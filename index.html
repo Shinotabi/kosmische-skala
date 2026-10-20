@@ -1451,7 +1451,7 @@ ${kind === 'truss' ? `
 
   const loader = new THREE.GLTFLoader().setMeshoptDecoder(window.MeshoptDecoder);
   function add(key, url, prep){
-    loader.load(url, g => {
+    const onModel = g => {
       const root = g.scene, meshes = [];
       root.traverse(o => { if (o.isMesh) meshes.push(o); });
       root.updateMatrixWorld(true);
@@ -1464,7 +1464,13 @@ ${kind === 'truss' ? `
       meshes.forEach(m => { m.castShadow = m.receiveShadow = true; });
       scene.add(holder);
       T3.models[key] = {holder, spin, ready: true};
-    }, undefined, () => {});
+    };
+    /* Erst die .glb, ersatzweise dieselben Daten als Base64-Text (für Umgebungen ohne .glb-Auslieferung) */
+    loader.load(url, onModel, undefined, () => {
+      fetch(url.replace(/.glb$/, '.b64.txt')).then(r => { if (!r.ok) throw 0; return r.text(); })
+        .then(t => { const bin = atob(t.trim()), buf = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i); loader.parse(buf.buffer, '', onModel, () => {}); })
+        .catch(() => {});
+    });
   }
   add(0, 'models/emu.glb', meshes => meshes.forEach(m => {
     const o = m.material, n = o.name || '', tris = m.geometry.index ? m.geometry.index.count/3 : 0, hsl = {};
