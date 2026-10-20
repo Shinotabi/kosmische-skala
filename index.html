@@ -133,13 +133,16 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--body);ov
 .imp-in .x{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:18px;border:1px solid var(--faint);background:none;color:var(--ink);cursor:pointer;display:grid;place-items:center}
 .imp-in .x svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
 @media (max-width:760px){.imp-in{padding:24px 20px}.imp-in h2{font-size:30px}}
-.intro{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px 16px;background:radial-gradient(70% 60% at 50% 50%,rgba(4,5,10,.5),rgba(4,5,10,.88));transition:opacity 1.4s ease,visibility 0s 1.4s}
+.intro{position:fixed;inset:0;z-index:20;display:grid;place-items:start center;padding:calc(env(safe-area-inset-top,0px) + 9vh) 16px 24px;background:var(--void);overflow:hidden;transition:opacity 1.5s ease .25s,visibility 0s 1.8s}
 .intro.out{opacity:0;visibility:hidden}
-.intro-in{text-align:center;max-width:680px}
+#introCv{position:absolute;inset:0;width:100%;height:100%;transform-origin:50% 70%;transition:transform 1.8s cubic-bezier(.55,0,.2,1),filter 1.8s ease}
+.intro.out #introCv{transform:scale(2.6);filter:blur(6px)}
+.intro-in{position:relative;text-align:center;max-width:680px;text-shadow:0 0 28px rgba(4,5,10,.9),0 0 8px rgba(4,5,10,.6);transition:opacity .6s ease,transform .9s ease}
+.intro.out .intro-in{opacity:0;transform:scale(.96)}
 .intro-eye{font:500 11px var(--mono);letter-spacing:.26em;text-transform:uppercase;color:var(--dim);margin:0 0 24px;opacity:0;animation:introUp 1.2s .3s forwards}
 .intro-title{font-family:var(--display);font-weight:300;font-variation-settings:"opsz" 144;font-size:clamp(52px,10vw,128px);line-height:.95;letter-spacing:-.035em;margin:0;color:var(--ink);text-wrap:balance}
 .intro-title span{display:inline-block;opacity:0;filter:blur(10px);transform:translateY(16px);animation:introLetter 1.5s cubic-bezier(.2,.7,.2,1) forwards;animation-delay:calc(.55s + var(--i)*.065s)}
-.intro-sub{font-size:17px;line-height:1.55;color:#b9c0d4;margin:24px auto 36px;max-width:34ch;opacity:0;animation:introUp 1.2s 1.6s forwards}
+.intro-sub{font-size:17px;line-height:1.55;color:#b9c0d4;margin:20px auto 28px;max-width:34ch;opacity:0;animation:introUp 1.2s 1.6s forwards}
 .intro-act{display:flex;gap:20px;justify-content:center;align-items:center;flex-wrap:wrap;opacity:0;animation:introUp 1s 2.1s forwards}
 .intro-go{appearance:none;border:1px solid rgba(242,194,124,.6);background:rgba(242,194,124,.1);color:var(--sun);font:500 14px var(--body);height:46px;padding:0 26px;border-radius:23px;cursor:pointer;transition:background .2s,border-color .2s}
 .intro-go:hover{background:rgba(242,194,124,.2);border-color:var(--sun)}
@@ -234,6 +237,7 @@ html.ui .scalebar,html.ui #ov{transition-delay:1.6s}
 </dialog>
 
 <div class="intro" id="intro" role="dialog" aria-modal="true" aria-labelledby="introTitle">
+  <canvas id="introCv" aria-hidden="true"></canvas>
   <div class="intro-in">
     <p class="intro-eye">27 Größenordnungen · 40 Objekte</p>
     <h2 class="intro-title" id="introTitle" aria-label="Kosmische Skala">Kosmische Skala</h2>
@@ -1653,8 +1657,7 @@ function render(time){
   const i = Math.min(N-2, Math.floor(t)), f = t - i;
   const w = Math.exp(Math.log(WV[i])*(1-f) + Math.log(WV[i+1])*f);
   const cam = C[i] + (C[i+1] - C[i]) * ((w - WV[i]) / (WV[i+1] - WV[i]));
-  const s = VM / w * (1 + .75*introW);
-  const OXc = OX + (W/2 - OX)*introW;
+  const s = VM / w;
   const T = reduce ? 0 : time;
   const labels = [], marks = [], discs = [];
 
@@ -1673,7 +1676,7 @@ function render(time){
   }
 
   for (let j = 0; j < N; j++) {
-    const o = OBJ[j], R = o.d/2*s, X = (C[j] - cam)*s + OXc, Y = OY + (H/2 - OY)*introW, E = R*o.ext;
+    const o = OBJ[j], R = o.d/2*s, X = (C[j] - cam)*s + OX, Y = OY, E = R*o.ext;
     if (R < .03 || X + E < -40 || X - E > W + 40) continue;
     let a = 1;
     if (!o.solid && E/MAXD > 2.5) a = clamp(1 - (E/MAXD - 2.5)/5, 0, 1);
@@ -1974,7 +1977,7 @@ function sfx(j){
 }
 function sfxDive(){
   if (!SND.on || !SND.C) return;
-  const C = SND.C, t = C.currentTime, d = INTRO_MS/1000;
+  const C = SND.C, t = C.currentTime, d = INTRO_MS/1000 + .4;
   const src = C.createBufferSource(); src.buffer = SND.noise; src.loop = true;
   const bp = C.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = .9;
   bp.frequency.setValueAtTime(2200, t); bp.frequency.exponentialRampToValueAtTime(180, t + d);
@@ -1990,8 +1993,8 @@ $('sndBtn').addEventListener('click', () => audioOn(!SND.on));
 /* ======================================================================
    Intro
    ====================================================================== */
-let introActive = false, introT0 = 0, introW = 0;
-const INTRO_FROM = OBJ.findIndex(o => o.n === 'Sonnensystem'), INTRO_MS = 5600;
+let introActive = false, introT0 = 0;
+const INTRO_MS = 1800;
 function introSetup(skip){
   const el = $('intro');
   if (skip) { el.remove(); document.documentElement.classList.add('ui'); return; }
@@ -2003,20 +2006,74 @@ function introSetup(skip){
     [...word].forEach(ch => { const sp = document.createElement('span'); sp.style.setProperty('--i', li++); sp.textContent = ch; w.appendChild(sp); });
     ttl.appendChild(w);
   });
-  introActive = true; introW = 1;
-  t = targetT = INTRO_FROM;
+  introActive = true;
+  orreryStart();
   $('introSound').addEventListener('click', () => introGo(true));
   $('introQuiet').addEventListener('click', () => introGo(false));
   setTimeout(() => { try { $('introSound').focus({preventScroll: true}); } catch (e) {} }, 2200);
 }
+/* Planetarium: eigenständige Intro-Szene mit stilisierten Abständen */
+const ORR = {raf: 0, t0: 0};
+function orreryStart(){
+  const cv = $('introCv'), g = cv.getContext('2d');
+  const PL = [
+    {r:.17, sz:2.2, c:'#b9b1a8', p:.24}, {r:.25, sz:3.4, c:'#f0d8a4', p:.62}, {r:.34, sz:3.6, c:'#6fa8ff', p:1}, {r:.43, sz:2.8, c:'#d9744a', p:1.88},
+    {r:.62, sz:8, c:'#e3c6a2', p:11.9}, {r:.75, sz:6.8, c:'#e6cf9d', p:29.5, ring:1}, {r:.87, sz:4.6, c:'#a9e0e3', p:84}, {r:.98, sz:4.4, c:'#5f86f0', p:165}
+  ];
+  PL.forEach((q, i) => q.a0 = i*2.399 + 1.1);
+  const belt = []; for (let i = 0; i < 520; i++) belt.push([.5 + (Math.random() - .5)*.07, Math.random()*TAU, .3 + Math.random()*.7]);
+  const stars = []; for (let i = 0; i < 380; i++) stars.push([Math.random(), Math.random(), Math.random(), Math.random()*TAU]);
+  ORR.t0 = performance.now();
+  function draw(now){
+    const dp = Math.min(window.devicePixelRatio || 1, 2), Wc = innerWidth, Hc = innerHeight;
+    if (cv.width !== Math.round(Wc*dp) || cv.height !== Math.round(Hc*dp)) { cv.width = Math.round(Wc*dp); cv.height = Math.round(Hc*dp); }
+    g.setTransform(dp, 0, 0, dp, 0, 0);
+    g.fillStyle = '#04050a'; g.fillRect(0, 0, Wc, Hc);
+    const T = reduce ? 8 : (now - ORR.t0)/1000;
+    for (const [x, y, b, ph] of stars) { g.globalAlpha = (.25 + .6*b)*(reduce ? 1 : .7 + .3*Math.sin(T*(.5 + b) + ph)); g.fillStyle = b > .85 ? '#ffe9c8' : '#dfe6ff'; g.fillRect(x*Wc, y*Hc, b*1.6, b*1.6); }
+    g.globalAlpha = 1;
+    const cx = Wc/2, cy = Hc*.7, Rr = Math.min(Wc*.62, Hc*.95)*.66, tilt = .34 + .04*Math.sin(T*.05), rot = T*.012;
+    const P = (r, a) => { const x = Math.cos(a + rot)*r, z = Math.sin(a + rot)*r; return [cx + x*Rr, cy + z*Rr*tilt, z]; };
+    /* Bahnen */
+    g.lineWidth = 1;
+    for (const q of PL) { g.beginPath(); g.ellipse(cx, cy, q.r*Rr, q.r*Rr*tilt, 0, 0, TAU); g.strokeStyle = 'rgba(160,178,230,.13)'; g.stroke(); }
+    /* Gürtel */
+    for (const [r, a, b] of belt) { const [x, y] = P(r, a + T*.035/Math.pow(r, 1.5)); g.globalAlpha = .18 + .3*b; g.fillStyle = '#c8bca8'; g.fillRect(x, y, 1.1, 1.1); }
+    g.globalAlpha = 1;
+    /* Planeten mit Spur, nach Tiefe sortiert, Sonne dazwischen */
+    const items = PL.map(q => { const a = q.a0 + T*.42/q.p**.55; const [x, y, z] = P(q.r, a); return {q, a, x, y, z}; });
+    items.push({sun: 1, z: 0});
+    items.sort((m, n) => m.z - n.z);
+    for (const it of items) {
+      if (it.sun) {
+        const gl = g.createRadialGradient(cx, cy, 0, cx, cy, Rr*.32);
+        gl.addColorStop(0, 'rgba(255,236,200,.95)'); gl.addColorStop(.06, 'rgba(255,210,140,.75)'); gl.addColorStop(.2, 'rgba(255,170,80,.18)'); gl.addColorStop(1, 'rgba(255,150,60,0)');
+        g.fillStyle = gl; g.fillRect(cx - Rr*.32, cy - Rr*.32, Rr*.64, Rr*.64);
+        g.beginPath(); g.arc(cx, cy, Math.max(6, Rr*.035), 0, TAU); g.fillStyle = '#fff4dc'; g.fill();
+        continue;
+      }
+      const {q, a, x, y, z} = it, sz = q.sz*Math.max(.8, Math.min(1.5, Rr/420))*(1 + z*.12);
+      for (let k = 1; k <= 26; k++) { const [tx, ty] = P(q.r, a - k*.018/q.r); g.globalAlpha = .22*(1 - k/26); g.fillStyle = q.c; g.beginPath(); g.arc(tx, ty, sz*.45, 0, TAU); g.fill(); }
+      g.globalAlpha = 1;
+      const lx = (cx - x), ly = (cy - y), ll = Math.hypot(lx, ly) || 1;
+      const sh = g.createRadialGradient(x + lx/ll*sz*.5, y + ly/ll*sz*.5, sz*.1, x, y, sz*1.05);
+      sh.addColorStop(0, q.c); sh.addColorStop(.75, q.c); sh.addColorStop(1, 'rgba(4,5,10,.9)');
+      if (q.ring) { g.beginPath(); g.ellipse(x, y, sz*2.3, sz*2.3*tilt*.9, -.2, 0, TAU); g.strokeStyle = 'rgba(230,207,157,.55)'; g.lineWidth = sz*.35; g.stroke(); g.lineWidth = 1; }
+      g.beginPath(); g.arc(x, y, sz, 0, TAU); g.fillStyle = sh; g.fill();
+    }
+    if (!reduce) ORR.raf = requestAnimationFrame(draw);
+  }
+  ORR.raf = requestAnimationFrame(draw);
+}
+function orreryStop(){ cancelAnimationFrame(ORR.raf); ORR.raf = 0; }
 function introGo(sound){
   if (!introActive) return;
   introActive = false;
   if (sound) audioOn(true);
   $('intro').classList.add('out');
-  if (reduce) { t = targetT = 0; introW = 0; document.documentElement.classList.add('ui'); }
-  else { introT0 = performance.now(); sfxDive(); }
-  setTimeout(() => { const el = $('intro'); if (el) el.remove(); }, 1600);
+  if (reduce) { document.documentElement.classList.add('ui'); orreryStop(); }
+  else { introT0 = performance.now(); sfxDive(); setTimeout(() => document.documentElement.classList.add('ui'), 700); setTimeout(orreryStop, INTRO_MS + 200); }
+  setTimeout(() => { const el = $('intro'); if (el) el.remove(); }, INTRO_MS + 300);
 }
 
 /* Bildrate halten: Auflösung passt sich an */
@@ -2024,13 +2081,7 @@ let ema = 16, qT = 0;
 function frame(now){
   const dtms = last ? now - last : 16, dt = Math.min(.05, dtms/1000); last = now;
   ema = ema*.94 + Math.min(dtms, 100)*.06; qT += dt;
-  if (introT0) {
-    /* Flug vom Sonnensystem zum Astronauten: langsam los, zügig durch die Mitte, sanft ankommen */
-    const k = Math.min(1, (now - introT0)/INTRO_MS), e = k < .5 ? 16*k**5 : 1 - (-2*k + 2)**5/2;
-    t = targetT = INTRO_FROM*(1 - e);
-    introW = Math.pow(1 - Math.min(1, k/.4), 2);
-    if (k >= 1) { introT0 = 0; introW = 0; t = targetT = 0; document.documentElement.classList.add('ui'); }
-  }
+  if (introT0 && now - introT0 > INTRO_MS) introT0 = 0;
   if (qT > 1.2) { qT = 0;
     if (ema > 25 && quality > .5) { quality = Math.max(.5, quality*.82); sizeGL(); }
     else if (ema < 13.5 && quality < 1) { quality = Math.min(1, quality*1.1); sizeGL(); } }
