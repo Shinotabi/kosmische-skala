@@ -133,6 +133,28 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--body);ov
 .imp-in .x{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:18px;border:1px solid var(--faint);background:none;color:var(--ink);cursor:pointer;display:grid;place-items:center}
 .imp-in .x svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
 @media (max-width:760px){.imp-in{padding:24px 20px}.imp-in h2{font-size:30px}}
+.intro{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px 16px;background:radial-gradient(70% 60% at 50% 50%,rgba(4,5,10,.72),rgba(4,5,10,.94));transition:opacity 1.4s ease,visibility 0s 1.4s}
+.intro.out{opacity:0;visibility:hidden}
+.intro-in{text-align:center;max-width:680px}
+.intro-eye{font:500 11px var(--mono);letter-spacing:.26em;text-transform:uppercase;color:var(--dim);margin:0 0 24px;opacity:0;animation:introUp 1.2s .3s forwards}
+.intro-title{font-family:var(--display);font-weight:300;font-variation-settings:"opsz" 144;font-size:clamp(52px,10vw,128px);line-height:.95;letter-spacing:-.035em;margin:0;color:var(--ink);text-wrap:balance}
+.intro-title span{display:inline-block;opacity:0;filter:blur(10px);transform:translateY(16px);animation:introLetter 1.5s cubic-bezier(.2,.7,.2,1) forwards;animation-delay:calc(.55s + var(--i)*.065s)}
+.intro-sub{font-size:17px;line-height:1.55;color:#b9c0d4;margin:24px auto 36px;max-width:34ch;opacity:0;animation:introUp 1.2s 1.6s forwards}
+.intro-act{display:flex;gap:20px;justify-content:center;align-items:center;flex-wrap:wrap;opacity:0;animation:introUp 1s 2.1s forwards}
+.intro-go{appearance:none;border:1px solid rgba(242,194,124,.6);background:rgba(242,194,124,.1);color:var(--sun);font:500 14px var(--body);height:46px;padding:0 26px;border-radius:23px;cursor:pointer;transition:background .2s,border-color .2s}
+.intro-go:hover{background:rgba(242,194,124,.2);border-color:var(--sun)}
+.intro-quiet{appearance:none;border:0;background:none;color:var(--dim);font:500 13px var(--body);cursor:pointer;padding:6px 2px;text-decoration:underline;text-underline-offset:5px;text-decoration-color:var(--faint)}
+.intro-quiet:hover{color:var(--ink)}
+.intro-go:focus-visible,.intro-quiet:focus-visible{outline:2px solid var(--sun);outline-offset:4px}
+.intro-tip{font:400 10px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:#5d6580;margin:28px 0 0;opacity:0;animation:introUp 1s 2.4s forwards}
+@keyframes introLetter{to{opacity:1;filter:none;transform:none}}
+@keyframes introUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.top,.panel,.dock,.scalebar,#ov{transition:opacity 1.2s ease}
+html:not(.ui) .top,html:not(.ui) .panel,html:not(.ui) .dock,html:not(.ui) .scalebar,html:not(.ui) .hint,html:not(.ui) #ov{opacity:0;pointer-events:none}
+html.ui .panel{transition-delay:.9s}
+html.ui .dock{transition-delay:1.2s}
+html.ui .scalebar,html.ui #ov{transition-delay:1.6s}
+.intro-title .w{display:inline-block;white-space:nowrap}
 .nogl{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);max-width:30ch;text-align:center;color:var(--dim);font-size:15px;line-height:1.5}
 
 @media (max-width:760px){
@@ -154,7 +176,7 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--body);ov
   .hint{display:none}
   .veil{background:radial-gradient(120% 90% at 50% 35%,transparent 50%,rgba(2,3,8,.7) 100%),linear-gradient(0deg,rgba(3,4,9,.85) 0%,rgba(3,4,9,0) 50%)}
 }
-@media (prefers-reduced-motion:reduce){.comp-bar i,.comp-rows li{transition:none}.panel.swap .anim{animation:none}.scalebar .bar{transition:none}}
+@media (prefers-reduced-motion:reduce){.intro *{animation-duration:.01s!important;animation-delay:0s!important}.comp-bar i,.comp-rows li{transition:none}.panel.swap .anim{animation:none}.scalebar .bar{transition:none}}
 </style>
 </head>
 <body>
@@ -169,7 +191,7 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--body);ov
   <div class="brandwrap">
     <div class="brand"><i></i><span>Kosmische Skala</span></div>
     <nav class="meta" aria-label="Seiteninformationen">
-      <button type="button" id="impBtn">Impressum</button><span aria-hidden="true">·</span><a id="coffee" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM16 10h1.5a2.5 2.5 0 0 1 0 5H16M8 3.5c0 1.2 1 1.2 1 2.4M12 3.5c0 1.2 1 1.2 1 2.4"/></svg>Kaffee spendieren</a>
+      <button type="button" id="impBtn">Impressum</button><span aria-hidden="true">·</span><a id="coffee" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM16 10h1.5a2.5 2.5 0 0 1 0 5H16M8 3.5c0 1.2 1 1.2 1 2.4M12 3.5c0 1.2 1 1.2 1 2.4"/></svg>Kaffee spendieren</a><span aria-hidden="true">·</span><button type="button" id="sndBtn" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" id="sndIcon"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l4 6M21 9l-4 6"/></svg><span id="sndLbl">Ton an</span></button>
     </nav>
   </div>
   <div class="readout"><span class="lbl">Bildbreite</span><span id="fov">–</span><span id="pow"></span></div>
@@ -206,10 +228,23 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--body);ov
     <h3>Darstellungen</h3>
     <p>Alle Himmelskörper werden live im Browser berechnet. Sie sind maßstabsgetreu in der Größe, Oberflächen und Farben sind aber künstlerische Annäherungen und keine Fotos. Die Erdoberfläche ist das Bild „Blue Marble“ der NASA (Visible Earth). Die 3D-Modelle des Raumanzugs (EMU) und der ISS stammen aus den <a href="https://science.nasa.gov/3d-resources/" target="_blank" rel="noopener">NASA 3D Resources</a>; Materialien und Texturen der ISS wurden ergänzt.</p>
     <h3>Datenschutz</h3>
-    <p>Diese Seite setzt keine Cookies und verwendet kein Tracking. Beim Aufruf verarbeitet der Webhoster technisch notwendige Daten wie IP-Adresse, Zeitpunkt und Browserkennung in Server-Logfiles, um die Seite auszuliefern und abzusichern (Art. 6 Abs. 1 lit. f DSGVO). Die Schriften werden über <span id="fontHost">Bunny Fonts (BunnyWay d.o.o., Slowenien)</span> geladen, die 3D-Bibliothek three.js über das Content-Delivery-Netzwerk jsDelivr; dabei wird deine IP-Adresse an diese Dienste übermittelt. Links zu Wikipedia, NASA und PayPal führen zu externen Anbietern, deren Datenschutzbestimmungen ab dem Aufruf gelten.</p>
+    <p>Diese Seite setzt keine Cookies und verwendet kein Tracking. Beim Aufruf verarbeitet der Webhoster technisch notwendige Daten wie IP-Adresse, Zeitpunkt und Browserkennung in Server-Logfiles, um die Seite auszuliefern und abzusichern (Art. 6 Abs. 1 lit. f DSGVO). Klänge werden live im Browser erzeugt, es werden keine Audiodateien geladen. Die Schriften werden über <span id="fontHost">Bunny Fonts (BunnyWay d.o.o., Slowenien)</span> geladen, die 3D-Bibliothek three.js über das Content-Delivery-Netzwerk jsDelivr; dabei wird deine IP-Adresse an diese Dienste übermittelt. Links zu Wikipedia, NASA und PayPal führen zu externen Anbietern, deren Datenschutzbestimmungen ab dem Aufruf gelten.</p>
     <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung sowie ein Beschwerderecht bei einer Datenschutz-Aufsichtsbehörde. Verantwortlich ist die oben genannte Person.</p>
   </div>
 </dialog>
+
+<div class="intro" id="intro" role="dialog" aria-modal="true" aria-labelledby="introTitle">
+  <div class="intro-in">
+    <p class="intro-eye">27 Größenordnungen · 40 Objekte</p>
+    <h2 class="intro-title" id="introTitle" aria-label="Kosmische Skala">Kosmische Skala</h2>
+    <p class="intro-sub">Eine Reise vom Menschen bis an den Rand des beobachtbaren Universums.</p>
+    <div class="intro-act">
+      <button type="button" class="intro-go" id="introSound">Mit Ton eintauchen</button>
+      <button type="button" class="intro-quiet" id="introQuiet">Ohne Ton</button>
+    </div>
+    <p class="intro-tip">Kopfhörer empfohlen</p>
+  </div>
+</div>
 
 <div class="hint" id="hint">Scrollen, wischen oder <kbd>←</kbd> <kbd>→</kbd> zum Herauszoomen</div>
 
@@ -1576,9 +1611,11 @@ ${kind === 'truss' ? `
 }
 /* Pro Bild: Modell statt Shader verwenden, wenn es geladen ist */
 function t3Use(o, X, Y, R, a){
-  if (T3.state !== 'ready' || o.k !== 'craft') return false;
-  const md = T3.models[o.g.mode || 0];
-  if (!md || !md.ready || R < 1.2) return false;
+  if (o.k !== 'craft') return false;
+  const md = T3.state === 'ready' ? T3.models[o.g.mode || 0] : null;
+  /* Solange das Modell lädt, nichts zeichnen; erst nach 9 s ohne Modell den Shader-Ersatz zeigen */
+  if (!md || !md.ready) return T3.state !== 'failed' && performance.now() < 9000 && R >= 1.2;
+  if (R < 1.2) return false;
   T3.draws.push({md, X, Y, R, a, mode: o.g.mode || 0});
   return true;
 }
@@ -1616,9 +1653,10 @@ function render(time){
   const i = Math.min(N-2, Math.floor(t)), f = t - i;
   const w = Math.exp(Math.log(WV[i])*(1-f) + Math.log(WV[i+1])*f);
   const cam = C[i] + (C[i+1] - C[i]) * ((w - WV[i]) / (WV[i+1] - WV[i]));
-  const s = VM / w;
+  const s = VM / (w*(1 + introZ));
   const T = reduce ? 0 : time;
   const labels = [], marks = [], discs = [];
+  const introShift = introZ < 0 ? (-introZ/.6)*(OBJ[0].d/2*s)*.62 : 0;
 
   if (gl) {
     gl.viewport(0, 0, GW, GH);
@@ -1635,7 +1673,7 @@ function render(time){
   }
 
   for (let j = 0; j < N; j++) {
-    const o = OBJ[j], R = o.d/2*s, X = (C[j] - cam)*s + OX, Y = OY, E = R*o.ext;
+    const o = OBJ[j], R = o.d/2*s, X = (C[j] - cam)*s + OX, Y = OY + introShift, E = R*o.ext;
     if (R < .03 || X + E < -40 || X - E > W + 40) continue;
     let a = 1;
     if (!o.solid && E/MAXD > 2.5) a = clamp(1 - (E/MAXD - 2.5)/5, 0, 1);
@@ -1774,7 +1812,7 @@ $('compBtn').addEventListener('click', () => { compOpen = !compOpen; compRender(
 let focus = -1, lastFov = '', lastBar = '';
 function setFocus(j){
   if (j === focus) return;
-  if (focus >= 0) OBJ[focus].dotEl.classList.remove('on');
+  if (focus >= 0) { OBJ[focus].dotEl.classList.remove('on'); sfx(j); }
   focus = j; const o = OBJ[j]; o.dotEl.classList.add('on');
   $('idx').textContent = String(j + 1).padStart(2, '0') + ' / ' + N;
   $('cat').textContent = o.cat; $('name').textContent = o.n;
@@ -1797,6 +1835,7 @@ function hud(s, w){
   const bl = big(nice) + ' ' + (u === 'Lichtjahre' ? 'Lj' : u);
   if (bl !== lastBar) { lastBar = bl; $('barlbl').textContent = bl; }
   cursor.style.left = clamp(pos(Math.log10(w/FR)), 0, 1)*100 + '%';
+  audioScale(Math.log10(w/FR));
 }
 
 /* ======================================================================
@@ -1816,7 +1855,7 @@ function setTour(on){
 const step = d => { userMove(); targetT = clamp(d > 0 ? Math.floor(targetT + .001) + 1 : Math.ceil(targetT - .001) - 1, 0, N-1); };
 
 addEventListener('wheel', e => {
-  if (dialogOpen()) return;
+  if (dialogOpen() || introActive) { if (introActive) e.preventDefault(); return; }
   if (e.target.closest && e.target.closest('.dock') && !e.target.closest('.rail')) return;
   e.preventDefault(); userMove();
   const k = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
@@ -1836,6 +1875,7 @@ const endDrag = () => { if (drag && performance.now() - drag.tm < 80) vel = clam
 ov.addEventListener('pointerup', endDrag); ov.addEventListener('pointercancel', endDrag);
 
 addEventListener('keydown', e => {
+  if (introActive) { if (e.key === 'Enter') { e.preventDefault(); introGo(true); } else if (e.key === 'Escape') introGo(false); return; }
   if (dialogOpen()) return;
   const k = e.key;
   if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown' || (k === ' ' && e.target === document.body)) { e.preventDefault(); step(1); }
@@ -1869,11 +1909,106 @@ rail.addEventListener('pointermove', e => {
 rail.addEventListener('pointerup', () => { railDrag = false; });
 rail.addEventListener('pointerleave', () => { if (!railDrag) tip.classList.remove('show'); });
 
+/* ======================================================================
+   Klang: generativer Ambient-Drone und Übergangsgeräusche (Web Audio, ohne Dateien)
+   ====================================================================== */
+const SND = {C: null, on: false, lastL: -1};
+function audioInit(){
+  const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
+  const C = new AC(); SND.C = C;
+  const master = C.createGain(); master.gain.value = 0; master.connect(C.destination); SND.master = master;
+  const len = Math.floor(C.sampleRate*5), ir = C.createBuffer(2, len, C.sampleRate);
+  for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random()*2 - 1)*Math.pow(1 - i/len, 3); }
+  const verb = C.createConvolver(); verb.buffer = ir; const wet = C.createGain(); wet.gain.value = .85; verb.connect(wet); wet.connect(master); SND.verb = verb;
+  const dry = C.createGain(); dry.gain.value = .55; dry.connect(master); SND.dry = dry;
+  const lp = C.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700; lp.Q.value = .5; lp.connect(dry); lp.connect(verb); SND.lp = lp;
+  [[55, 'sine', .16], [82.41, 'sine', .09], [110, 'triangle', .035], [164.81, 'triangle', .02], [246.94, 'sine', .008]].forEach(([fq, type, vol], i) => {
+    const o = C.createOscillator(); o.type = type; o.frequency.value = fq; o.detune.value = i % 2 ? 4 : -3;
+    const g = C.createGain(); g.gain.value = vol*.7;
+    const lfo = C.createOscillator(); lfo.frequency.value = .025 + i*.013; const lg = C.createGain(); lg.gain.value = vol*.35;
+    lfo.connect(lg); lg.connect(g.gain); lfo.start();
+    o.connect(g); g.connect(lp); o.start();
+  });
+  const fl = C.createOscillator(); fl.frequency.value = .018; const fg = C.createGain(); fg.gain.value = 160; fl.connect(fg); fg.connect(lp.frequency); fl.start();
+  const nb = C.createBuffer(1, C.sampleRate*4, C.sampleRate), nd = nb.getChannelData(0);
+  for (let i = 0; i < nd.length; i++) nd[i] = Math.random()*2 - 1;
+  SND.noise = nb;
+  const ns = C.createBufferSource(); ns.buffer = nb; ns.loop = true;
+  const bp = C.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = .7;
+  const ng = C.createGain(); ng.gain.value = .01; ns.connect(bp); bp.connect(ng); ng.connect(verb); ng.connect(dry); ns.start();
+  return true;
+}
+function audioOn(on){
+  if (on && !SND.C && !audioInit()) return;
+  SND.on = on;
+  if (SND.C) {
+    if (on) SND.C.resume();
+    const g = SND.master.gain, t = SND.C.currentTime;
+    g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(on ? .5 : 0, t + (on ? 3.5 : .6));
+  }
+  $('sndBtn').setAttribute('aria-pressed', on);
+  $('sndLbl').textContent = on ? 'Ton aus' : 'Ton an';
+  $('sndIcon').innerHTML = on ? '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>' : '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l4 6M21 9l-4 6"/>';
+}
+function audioScale(L){
+  if (!SND.on || Math.abs(L - SND.lastL) < .05) return;
+  SND.lastL = L;
+  SND.lp.frequency.setTargetAtTime(380 + (27 - clamp(L, 0, 27))*20, SND.C.currentTime, 1.2);
+}
+const PENTA = [0, 2, 4, 7, 9];
+let sfxLast = 0;
+function sfx(j){
+  if (!SND.on || !SND.C) return;
+  const now = performance.now(); if (now - sfxLast < 170) return; sfxLast = now;
+  const C = SND.C, t = C.currentTime;
+  const src = C.createBufferSource(); src.buffer = SND.noise;
+  const bp = C.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 1.4;
+  bp.frequency.setValueAtTime(260, t); bp.frequency.exponentialRampToValueAtTime(1500, t + .55);
+  const g = C.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.045, t + .2); g.gain.exponentialRampToValueAtTime(.0001, t + .95);
+  src.connect(bp); bp.connect(g); g.connect(SND.verb); g.connect(SND.dry); src.start(t, Math.random()*3); src.stop(t + 1);
+  const fq = 523.25/Math.pow(2, Math.floor(j/10))*Math.pow(2, PENTA[j % 5]/12);
+  const o = C.createOscillator(); o.type = 'sine'; o.frequency.value = fq;
+  const og = C.createGain(); og.gain.setValueAtTime(0, t + .08); og.gain.linearRampToValueAtTime(.03, t + .12); og.gain.exponentialRampToValueAtTime(.0001, t + 2.4);
+  o.connect(og); og.connect(SND.verb); og.connect(SND.dry); o.start(t + .08); o.stop(t + 2.5);
+}
+$('sndBtn').addEventListener('click', () => audioOn(!SND.on));
+
+/* ======================================================================
+   Intro
+   ====================================================================== */
+let introActive = false, introT0 = 0, introZ = 0;
+function introSetup(skip){
+  const el = $('intro');
+  if (skip) { el.remove(); document.documentElement.classList.add('ui'); return; }
+  const ttl = $('introTitle'), txt = ttl.textContent; ttl.textContent = '';
+  let li = 0;
+  txt.split(' ').forEach((word, wi) => {
+    if (wi) ttl.appendChild(document.createTextNode(' '));
+    const w = document.createElement('span'); w.className = 'w'; w.setAttribute('aria-hidden', 'true');
+    [...word].forEach(ch => { const sp = document.createElement('span'); sp.style.setProperty('--i', li++); sp.textContent = ch; w.appendChild(sp); });
+    ttl.appendChild(w);
+  });
+  introActive = true; introZ = reduce ? 0 : -.6;
+  $('introSound').addEventListener('click', () => introGo(true));
+  $('introQuiet').addEventListener('click', () => introGo(false));
+  setTimeout(() => { try { $('introSound').focus({preventScroll: true}); } catch (e) {} }, 2200);
+}
+function introGo(sound){
+  if (!introActive) return;
+  introActive = false;
+  if (sound) audioOn(true);
+  $('intro').classList.add('out');
+  document.documentElement.classList.add('ui');
+  introT0 = reduce ? 0 : performance.now(); if (reduce) introZ = 0;
+  setTimeout(() => { const el = $('intro'); if (el) el.remove(); }, 1600);
+}
+
 /* Bildrate halten: Auflösung passt sich an */
 let ema = 16, qT = 0;
 function frame(now){
   const dtms = last ? now - last : 16, dt = Math.min(.05, dtms/1000); last = now;
   ema = ema*.94 + Math.min(dtms, 100)*.06; qT += dt;
+  if (introT0) { const k = Math.min(1, (now - introT0)/2800); introZ = -.6*Math.pow(1 - k, 3); if (k >= 1) { introT0 = 0; introZ = 0; } }
   if (qT > 1.2) { qT = 0;
     if (ema > 25 && quality > .5) { quality = Math.max(.5, quality*.82); sizeGL(); }
     else if (ema < 13.5 && quality < 1) { quality = Math.min(1, quality*1.1); sizeGL(); } }
@@ -1893,7 +2028,8 @@ const start = data => {
   if (data && typeof data.t === 'number') t = targetT = clamp(data.t, 0, N-1);
   setFocus(clamp(Math.round(t), 0, N-1));
   requestAnimationFrame(frame);
-  setTimeout(t3Start, 250);
+  t3Start();
+  introSetup(data && typeof data.t === 'number');
 };
 const hot = window.claude && window.claude.hot;
 if (hot && hot.snapshot) hot.snapshot(() => ({t: targetT}));
