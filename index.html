@@ -31,8 +31,7 @@ html,body{height:100%}
 body{margin:0;background:var(--void);color:var(--ink);font-family:var(--body);overflow:hidden;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
 #gl,#tc,#ov{position:fixed;inset:0;width:100%;height:100%;display:block}
 #gl,#tc{pointer-events:none}
-#ov{touch-action:none;cursor:grab}
-#ov:active{cursor:grabbing}
+#ov{touch-action:none}
 .veil{position:fixed;inset:0;pointer-events:none;background:
   radial-gradient(120% 90% at 60% 45%,transparent 55%,rgba(2,3,8,.7) 100%),
   linear-gradient(90deg,rgba(3,4,9,.7) 0%,rgba(3,4,9,0) 38%)}
@@ -59,6 +58,27 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--body);ov
 .panel.swap .anim:nth-child(3){animation-delay:.08s}
 .panel.swap .anim:nth-child(4){animation-delay:.12s}
 .panel.swap .anim:nth-child(5){animation-delay:.16s}
+.comp{pointer-events:auto;margin-top:16px;max-width:400px}
+.comp-toggle{appearance:none;background:none;border:0;padding:2px 0;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font:500 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--sun)}
+.comp-toggle svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .3s}
+.comp-toggle[aria-expanded="true"] svg{transform:rotate(180deg)}
+.comp-toggle:focus-visible,.comp-tabs button:focus-visible{outline:2px solid var(--sun);outline-offset:3px;border-radius:2px}
+.comp-body{margin-top:12px;padding-top:12px;border-top:1px solid var(--faint)}
+.comp-tabs{display:flex;flex-wrap:wrap;gap:4px 16px;margin-bottom:10px}
+.comp-tabs:empty{display:none}
+.comp-tabs button{appearance:none;background:none;border:0;padding:2px 0 4px;cursor:pointer;font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);border-bottom:1px solid transparent}
+.comp-tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--sun)}
+.comp-unit{font:400 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.comp-bar{display:flex;gap:2px;height:5px;margin:10px 0 6px;border-radius:3px;overflow:hidden}
+.comp-bar i{display:block;height:100%;width:0;transition:width .9s cubic-bezier(.2,.7,.2,1)}
+.comp-rows{list-style:none;margin:0;padding:0}
+.comp-rows li{display:grid;grid-template-columns:4.2em 1fr auto;align-items:baseline;gap:12px;padding:6px 0;border-bottom:1px solid rgba(150,165,210,.1);opacity:0;transform:translateY(6px);transition:opacity .5s,transform .5s}
+.comp-rows li.in{opacity:1;transform:none}
+.comp-rows .fm{font-family:var(--display);font-weight:300;font-variation-settings:"opsz" 144;font-size:26px;line-height:1;letter-spacing:-.02em;color:var(--ink)}
+.comp-rows .fm sub{font-size:.52em;vertical-align:-.12em;letter-spacing:0}
+.comp-rows .nm{font-size:13px;color:#aab1c6;min-width:0}
+.comp-rows .pc{font:500 13px var(--mono);font-variant-numeric:tabular-nums;color:var(--ink);text-align:right}
+.comp-rows .sw{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:8px;vertical-align:1px}
 .more{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:16px}
 .more a{pointer-events:auto;font:500 12px var(--mono);letter-spacing:.04em;color:var(--ink);text-decoration:none;padding-bottom:3px;border-bottom:1px solid rgba(242,194,124,.45);transition:color .2s,border-color .2s}
 .more a:hover{color:var(--sun);border-color:var(--sun)}
@@ -120,6 +140,9 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--body);ov
   .panel{left:16px;right:16px;width:auto;bottom:132px}
   .panel h1{font-size:34px;margin:10px 0}
   .more{margin-top:10px}
+  .panel.comp-open p{display:none}
+  .comp-rows .fm{font-size:22px}
+  .comp-rows li{padding:4px 0}
   .panel p{font-size:14px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .scalebar{right:16px;bottom:auto;top:calc(env(safe-area-inset-top,0px) + 70px)}
   .dock{gap:12px;padding:0 16px calc(env(safe-area-inset-bottom,0px) + 14px);flex-wrap:wrap}
@@ -130,7 +153,7 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--body);ov
   .hint{display:none}
   .veil{background:radial-gradient(120% 90% at 50% 35%,transparent 50%,rgba(2,3,8,.7) 100%),linear-gradient(0deg,rgba(3,4,9,.85) 0%,rgba(3,4,9,0) 50%)}
 }
-@media (prefers-reduced-motion:reduce){.panel.swap .anim{animation:none}.scalebar .bar{transition:none}}
+@media (prefers-reduced-motion:reduce){.comp-bar i,.comp-rows li{transition:none}.panel.swap .anim{animation:none}.scalebar .bar{transition:none}}
 </style>
 </head>
 <body>
@@ -156,6 +179,15 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--body);ov
   <h1 class="anim" id="name"></h1>
   <div class="size anim"><span id="size"></span><span id="size2"></span></div>
   <p class="anim" id="desc"></p>
+  <div class="comp anim" id="comp" hidden>
+    <button type="button" class="comp-toggle" id="compBtn" aria-expanded="false" aria-controls="compBody"><span>Zusammensetzung</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+    <div class="comp-body" id="compBody" hidden>
+      <div class="comp-tabs" id="compTabs" role="tablist"></div>
+      <div class="comp-unit" id="compUnit"></div>
+      <div class="comp-bar" id="compBar" aria-hidden="true"></div>
+      <ol class="comp-rows" id="compRows"></ol>
+    </div>
+  </div>
   <div class="more anim" id="more"></div>
 </section>
 
@@ -169,7 +201,7 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--body);ov
     <address id="impAddr"></address>
     <p><span class="lbl">E-Mail</span><br><span id="impMail"></span></p>
     <h3>Inhalte und Links</h3>
-    <p>Die Texte und Größenangaben sind sorgfältig zusammengestellt, aber ohne Gewähr. Bei vielen Objekten sind die Werte Schätzungen der Forschung. Für die Inhalte verlinkter Seiten wie Wikipedia oder NASA sind deren Betreiber verantwortlich.</p>
+    <p>Die Texte, Größenangaben und Zusammensetzungen sind sorgfältig zusammengestellt, aber ohne Gewähr. Die Zusammensetzungen stammen unter anderem aus den Planetary Fact Sheets der NASA und den Ergebnissen der Planck-Mission. Bei vielen Objekten sind die Werte Schätzungen der Forschung. Für die Inhalte verlinkter Seiten wie Wikipedia oder NASA sind deren Betreiber verantwortlich.</p>
     <h3>Darstellungen</h3>
     <p>Alle Himmelskörper werden live im Browser berechnet. Sie sind maßstabsgetreu in der Größe, Oberflächen und Farben sind aber künstlerische Annäherungen und keine Fotos. Die 3D-Modelle des Raumanzugs (EMU) und der ISS stammen aus den <a href="https://science.nasa.gov/3d-resources/" target="_blank" rel="noopener">NASA 3D Resources</a>; Materialien und Texturen der ISS wurden ergänzt.</p>
     <h3>Datenschutz</h3>
@@ -302,6 +334,23 @@ const OBJ = [
    t:'Alles, dessen Licht uns seit dem Urknall vor 13,8 Milliarden Jahren erreichen konnte. Weil sich der Raum ausdehnt, liegt sein Rand heute rund 46 Milliarden Lichtjahre entfernt.'}
 ];
 const N = OBJ.length;
+/* Zusammensetzung: Formel, Name, Anteil in Prozent. Quellen: NASA Planetary Fact Sheets, Sonnen- und Krustenhäufigkeiten, Planck 2018 */
+const COMP = {
+  'Sonne': [{t:'Sonne', u:'Massenanteile der Oberfläche', r:[['H','Wasserstoff',73.46],['He','Helium',24.85],['O','Sauerstoff',0.77],['C','Kohlenstoff',0.29],['Fe','Eisen',0.16]]}],
+  'Venus': [{t:'Atmosphäre', u:'Volumenanteile', r:[['CO2','Kohlendioxid',96.5],['N2','Stickstoff',3.5],['SO2','Schwefeldioxid',0.015]]}],
+  'Erde': [
+    {t:'Atmosphäre', u:'Volumenanteile, trockene Luft', r:[['N2','Stickstoff',78.08],['O2','Sauerstoff',20.95],['Ar','Argon',0.93],['CO2','Kohlendioxid',0.042]]},
+    {t:'Erdkruste', u:'Massenanteile', r:[['O','Sauerstoff',46.1],['Si','Silizium',28.2],['Al','Aluminium',8.2],['Fe','Eisen',5.6],['Ca','Calcium',4.2]]},
+    {t:'Ganzer Planet', u:'Massenanteile', r:[['Fe','Eisen',32.1],['O','Sauerstoff',30.1],['Si','Silizium',15.1],['Mg','Magnesium',13.9],['S','Schwefel',2.9]]}],
+  'Mars': [{t:'Atmosphäre', u:'Volumenanteile', r:[['CO2','Kohlendioxid',95.1],['N2','Stickstoff',2.59],['Ar','Argon',1.94],['O2','Sauerstoff',0.16],['CO','Kohlenmonoxid',0.06]]}],
+  'Jupiter': [{t:'Atmosphäre', u:'Volumenanteile', r:[['H2','Wasserstoff',89.8],['He','Helium',10.2],['CH4','Methan',0.3],['NH3','Ammoniak',0.026]]}],
+  'Saturn': [{t:'Atmosphäre', u:'Volumenanteile', r:[['H2','Wasserstoff',96.3],['He','Helium',3.25],['CH4','Methan',0.45],['NH3','Ammoniak',0.0125]]}],
+  'Uranus': [{t:'Atmosphäre', u:'Volumenanteile', r:[['H2','Wasserstoff',82.5],['He','Helium',15.2],['CH4','Methan',2.3]]}],
+  'Neptun': [{t:'Atmosphäre', u:'Volumenanteile', r:[['H2','Wasserstoff',80],['He','Helium',19],['CH4','Methan',1.5]]}],
+  'Pluto': [{t:'Atmosphäre', u:'Volumenanteile, Schätzung', r:[['N2','Stickstoff',99],['CH4','Methan',0.5],['CO','Kohlenmonoxid',0.05]]}],
+  'Orionnebel': [{t:'Gas', u:'Massenanteile, typisch für Sternentstehungsgebiete', r:[['H','Wasserstoff',70],['He','Helium',28],['Z','Schwerere Elemente',2]]}],
+  'Beobachtbares Universum': [{t:'Energiebudget', u:'Anteile an der Gesamtenergiedichte', r:[['Λ','Dunkle Energie',68.5],['DM','Dunkle Materie',26.4],['b','Gewöhnliche Materie',4.9]]}]
+};
 const WIKI = {'Astronaut':'Raumanzug', 'Komet 67P':'67P/Tschurjumow-Gerassimenko', 'Deimos':'Deimos (Mond)', 'Phobos':'Phobos (Mond)', 'Vesta':'(4) Vesta', 'Ceres':'(1) Ceres', 'Bennu':'(101955) Bennu', 'Ryugu':'(162173) Ryugu',
   'Merkur':'Merkur (Planet)', 'Mars':'Mars (Planet)', 'Venus':'Venus (Planet)', 'Neptun':'Neptun (Planet)', 'Uranus':'Uranus (Planet)', 'Saturn':'Saturn (Planet)', 'Jupiter':'Jupiter (Planet)',
   'Nächster Stern':'Proxima Centauri', 'Andromeda':'Andromedagalaxie', 'Sirius A':'Sirius'};
@@ -371,6 +420,7 @@ const PRE = `#version 300 es
 precision highp float; precision highp int;
 in vec2 vP; out vec4 fragColor;
 uniform float uT, uR, uSeed, uAlpha, uDpr, uEdge;
+uniform vec2 uRot;
 uniform int uMode;
 uniform vec3 uA, uB, uC, uD, uDot;
 uniform vec4 uQ;
@@ -525,7 +575,7 @@ vec4 shade(vec2 p){
   if(rl < 1.0){
     float z = sqrt(1.0-r2); zs = z;
     vec3 nv = vec3(p,z);
-    vec3 s = rotY(uT*uAxis.z)*(transpose(M)*nv);
+    vec3 s = rotY(uT*uAxis.z + uRot.x)*(transpose(M)*(uRing.z > 0.0 ? nv : rotX(-uRot.y)*nv));
     vec3 alb = uA; float h = 0.0, wet = 0.0, cloud = 0.0; vec3 emis = vec3(0.0);
     if(uMode==0){
       int sp = int(uQ.z+0.5);
@@ -662,7 +712,7 @@ float shapeD(vec3 q){
 float sdf(vec3 q){ return shapeD(q) + uQ.z*fbm(q+uSeed,1.8,4); }
 vec4 shade(vec2 p){
   if(dot(p,p)>1.25) return vec4(0.0);
-  mat3 Rv = rotX(0.4)*rotY(uT*0.045+uSeed);
+  mat3 Rv = rotX(0.4 + uRot.y)*rotY(uT*0.045 + uSeed + uRot.x);
   mat3 Ri = transpose(Rv);
   vec3 ro = Ri*vec3(p,1.6), rd = Ri*vec3(0.0,0.0,-1.0);
   float t=0.0, dm=1e9, tm=0.0; bool hit=false;
@@ -942,7 +992,7 @@ vec4 shade(vec2 p){
   vec3 c = uA;
   vec3 col = vec3(0.0);
   if(r<1.0){
-    float z = sqrt(1.0-r*r); vec3 s = rotY(uT*0.008)*vec3(p,z);
+    float z = sqrt(1.0-r*r); vec3 s = rotY(uT*0.008 + uRot.x)*(rotX(-uRot.y)*vec3(p,z));
     float mu = z; float limb = 1.0-0.6*(1.0-mu)-0.15*(1.0-mu)*(1.0-mu);
     float g;
     if(uQ.x>0.5){
@@ -1322,6 +1372,7 @@ function drawObj(o, X, Y, R, a, time, extra){
   gl.uniform1f(U(e,'uR'), R); gl.uniform1f(U(e,'uT'), time); gl.uniform1f(U(e,'uSeed'), o.seed);
   gl.uniform1f(U(e,'uAlpha'), a); gl.uniform1f(U(e,'uDpr'), KG); gl.uniform1f(U(e,'uEdge'), o.solid ? 0 : o.ext);
   gl.uniform3fv(U(e,'uDot'), o.dotv);
+  gl.uniform2f(U(e,'uRot'), o.rot ? o.rot.yaw : 0, o.rot ? o.rot.pitch : 0);
   const g = o.g;
   gl.uniform1i(U(e,'uMode'), g.mode || 0);
   setVec(e,'uA',g.A); setVec(e,'uB',g.B); setVec(e,'uC',g.C); setVec(e,'uD',g.D);
@@ -1493,7 +1544,7 @@ function t3Use(o, X, Y, R, a){
   if (T3.state !== 'ready' || o.k !== 'craft') return false;
   const md = T3.models[o.g.mode || 0];
   if (!md || !md.ready || R < 1.2) return false;
-  T3.draws.push({md, X, Y, R, a, mode: o.g.mode || 0});
+  T3.draws.push({md, X, Y, R, a, mode: o.g.mode || 0, rot: o.rot});
   return true;
 }
 function t3Render(time){
@@ -1505,12 +1556,12 @@ function t3Render(time){
   if (!T3.draws.length) { if (T3.drawn) { R3.clear(); T3.drawn = false; } return; }
   let big = 1, main = T3.draws[0];
   for (const d of T3.draws) {
-    const {md, X, Y, R, mode} = d;
+    const {md, X, Y, R, mode} = d, uy = d.rot ? d.rot.yaw : 0, up = d.rot ? d.rot.pitch : 0;
     md.holder.visible = true;
     md.holder.position.set(X - W/2, H/2 - Y, 0);
     md.holder.scale.setScalar(R);
-    if (mode === 0) md.spin.rotation.set(0.07 + 0.03*Math.sin(time*0.21), Math.PI + 0.38 + 0.14*Math.sin(time*0.13), 0.035*Math.sin(time*0.17));
-    else md.spin.rotation.set(0.32, Math.PI/2 + 0.06*Math.sin(time*0.04), 0.02);
+    if (mode === 0) md.spin.rotation.set(0.07 + 0.03*Math.sin(time*0.21) + up, Math.PI + 0.38 + 0.14*Math.sin(time*0.13) + uy, 0.035*Math.sin(time*0.17));
+    else md.spin.rotation.set(0.32 + up, Math.PI/2 + 0.06*Math.sin(time*0.04) + uy, 0.02);
     if (R > big) { big = R; main = d; }
   }
   cam.left = -W/2; cam.right = W/2; cam.top = H/2; cam.bottom = -H/2;
@@ -1524,6 +1575,19 @@ function t3Render(time){
   T3.draws.length = 0;
 }
 
+/* Drehen per Ziehen: Planeten, Monde, Kleinkörper, Sterne und die 3D-Modelle */
+const ROT = new Set(['craft','rock','planet','star']);
+let hitList = [], hitLast = [], hoverJ = -1;
+OBJ.forEach(o => { if (ROT.has(o.k)) o.rot = {yaw: 0, pitch: 0, vy: 0, vp: 0}; });
+function hitAt(x, y){
+  let best = -1, br = 1e9;
+  for (const [cx, cy, cr, j] of hitLast) { const d = Math.hypot(x - cx, y - cy); if (d < cr && cr < br) { best = j; br = cr; } }
+  return best;
+}
+function spinStep(dt){
+  for (const o of OBJ) { const r = o.rot; if (!r || (drag && drag.rot === o)) continue;
+    if (Math.abs(r.vy) > .001 || Math.abs(r.vp) > .001) { r.yaw += r.vy*dt; r.pitch = clamp(r.pitch + r.vp*dt, -1.2, 1.2); const k = Math.exp(-dt*2.5); r.vy *= k; r.vp *= k; } }
+}
 let lastR = 0;
 function render(time){
   const kk = clamp((time - (lastR || time))*10, 0, 1); lastR = time;
@@ -1533,6 +1597,7 @@ function render(time){
   const s = VM / w;
   const T = reduce ? 0 : time;
   const labels = [], marks = [], discs = [];
+  hitList = [];
 
   if (gl) {
     gl.viewport(0, 0, GW, GH);
@@ -1559,6 +1624,7 @@ function render(time){
 
     const dpx = 2*R;
     if (R > 4) discs.push([X, Y, R*(o.k === 'star' ? 1.05 : o.lx ? o.lx*.9 : 1), j]);
+    if (ROT.has(o.k) && R > 12) hitList.push([X, Y, R*(o.k === 'craft' ? .9 : 1), j]);
     let la = smooth(5, 30, dpx) * clamp((VM*.9 - dpx)/(VM*.3), 0, 1) * a * (1 - smooth(1.15, 1.75, Math.abs(j - t)));
     if (X < 0 || X > W) la = 0;
     if (la > .02) {
@@ -1578,6 +1644,7 @@ function render(time){
   }
 
   t3Render(T);
+  hitLast = hitList;
   const od = ov.width / W;
   octx.setTransform(od, 0, 0, od, 0, 0);
   octx.clearRect(0, 0, W, H);
@@ -1596,6 +1663,7 @@ function render(time){
     octx.globalAlpha = la*o.blk;
     octx.font = FONT_LAB; octx.fillStyle = '#e1e5f2'; octx.fillText(o.n, x, y);
     octx.font = FONT_MONO; octx.fillStyle = '#8a92aa'; octx.fillText(fmtLen(o.d), x, y + 20);
+    if (j === hoverJ) { octx.fillStyle = '#f2c27c'; octx.fillText('↻ Ziehen zum Drehen', x, y + 38); }
     if (act > .01) { const nw = textW(o.n, FONT_LAB)*act; octx.globalAlpha = la*o.blk*act; octx.fillStyle = '#f2c27c'; octx.fillRect(x - nw/2, y + 5, nw, 1.5); }
   }
   octx.textAlign = 'left';
@@ -1631,6 +1699,60 @@ const pos = L => (L - LMIN)/(LMAX - LMIN);
   OBJ.forEach((o, j) => { const d = document.createElement('div'); d.className = 'odot'; d.style.left = pos(FL[j])*100 + '%'; dots.appendChild(d); o.dotEl = d; });
 })();
 
+/* Zusammensetzung anzeigen */
+const COMP_COL = ['#f2c27c','#e39a72','#c58fb8','#93b4ff','#6a7aa6','#4a5370'];
+let compOpen = false, compTab = 0, compObj = null;
+const nfc2 = new Intl.NumberFormat('de-DE', {maximumFractionDigits: 3});
+function formula(el, fm){
+  el.textContent = '';
+  for (const part of fm.match(/\d+|\D+/g)) { if (/^\d+$/.test(part)) { const sb = document.createElement('sub'); sb.textContent = part; el.appendChild(sb); } else el.appendChild(document.createTextNode(part)); }
+}
+function compShow(o){
+  const data = COMP[o.n], box = $('comp');
+  compObj = o;
+  if (!data) { box.hidden = true; panel.classList.remove('comp-open'); return; }
+  box.hidden = false; compTab = 0;
+  $('compBtn').querySelector('span').textContent = data.length > 1 || data[0].t === 'Atmosphäre' ? 'Zusammensetzung · ' + (data.length > 1 ? data.length + ' Schichten' : data[0].t) : 'Zusammensetzung';
+  compRender();
+}
+function compRender(){
+  const o = compObj, data = o && COMP[o.n]; if (!data) return;
+  $('compBtn').setAttribute('aria-expanded', compOpen);
+  $('compBody').hidden = !compOpen;
+  panel.classList.toggle('comp-open', compOpen);
+  if (!compOpen) return;
+  const tabs = $('compTabs'); tabs.textContent = '';
+  if (data.length > 1) data.forEach((d, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.role = 'tab'; b.textContent = d.t; b.setAttribute('aria-selected', i === compTab);
+    b.addEventListener('click', () => { compTab = i; compRender(); }); tabs.appendChild(b);
+  });
+  const d = data[compTab];
+  $('compUnit').textContent = d.u;
+  const rows = d.r.slice(), sum = rows.reduce((a, r) => a + r[2], 0);
+  if (sum < 99.5) rows.push(['…', 'Weitere', +(100 - sum).toFixed(2)]);
+  const bar = $('compBar'), list = $('compRows');
+  bar.textContent = ''; list.textContent = '';
+  rows.forEach((r, i) => {
+    const col = r[0] === '…' ? '#3a4058' : COMP_COL[i % COMP_COL.length];
+    const seg = document.createElement('i'); seg.style.background = col; bar.appendChild(seg);
+    const li = document.createElement('li');
+    const fm = document.createElement('span'); fm.className = 'fm'; formula(fm, r[0]);
+    const nm = document.createElement('span'); nm.className = 'nm';
+    const sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = col; nm.append(sw, r[1]);
+    const pc = document.createElement('span'); pc.className = 'pc'; pc.dataset.v = r[2]; pc.textContent = reduce ? nfc2.format(r[2]) + ' %' : '0 %';
+    li.append(fm, nm, pc); list.appendChild(li);
+    setTimeout(() => { seg.style.width = Math.max(r[2], 0.6) + '%'; li.classList.add('in'); }, reduce ? 0 : 40 + i*70);
+  });
+  if (reduce) return;
+  const t0 = performance.now();
+  (function count(now){
+    const k = Math.min(1, (now - t0)/900), e = 1 - Math.pow(1 - k, 3);
+    list.querySelectorAll('.pc').forEach(el => { const v = +el.dataset.v; el.textContent = nfc2.format(k < 1 ? +(v*e).toFixed(v < 1 ? 3 : 1) : v) + ' %'; });
+    if (k < 1) requestAnimationFrame(count);
+  })(t0);
+}
+$('compBtn').addEventListener('click', () => { compOpen = !compOpen; compRender(); measureAvoid(); });
+
 let focus = -1, lastFov = '', lastBar = '';
 function setFocus(j){
   if (j === focus) return;
@@ -1639,6 +1761,7 @@ function setFocus(j){
   $('idx').textContent = String(j + 1).padStart(2, '0') + ' / ' + N;
   $('cat').textContent = o.cat; $('name').textContent = o.n;
   $('size').textContent = fmtLen(o.d); $('size2').textContent = fmt2(o.d); $('desc').textContent = o.t;
+  compShow(o);
   const more = $('more'); more.textContent = '';
   const link = (href, label, title) => { const a = document.createElement('a'); a.href = href; a.target = '_blank'; a.rel = 'noopener'; a.textContent = label + ' ↗'; a.title = title; more.appendChild(a); };
   link(wikiURL(o), 'Wikipedia', o.n + ' bei Wikipedia');
@@ -1683,15 +1806,42 @@ addEventListener('wheel', e => {
 }, {passive: false});
 
 let drag = null;
-ov.addEventListener('pointerdown', e => { drag = {x: e.clientX, y: e.clientY, tm: performance.now(), v: 0}; ov.setPointerCapture(e.pointerId); vel = 0; userMove(); });
+ov.addEventListener('pointerdown', e => {
+  const j = hitAt(e.clientX, e.clientY);
+  drag = {x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, tm: performance.now(), v: 0, hit: j, touch: e.pointerType !== 'mouse', mode: null, rot: null};
+  if (j >= 0 && !drag.touch) { drag.mode = 'rot'; drag.rot = OBJ[j].rot; drag.rot.vy = drag.rot.vp = 0; ov.style.cursor = 'grabbing'; }
+  ov.setPointerCapture(e.pointerId); vel = 0; userMove();
+});
 ov.addEventListener('pointermove', e => {
-  if (!drag) return;
+  if (!drag) {
+    const j = e.pointerType === 'mouse' ? hitAt(e.clientX, e.clientY) : -1;
+    if (j !== hoverJ) { hoverJ = j; ov.style.cursor = j >= 0 ? 'grab' : ''; }
+    return;
+  }
+  if (!drag.mode) {
+    const mx = e.clientX - drag.x0, my = e.clientY - drag.y0;
+    if (Math.hypot(mx, my) < 6) return;
+    if (drag.hit >= 0 && Math.abs(mx) > Math.abs(my)) { drag.mode = 'rot'; drag.rot = OBJ[drag.hit].rot; drag.rot.vy = drag.rot.vp = 0; }
+    else drag.mode = 'zoom';
+  }
+  if (drag.mode === 'rot') {
+    const now = performance.now(), dt = Math.max(1, now - drag.tm)/1000, r = drag.rot;
+    const dy = (e.clientX - drag.x)*.012, dp = drag.touch ? 0 : (e.clientY - drag.y)*.012;
+    r.yaw += dy; r.pitch = clamp(r.pitch + dp, -1.2, 1.2);
+    r.vy = r.vy*.5 + dy/dt*.5; r.vp = r.vp*.5 + dp/dt*.5;
+    drag.x = e.clientX; drag.y = e.clientY; drag.tm = now;
+    return;
+  }
   const d = (drag.y - e.clientY) + (drag.x - e.clientX), now = performance.now(), dt = Math.max(1, now - drag.tm);
   const dT = d * (e.pointerType === 'touch' ? .009 : .006);
   targetT = clamp(targetT + dT, 0, N-1);
   drag.v = drag.v*.6 + (dT/dt*1000)*.4; drag.x = e.clientX; drag.y = e.clientY; drag.tm = now;
 });
-const endDrag = () => { if (drag && performance.now() - drag.tm < 80) vel = clamp(drag.v, -6, 6); drag = null; };
+const endDrag = () => {
+  if (drag && drag.mode === 'rot') { const r = drag.rot; if (performance.now() - drag.tm > 80) r.vy = r.vp = 0; r.vy = clamp(r.vy, -8, 8); r.vp = clamp(r.vp, -8, 8); ov.style.cursor = hoverJ >= 0 ? 'grab' : ''; }
+  else if (drag && drag.mode === 'zoom' && performance.now() - drag.tm < 80) vel = clamp(drag.v, -6, 6);
+  drag = null;
+};
 ov.addEventListener('pointerup', endDrag); ov.addEventListener('pointercancel', endDrag);
 
 addEventListener('keydown', e => {
@@ -1741,6 +1891,7 @@ function frame(now){
     targetT += dt*.42*(.2 + .8*Math.pow(Math.sin(Math.PI*fr), 2));
     if (targetT >= N-1) { targetT = N-1; setTour(false); }
   }
+  spinStep(dt);
   if (Math.abs(vel) > .002) { targetT = clamp(targetT + vel*dt, 0, N-1); vel *= Math.exp(-dt*3.5); } else vel = 0;
   t += (targetT - t) * (reduce ? 1 : 1 - Math.exp(-dt*6.5));
   if (Math.abs(targetT - t) < 1e-5) t = targetT;
