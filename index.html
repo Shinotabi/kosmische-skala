@@ -1,0 +1,1446 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kosmische Skala</title>
+<meta name="description" content="Maßstabsgetreuer Zoom durchs All: vom Astronauten bis zum Rand des beobachtbaren Universums, 40 Objekte über 27 Größenordnungen.">
+<meta name="theme-color" content="#04050a">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Kosmische Skala">
+<meta property="og:description" content="Maßstabsgetreuer Zoom durchs All: vom Astronauten bis zum Rand des beobachtbaren Universums, 40 Objekte über 27 Größenordnungen.">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%227%22%20fill%3D%22%2304050a%22%2F%3E%3Ccircle%20cx%3D%2216%22%20cy%3D%2216%22%20r%3D%226%22%20fill%3D%22%23f2c27c%22%2F%3E%3Ccircle%20cx%3D%2216%22%20cy%3D%2216%22%20r%3D%2211%22%20fill%3D%22none%22%20stroke%3D%22%2393b4ff%22%20stroke-opacity%3D%22.5%22%2F%3E%3C%2Fsvg%3E">
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link rel="stylesheet" href="https://fonts.bunny.net/css?family=fraunces:300,300i,400|hanken-grotesk:400,500,600|jetbrains-mono:400,500&display=swap">
+<style>
+/* Layout: ein Vollbild-WebGL-Fenster ins All; links unten die Objektkarte, unten ein logarithmisches Lineal von 1 m bis 10²⁷ m. */
+:root{
+  --void:#04050a;
+  --ink:#e8ebf4;
+  --dim:#8a92aa;
+  --faint:rgba(150,165,210,.22);
+  --sun:#f2c27c;
+  --cold:#93b4ff;
+  --display:"Fraunces", "Iowan Old Style", Georgia, serif;
+  --body:"Hanken Grotesk", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{margin:0;background:var(--void);color:var(--ink);font-family:var(--body);overflow:hidden;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+#gl,#ov{position:fixed;inset:0;width:100%;height:100%;display:block}
+#gl{pointer-events:none}
+#ov{touch-action:none;cursor:grab}
+#ov:active{cursor:grabbing}
+.veil{position:fixed;inset:0;pointer-events:none;background:
+  radial-gradient(120% 90% at 60% 45%,transparent 55%,rgba(2,3,8,.7) 100%),
+  linear-gradient(90deg,rgba(3,4,9,.7) 0%,rgba(3,4,9,0) 38%)}
+
+.top{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;
+  padding:calc(env(safe-area-inset-top,0px) + 22px) 32px 0;pointer-events:none}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+.brand i{width:9px;height:9px;border-radius:50%;background:var(--sun);box-shadow:0 0 12px var(--sun)}
+.readout{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.readout .lbl{display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+.readout #fov{font-size:15px;color:var(--ink)}
+.readout #pow{display:block;font-size:11px;color:var(--cold);margin-top:3px}
+
+.panel{position:fixed;left:32px;bottom:150px;width:min(410px,calc(100% - 64px));pointer-events:none}
+.eyebrow{display:flex;gap:12px;align-items:center;font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.chip{padding:3px 8px 2px;border:1px solid var(--faint);border-radius:999px;letter-spacing:.12em;color:var(--sun)}
+.panel h1{font-family:var(--display);font-weight:300;font-variation-settings:"opsz" 144;font-size:clamp(38px,5.2vw,68px);line-height:.98;letter-spacing:-.025em;margin:14px 0 14px;text-wrap:balance}
+.size{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;font-family:var(--mono);font-variant-numeric:tabular-nums}
+#size{font-size:17px;color:var(--sun)}
+#size2{font-size:12px;color:var(--dim)}
+.panel p{font-size:15.5px;line-height:1.6;color:#c3c9da;margin:14px 0 0;max-width:38ch;text-wrap:pretty}
+.panel.swap .anim{animation:rise .55s cubic-bezier(.2,.7,.2,1) both}
+.panel.swap .anim:nth-child(2){animation-delay:.04s}
+.panel.swap .anim:nth-child(3){animation-delay:.08s}
+.panel.swap .anim:nth-child(4){animation-delay:.12s}
+.panel.swap .anim:nth-child(5){animation-delay:.16s}
+.more{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:16px}
+.more a{pointer-events:auto;font:500 12px var(--mono);letter-spacing:.04em;color:var(--ink);text-decoration:none;padding-bottom:3px;border-bottom:1px solid rgba(242,194,124,.45);transition:color .2s,border-color .2s}
+.more a:hover{color:var(--sun);border-color:var(--sun)}
+.more a:focus-visible{outline:2px solid var(--sun);outline-offset:3px;border-radius:2px}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.scalebar{position:fixed;right:32px;bottom:150px;display:flex;flex-direction:column;align-items:flex-end;gap:7px;pointer-events:none;font-family:var(--mono);font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
+.scalebar .bar{height:7px;border:1px solid rgba(232,235,244,.7);border-top:0;transition:width .12s linear}
+
+.dock{position:fixed;left:0;right:0;bottom:0;display:flex;align-items:center;gap:28px;padding:0 32px calc(env(safe-area-inset-bottom,0px) + 26px)}
+.controls{display:flex;gap:8px;flex:none}
+.controls button{appearance:none;border:1px solid var(--faint);background:rgba(10,13,24,.6);color:var(--ink);height:40px;min-width:40px;border-radius:20px;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;font:500 13px var(--body);cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:border-color .2s,background .2s}
+.controls button:hover{border-color:rgba(242,194,124,.6)}
+.controls button:focus-visible,.rail:focus-visible{outline:2px solid var(--sun);outline-offset:3px}
+.controls button[aria-pressed="true"]{background:rgba(242,194,124,.14);border-color:var(--sun);color:var(--sun)}
+.controls svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#tour{padding:0 16px 0 13px}
+
+.rail{position:relative;flex:1;min-width:0;height:46px;cursor:pointer;touch-action:none}
+.rail .track{position:absolute;left:0;right:0;top:15px;height:1px;background:var(--faint)}
+.tick{position:absolute;top:11px;width:1px;height:9px;background:var(--faint)}
+.tick.maj{height:13px;top:9px;background:rgba(150,165,210,.45)}
+.tick span{position:absolute;top:18px;left:0;transform:translateX(-50%);font-family:var(--mono);font-size:10px;color:var(--dim);white-space:nowrap}
+.odot{position:absolute;top:12px;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:#59617a;transition:background .25s,transform .25s}
+.odot.on{background:var(--sun);transform:scale(1.5);box-shadow:0 0 10px var(--sun)}
+.cursor{position:absolute;top:0;height:31px;width:0;pointer-events:none}
+.cursor::before{content:"";position:absolute;left:-1px;top:0;width:2px;height:31px;background:var(--sun);border-radius:1px;box-shadow:0 0 12px rgba(242,194,124,.8)}
+.tip{position:absolute;bottom:40px;transform:translateX(-50%);padding:4px 9px;border-radius:6px;background:rgba(12,15,28,.92);border:1px solid var(--faint);font:500 12px var(--body);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s}
+.tip.show{opacity:1}
+
+.hint{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);padding:8px 14px;border-radius:999px;background:rgba(12,15,28,.7);border:1px solid var(--faint);
+  font:500 13px var(--body);color:var(--ink);white-space:nowrap;pointer-events:none;transition:opacity .8s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.hint kbd{font-family:var(--mono);font-size:11px;padding:1px 5px;border:1px solid var(--faint);border-radius:4px;color:var(--dim)}
+.hint.gone{opacity:0}
+.brandwrap{display:flex;flex-direction:column;gap:10px}
+.meta{display:flex;align-items:center;gap:8px;pointer-events:auto;font:500 11px var(--mono);letter-spacing:.06em;color:#5d6580}
+.meta button,.meta a{appearance:none;background:none;border:0;padding:2px 0;margin:0;color:var(--dim);font:inherit;letter-spacing:inherit;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:color .2s}
+.meta button:hover,.meta a:hover{color:var(--sun)}
+.meta button:focus-visible,.meta a:focus-visible,.imp-in .x:focus-visible{outline:2px solid var(--sun);outline-offset:3px;border-radius:2px}
+.meta svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+#imp{border:1px solid var(--faint);border-radius:14px;padding:0;background:rgba(10,13,24,.94);color:var(--ink);width:min(560px,calc(100% - 32px));max-height:min(82vh,760px);box-shadow:0 30px 80px rgba(0,0,0,.6)}
+#imp::backdrop{background:rgba(2,3,8,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.imp-in{position:relative;padding:28px 30px 30px;font-size:14px;line-height:1.6;color:#c3c9da}
+.imp-in h2{font-family:var(--display);font-weight:300;font-size:36px;letter-spacing:-.02em;color:var(--ink);margin:0 0 6px}
+.imp-in h3{font:500 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--sun);margin:22px 0 6px}
+.imp-in .lbl{font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.imp-in address{font-style:normal;color:var(--ink);margin:10px 0 14px}
+.imp-in p{margin:0 0 10px;max-width:60ch}
+.imp-in a{color:var(--ink);text-decoration-color:rgba(242,194,124,.6);text-underline-offset:3px}
+.imp-in .x{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:18px;border:1px solid var(--faint);background:none;color:var(--ink);cursor:pointer;display:grid;place-items:center}
+.imp-in .x svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+@media (max-width:760px){.imp-in{padding:24px 20px}.imp-in h2{font-size:30px}}
+.nogl{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);max-width:30ch;text-align:center;color:var(--dim);font-size:15px;line-height:1.5}
+
+@media (max-width:760px){
+  .top{padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 0}
+  .readout #fov{font-size:13px}
+  .panel{left:16px;right:16px;width:auto;bottom:132px}
+  .panel h1{font-size:34px;margin:10px 0}
+  .more{margin-top:10px}
+  .panel p{font-size:14px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .scalebar{right:16px;bottom:auto;top:calc(env(safe-area-inset-top,0px) + 70px)}
+  .dock{gap:12px;padding:0 16px calc(env(safe-area-inset-bottom,0px) + 14px);flex-wrap:wrap}
+  .controls{order:2;width:100%;justify-content:center}
+  .rail{order:1;flex-basis:100%}
+  .tick span{font-size:9px}
+  .tick:not(.lab) span{display:none}
+  .hint{display:none}
+  .veil{background:radial-gradient(120% 90% at 50% 35%,transparent 50%,rgba(2,3,8,.7) 100%),linear-gradient(0deg,rgba(3,4,9,.85) 0%,rgba(3,4,9,0) 50%)}
+}
+@media (prefers-reduced-motion:reduce){.panel.swap .anim{animation:none}.scalebar .bar{transition:none}}
+</style>
+</head>
+<body>
+
+
+<canvas id="gl" aria-hidden="true"></canvas>
+<div class="veil"></div>
+<canvas id="ov" role="img" aria-label="Maßstabsgetreue Darstellung von Objekten im All, vom Astronauten bis zum beobachtbaren Universum"></canvas>
+
+<header class="top">
+  <div class="brandwrap">
+    <div class="brand"><i></i><span>Kosmische Skala</span></div>
+    <nav class="meta" aria-label="Seiteninformationen">
+      <button type="button" id="impBtn">Impressum</button><span aria-hidden="true">·</span><a id="coffee" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM16 10h1.5a2.5 2.5 0 0 1 0 5H16M8 3.5c0 1.2 1 1.2 1 2.4M12 3.5c0 1.2 1 1.2 1 2.4"/></svg>Kaffee spendieren</a>
+    </nav>
+  </div>
+  <div class="readout"><span class="lbl">Bildbreite</span><span id="fov">–</span><span id="pow"></span></div>
+</header>
+
+<section class="panel" id="panel" aria-live="polite">
+  <div class="eyebrow anim"><span id="idx"></span><span class="chip" id="cat"></span></div>
+  <h1 class="anim" id="name"></h1>
+  <div class="size anim"><span id="size"></span><span id="size2"></span></div>
+  <p class="anim" id="desc"></p>
+  <div class="more anim" id="more"></div>
+</section>
+
+<div class="scalebar" aria-hidden="true"><span id="barlbl"></span><div class="bar" id="bar"></div></div>
+
+<dialog id="imp" aria-labelledby="impTitle">
+  <div class="imp-in">
+    <button type="button" class="x" id="impClose" aria-label="Impressum schließen"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <h2 id="impTitle">Impressum</h2>
+    <p class="lbl">Angaben gemäß § 5 DDG</p>
+    <address id="impAddr"></address>
+    <p><span class="lbl">E-Mail</span><br><span id="impMail"></span></p>
+    <h3>Inhalte und Links</h3>
+    <p>Die Texte und Größenangaben sind sorgfältig zusammengestellt, aber ohne Gewähr. Bei vielen Objekten sind die Werte Schätzungen der Forschung. Für die Inhalte verlinkter Seiten wie Wikipedia oder NASA sind deren Betreiber verantwortlich.</p>
+    <h3>Darstellungen</h3>
+    <p>Alle Himmelskörper werden live im Browser berechnet. Sie sind maßstabsgetreu in der Größe, Oberflächen und Farben sind aber künstlerische Annäherungen und keine Fotos.</p>
+    <h3>Datenschutz</h3>
+    <p>Diese Seite setzt keine Cookies und verwendet kein Tracking. Beim Aufruf verarbeitet der Webhoster technisch notwendige Daten wie IP-Adresse, Zeitpunkt und Browserkennung in Server-Logfiles, um die Seite auszuliefern und abzusichern (Art. 6 Abs. 1 lit. f DSGVO). Die Schriften werden über <span id="fontHost">Bunny Fonts (BunnyWay d.o.o., Slowenien)</span> geladen; dabei wird deine IP-Adresse an diesen Dienst übermittelt. Links zu Wikipedia, NASA und PayPal führen zu externen Anbietern, deren Datenschutzbestimmungen ab dem Aufruf gelten.</p>
+    <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung sowie ein Beschwerderecht bei einer Datenschutz-Aufsichtsbehörde. Verantwortlich ist die oben genannte Person.</p>
+  </div>
+</dialog>
+
+<div class="hint" id="hint">Scrollen, wischen oder <kbd>←</kbd> <kbd>→</kbd> zum Herauszoomen</div>
+
+<footer class="dock" id="dock">
+  <div class="controls">
+    <button id="prev" type="button" aria-label="Vorheriges Objekt"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <button id="tour" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" id="tourIcon"><path d="M8 5l11 7-11 7z"/></svg><span id="tourLbl">Tour</span></button>
+    <button id="next" type="button" aria-label="Nächstes Objekt"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  </div>
+  <div class="rail" id="rail" role="slider" tabindex="0" aria-label="Größenskala" aria-valuemin="1" aria-valuemax="40" aria-valuenow="1">
+    <div class="track"></div><div id="ticks"></div><div id="dots"></div><div class="cursor" id="cursor"></div><div class="tip" id="tip"></div>
+  </div>
+</footer>
+
+<script>
+(() => {
+const TAU = Math.PI * 2, LY = 9.4607e15, AU = 1.495978707e11, RSUN = 6.957e8;
+
+/* ======================================================================
+   Objekte, aufsteigend nach Größe. g = Parameter für den jeweiligen Shader.
+   ====================================================================== */
+const OBJ = [
+  {n:'Astronaut', d:1.9, k:'craft', cat:'Raumfahrt', dot:'#f2f2f2', g:{mode:0},
+   t:'Ein Mensch im Raumanzug für Außeneinsätze. Der Anzug wiegt rund 130 kg und ist ein kleines Raumschiff mit eigener Luft, Kühlung und Funk.'},
+  {n:'Internationale Raumstation', d:109, k:'craft', cat:'Raumfahrt', dot:'#cdd3dc', g:{mode:1},
+   t:'Die ISS ist etwa so breit, wie ein Fußballfeld lang ist. Sie umrundet die Erde in rund 400 km Höhe einmal alle 90 Minuten.'},
+  {n:'Bennu', d:490, k:'rock', cat:'Asteroid', dot:'#77716c', g:{mode:0, A:[.27,.255,.24], Q:[.45,1,.045,0]},
+   t:'Ein erdnaher Asteroid in Kreiselform. Die Sonde OSIRIS-REx sammelte 2020 Gestein von seiner Oberfläche und brachte es 2023 zur Erde.'},
+  {n:'Ryugu', d:900, k:'rock', cat:'Asteroid', dot:'#6b6560', g:{mode:0, A:[.21,.2,.19], Q:[.5,.85,.06,0]},
+   t:'Auch Ryugu ist ein locker gebundener Haufen aus Geröll. Die japanische Sonde Hayabusa2 brachte Ende 2020 Proben von ihm zur Erde.'},
+  {n:'Komet 67P', d:4100, k:'rock', cat:'Komet', dot:'#77716c', g:{mode:1, A:[.25,.24,.23], Q:[.3,.55,.07,0]},
+   t:'Tschurjumow-Gerassimenko besteht aus zwei verbundenen Brocken. 2014 landete hier mit Philae zum ersten Mal eine Sonde auf einem Kometen.'},
+  {n:'Deimos', d:12400, k:'rock', cat:'Mond', dot:'#a39582', g:{mode:2, A:[.5,.45,.39], Q:[.8,.12,.045,0]},
+   t:'Der kleinere der beiden Marsmonde. Von der Marsoberfläche aus wirkt er kaum größer als ein heller Stern.'},
+  {n:'Phobos', d:22500, k:'rock', cat:'Mond', dot:'#8d8077', g:{mode:2, A:[.4,.36,.33], Q:[1,.08,.06,1]},
+   t:'Phobos kreist so nah um den Mars, dass er ihm jedes Jahrhundert knapp zwei Meter näher kommt. In einigen zehn Millionen Jahren wird er zerbrechen.'},
+  {n:'Vesta', d:525e3, k:'rock', cat:'Asteroid', dot:'#a9a39c', g:{mode:3, A:[.55,.52,.49], Q:[1,0,.03,0]},
+   t:'Der hellste Asteroid am Himmel. Ein Einschlagbecken an seinem Südpol ist mit rund 500 km fast so breit wie Vesta selbst.'},
+  {n:'Ceres', d:939e3, k:'planet', cat:'Zwergplanet', dot:'#8d8984',
+   g:{mode:0, A:[.42,.4,.38], B:[.3,.29,.28], C:[.95,.95,.95], Q:[1,.4,3,0], axis:[.05,.1,.01]},
+   t:'Der größte Körper im Asteroidengürtel und ein Zwergplanet. Die hellen Flecken im Krater Occator sind Ablagerungen aus Salz.'},
+  {n:'Pluto', d:2377e3, k:'planet', cat:'Zwergplanet', dot:'#d8b892',
+   g:{mode:0, A:[.76,.6,.46], B:[.33,.18,.11], C:[.95,.91,.85], Q:[.5,.8,2,0], axis:[.2,-.25,.006]},
+   t:'Seit 2006 zählt Pluto als Zwergplanet. Sein helles „Herz“ ist eine weite Ebene aus gefrorenem Stickstoff.'},
+  {n:'Mond', d:3474e3, k:'planet', cat:'Mond', dot:'#c9c7c2',
+   g:{mode:0, A:[.62,.61,.59], B:[.27,.27,.28], C:[.8,.8,.78], Q:[1.1,1,0,0], axis:[.03,.05,.004]},
+   t:'Der Mond ist etwas mehr als ein Viertel so breit wie die Erde. Sein Licht braucht gut eine Sekunde bis zu uns.'},
+  {n:'Merkur', d:4879e3, k:'planet', cat:'Planet', dot:'#a8a097',
+   g:{mode:0, A:[.55,.52,.49], B:[.43,.41,.39], C:[.75,.73,.7], Q:[1.3,.4,0,0], axis:[0,0,.006]},
+   t:'Der kleinste und sonnennächste Planet. Tagsüber wird es über 400 °C heiß, nachts kühlt er auf rund −180 °C ab.'},
+  {n:'Mars', d:6779e3, k:'planet', cat:'Planet', dot:'#d27a4f',
+   g:{mode:0, A:[.72,.36,.2], B:[.38,.19,.11], C:[.86,.56,.36], Q:[.35,.9,1,0], axis:[.44,.2,.01], haze:.25, atmo:[.95,.62,.45]},
+   t:'Auf dem Mars steht Olympus Mons, der höchste Vulkan im Sonnensystem. Er ragt rund 22 km über seine Umgebung.'},
+  {n:'Venus', d:12104e3, k:'planet', cat:'Planet', dot:'#f0d8a4',
+   g:{mode:2, A:[.93,.82,.6], B:[.78,.64,.42], C:[.99,.94,.82], Q:[0,0,0,0], axis:[.05,.05,.004], haze:.8, atmo:[1,.9,.7]},
+   t:'Fast so groß wie die Erde. Unter ihrer dichten Hülle aus Kohlendioxid ist es mit rund 465 °C heißer als auf dem Merkur.'},
+  {n:'Erde', d:12742e3, k:'planet', cat:'Planet', dot:'#7fb0ff',
+   g:{mode:1, A:[0,0,0], Q:[0,0,0,0], axis:[.41,.15,.012], haze:.55, atmo:[.35,.6,1]},
+   t:'Unser Planet. Jeder Mensch, der je gelebt hat, lebte hier.'},
+  {n:'Neptun', d:49244e3, k:'planet', cat:'Planet', dot:'#5f86f0',
+   g:{mode:4, A:[.22,.36,.85], B:[.14,.25,.68], C:[.88,.92,1], D:[.06,.1,.35], Q:[14,.35,1,.55], axis:[.3,.15,.01], haze:.7, atmo:[.5,.66,1]},
+   t:'Der äußerste Planet. Hier wehen die schnellsten Winde des Sonnensystems mit über 2.000 km/h.'},
+  {n:'Uranus', d:50724e3, k:'planet', cat:'Planet', dot:'#a9e0e3',
+   g:{mode:4, A:[.62,.85,.88], B:[.54,.78,.82], C:[.82,.96,.96], D:[0,0,0], Q:[10,.15,0,.06], axis:[1.35,.3,.006], haze:.8, atmo:[.75,.95,.95], ring:[1.6,2.02,.8,1]},
+   t:'Seine Rotationsachse ist um 98 Grad gekippt. Deshalb rollt Uranus fast liegend um die Sonne.'},
+  {n:'Saturn', d:116460e3, k:'planet', lx:2.3, cat:'Planet', dot:'#e6cf9d',
+   g:{mode:3, A:[.9,.8,.6], B:[.74,.6,.4], C:[.96,.91,.77], D:[0,0,0], Q:[34,.45,0,.6], axis:[-.38,.42,.008], haze:.3, atmo:[.95,.86,.66], ring:[1.24,2.27,1,0]},
+   t:'Seine Hauptringe sind gut 270.000 km breit, aber an vielen Stellen nur etwa zehn Meter dick.'},
+  {n:'Jupiter', d:139820e3, k:'planet', cat:'Planet', dot:'#e3c6a2',
+   g:{mode:3, A:[.88,.76,.62], B:[.6,.4,.26], C:[.97,.93,.86], D:[.74,.33,.2], Q:[40,.8,1,1], axis:[.05,.06,.006], haze:.3, atmo:[.95,.88,.75]},
+   t:'Der größte Planet. Im Großen Roten Fleck, einem Sturm, der seit Jahrhunderten tobt, hätte die Erde Platz.'},
+  {n:'Sonne', d:1.3927e9, k:'star', T:5772, cat:'Stern', dot:'#ffd27a', g:{Q:[0,1,60,1]},
+   t:'Die Sonne enthält 99,8 % der Masse des Sonnensystems. Rund 1,3 Millionen Erden würden in sie hineinpassen.'},
+  {n:'Sirius A', d:1.711*2*RSUN, k:'star', T:9940, cat:'Stern', dot:'#dfe9ff', g:{Q:[0,1.25,70,0]},
+   t:'Der hellste Stern am Nachthimmel, 8,6 Lichtjahre entfernt. Er ist heißer als die Sonne und fast doppelt so groß.'},
+  {n:'Arktur', d:25.4*2*RSUN, k:'star', T:4290, cat:'Roter Riese', dot:'#ffb469', g:{Q:[0,.9,22,0]},
+   t:'Ein Roter Riese im Sternbild Bärenhüter. Unsere Sonne wird sich in etwa fünf Milliarden Jahren ähnlich aufblähen.'},
+  {n:'Aldebaran', d:44*2*RSUN, k:'star', T:3910, cat:'Roter Riese', dot:'#ff9d55', g:{Q:[0,.9,16,0]},
+   t:'Das orange Auge im Sternbild Stier. Die Raumsonde Pioneer 10 fliegt grob in seine Richtung und käme in etwa zwei Millionen Jahren dort an.'},
+  {n:'Rigel', d:79*2*RSUN, k:'star', T:12100, cat:'Blauer Überriese', dot:'#c4d6ff', g:{Q:[0,1.5,36,0]},
+   t:'Der helle Fuß des Orion, rund 860 Lichtjahre entfernt. Er leuchtet etwa 120.000-mal so stark wie die Sonne.'},
+  {n:'Erdbahn', d:2*AU, k:'orbits', cat:'Bahn', dot:'#8fb3ff',
+   orbits:[{r:.387,au:.387,a:2.2,l:'Merkur',c:[.75,.72,.68]},{r:.723,au:.723,a:4.1,l:'Venus',c:[1,.88,.62]},{r:1,au:1,a:-.75,l:'Erde',c:[.5,.72,1],hi:1}],
+   t:'Der Kreis, den die Erde in einem Jahr um die Sonne zieht. Ihr Abstand zur Sonne, rund 150 Millionen km, heißt Astronomische Einheit.'},
+  {n:'Beteigeuze', d:764*2*RSUN, k:'star', T:3600, cat:'Roter Überriese', dot:'#ff7a3d', g:{Q:[1,.8,0,0]},
+   t:'An der Stelle der Sonne würde Beteigeuze bis hinter den Asteroidengürtel reichen. Irgendwann wird sie als Supernova explodieren.'},
+  {n:'Stephenson 2-18', d:2150*2*RSUN, k:'star', T:3200, cat:'Roter Überriese', dot:'#f0603a', g:{Q:[1,.8,0,0]},
+   t:'Einer der größten bekannten Sterne, allerdings mit unsicherer Größe. An der Stelle der Sonne würde er bis etwa zur Saturnbahn reichen.'},
+  {n:'Sonnensystem', d:2*30.07*AU, k:'orbits', belt:1, cat:'Bahn', dot:'#8fb3ff',
+   orbits:[{au:.387,a:1,c:[.75,.72,.68]},{au:.723,a:2,c:[1,.88,.62]},{au:1,a:3,c:[.5,.72,1]},{au:1.524,a:4,c:[1,.55,.35]},{au:5.2,a:.9,l:'Jupiter',c:[1,.85,.65]},{au:9.58,a:3.6,l:'Saturn',c:[1,.9,.65]},{au:19.2,a:5.4,l:'Uranus',c:[.65,.95,.95]},{au:30.07,a:-.7,l:'Neptun',c:[.45,.6,1],hi:1}],
+   t:'Die Bahnen aller acht Planeten. Sonnenlicht braucht gut vier Stunden, bis es den Neptun erreicht.'},
+  {n:'Heliosphäre', d:240*AU, k:'helio', cat:'Grenze', dot:'#8fb3ff',
+   marks:[{x:0,y:0,l:'Sonne'},{x:1.42*Math.cos(.6),y:1.42*Math.sin(.6),l:'Voyager 1'},{x:1.18*Math.cos(-2.4),y:1.18*Math.sin(-2.4),l:'Voyager 2'}],
+   t:'Die Blase, die der Sonnenwind ins interstellare Gas bläst. Voyager 1 hat sie 2012 verlassen und ist heute rund 170 AE von der Sonne entfernt.'},
+  {n:'Oortsche Wolke', d:200000*AU, k:'oort', cat:'Kometenwolke', dot:'#bcd0ff',
+   marks:[{x:0,y:0,l:'Sonne'}],
+   t:'Eine vermutete Hülle aus Billionen eisiger Körper, aus der langperiodische Kometen kommen. Ihr äußerer Rand liegt vielleicht 1,5 Lichtjahre von der Sonne entfernt.'},
+  {n:'Nächster Stern', d:2*4.24*LY, k:'proxima', cat:'Nachbarschaft', dot:'#ffd27a',
+   marks:[{x:0,y:0,l:'Sonne'},{x:Math.cos(.7),y:Math.sin(.7),l:'Proxima Centauri'}],
+   t:'Ein Kreis mit dem Abstand zum nächsten Stern: 4,24 Lichtjahre bis Proxima Centauri. Eine heutige Raumsonde wäre Zehntausende Jahre unterwegs.'},
+  {n:'Orionnebel', d:24*LY, k:'nebula', cat:'Nebel', dot:'#ff8fb0',
+   t:'Eine Kinderstube für Sterne, rund 1.340 Lichtjahre entfernt. Mit bloßem Auge ist er als heller Fleck im Schwert des Orion zu sehen.'},
+  {n:'Omega Centauri', d:150*LY, k:'cluster', cat:'Kugelsternhaufen', dot:'#ffe6c0',
+   t:'Der größte Kugelsternhaufen der Milchstraße mit rund zehn Millionen Sternen. Vermutlich ist er der Kern einer verschluckten Zwerggalaxie.'},
+  {n:'Milchstraße', d:100000*LY, k:'galaxy', cat:'Galaxie', dot:'#e9e2ff', g:{mode:0},
+   marks:[{x:.52*Math.cos(2.5),y:.52*Math.sin(2.5),l:'Sonne'}],
+   t:'Unsere Galaxie mit 100 bis 400 Milliarden Sternen. Die Sonne liegt rund 26.000 Lichtjahre vom Zentrum entfernt und braucht für eine Runde etwa 230 Millionen Jahre.'},
+  {n:'Andromeda', d:220000*LY, k:'galaxy', cat:'Galaxie', dot:'#ffe9d0', g:{mode:1},
+   t:'Die nächste große Galaxie, 2,5 Millionen Lichtjahre entfernt. In einigen Milliarden Jahren könnte sie mit der Milchstraße verschmelzen.'},
+  {n:'Lokale Gruppe', d:10e6*LY, k:'galaxy', cat:'Galaxiengruppe', dot:'#d8dcff', g:{mode:2},
+   marks:[{x:-.25,y:.1,l:'Milchstraße'},{x:.25,y:-.05,l:'Andromeda'},{x:.36,y:.1,l:'Dreiecksgalaxie'}],
+   t:'Über 80 Galaxien, die von ihrer gegenseitigen Schwerkraft zusammengehalten werden. Die Milchstraße und Andromeda sind die beiden größten.'},
+  {n:'Virgo-Superhaufen', d:110e6*LY, k:'web', cat:'Superhaufen', dot:'#c8cfff', g:{mode:0},
+   marks:[{x:0,y:0,l:'Virgohaufen'},{x:.82,y:.08,l:'Lokale Gruppe'}],
+   t:'Rund hundert Galaxiengruppen und -haufen mit dem Virgohaufen in der Mitte. Unsere Lokale Gruppe liegt am Rand.'},
+  {n:'Laniakea', d:520e6*LY, k:'web', cat:'Superhaufen', dot:'#ffd9b0', g:{mode:1},
+   marks:[{x:0,y:0,l:'Großer Attraktor'},{x:.62,y:-.18,l:'Milchstraße'}],
+   t:'Der Superhaufen, zu dem wir gehören, 2014 anhand der Bewegung von Galaxien abgegrenzt. Der Name ist Hawaiianisch und bedeutet „unermesslicher Himmel“.'},
+  {n:'Herkules-Corona-Borealis-Mauer', d:10e9*LY, k:'web', cat:'Großstruktur', dot:'#c8cfff', g:{mode:2},
+   t:'Eine der größten bekannten Strukturen, entdeckt über die Verteilung von Gammablitzen. Ihre Ausdehnung ist umstritten, Schätzungen reichen bis zehn Milliarden Lichtjahre.'},
+  {n:'Beobachtbares Universum', d:93e9*LY, k:'web', cat:'Alles', dot:'#ffb36b', g:{mode:3},
+   marks:[{x:0,y:0,l:'Milchstraße'},{x:0,y:-.965,l:'Hintergrundstrahlung'}],
+   t:'Alles, dessen Licht uns seit dem Urknall vor 13,8 Milliarden Jahren erreichen konnte. Weil sich der Raum ausdehnt, liegt sein Rand heute rund 46 Milliarden Lichtjahre entfernt.'}
+];
+const N = OBJ.length;
+const WIKI = {'Astronaut':'Raumanzug', 'Komet 67P':'67P/Tschurjumow-Gerassimenko', 'Deimos':'Deimos (Mond)', 'Phobos':'Phobos (Mond)', 'Vesta':'(4) Vesta', 'Ceres':'(1) Ceres', 'Bennu':'(101955) Bennu', 'Ryugu':'(162173) Ryugu',
+  'Merkur':'Merkur (Planet)', 'Mars':'Mars (Planet)', 'Venus':'Venus (Planet)', 'Neptun':'Neptun (Planet)', 'Uranus':'Uranus (Planet)', 'Saturn':'Saturn (Planet)', 'Jupiter':'Jupiter (Planet)',
+  'Nächster Stern':'Proxima Centauri', 'Andromeda':'Andromedagalaxie', 'Sirius A':'Sirius'};
+const NASA = {'Internationale Raumstation':'https://www.nasa.gov/international-space-station/', 'Mond':'https://science.nasa.gov/moon/', 'Merkur':'https://science.nasa.gov/mercury/', 'Mars':'https://science.nasa.gov/mars/', 'Venus':'https://science.nasa.gov/venus/', 'Erde':'https://science.nasa.gov/earth/', 'Neptun':'https://science.nasa.gov/neptune/', 'Uranus':'https://science.nasa.gov/uranus/', 'Saturn':'https://science.nasa.gov/saturn/', 'Jupiter':'https://science.nasa.gov/jupiter/', 'Sonne':'https://science.nasa.gov/sun/', 'Pluto':'https://science.nasa.gov/dwarf-planets/pluto/'};
+const wikiURL = o => 'https://de.wikipedia.org/wiki/Spezial:Suche?go=Artikel&search=' + encodeURIComponent(WIKI[o.n] || o.n);
+
+const EXT = {craft:1.2, rock:1.12, planet:1.1, star:2.6, orbits:1.12, helio:1.75, oort:1.1, proxima:1.12, nebula:1.2, cluster:1.3, galaxy:1.15, web:1.12};
+const SOLID = new Set(['craft','rock','planet']);
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+function hex(h){const n=parseInt(h.slice(1),16);return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255]}
+function blackbody(K){
+  const t = K/100;
+  const r = t <= 66 ? 255 : 329.698727446*Math.pow(t-60,-0.1332047592);
+  const g = t <= 66 ? 99.4708025861*Math.log(t)-161.1195681661 : 288.1221695283*Math.pow(t-60,-0.0755148492);
+  const b = t >= 66 ? 255 : t <= 19 ? 0 : 138.5177312231*Math.log(t-10)-305.0447927307;
+  return [r,g,b].map(v => clamp(v,0,255)/255);
+}
+OBJ.forEach((o, j) => {
+  o.g = o.g || {};
+  const ring = o.g.ring;
+  o.ext = ring ? (ring[3] ? 2.1 : 2.35) : EXT[o.k];
+  o.solid = SOLID.has(o.k);
+  o.seed = (j*1.618 % 7) + .37;
+  o.dotv = hex(o.dot);
+  if (o.k === 'star') o.g.A = blackbody(o.T);
+  if (o.orbits) { const m = o.orbits[o.orbits.length-1].au; o.orbits.forEach(q => q.r = q.au/m); }
+});
+
+/* Layout im Raum: Objekte nebeneinander, Kamera gleitet logarithmisch */
+const FR = 2.4, C = [], WV = [];
+for (let j = 0; j < N; j++) {
+  const o = OBJ[j], L = o.d/2*(o.lx || 1);
+  if (j === 0) C.push(0);
+  else { const p = OBJ[j-1]; C.push(C[j-1] + p.d/2*(p.lx || 1)*1.6 + L); }
+  let w = Math.max(o.d*FR, o.d*(o.lx || 1)*1.15);
+  if (j) w = Math.max(w, WV[j-1]*1.05);
+  WV.push(w);
+}
+const FL = WV.map(w => Math.log10(w/FR));
+const LMIN = -0.2, LMAX = 27.3;
+
+/* Zahlen */
+const nfc = {};
+const nf = (x, sig = 3) => (nfc[sig] ||= new Intl.NumberFormat('de-DE', {maximumSignificantDigits: sig})).format(x);
+const SUP = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
+const sup = n => String(n).split('').map(c => SUP[c]).join('');
+function big(x){ if (x >= 1e15) { const e = Math.floor(Math.log10(x)); return nf(x/10**e, 2) + ' × 10' + sup(e); }
+  if (x >= 1e12) return nf(x/1e12)+' Bio.'; if (x >= 1e9) return nf(x/1e9)+' Mrd.'; if (x >= 1e6) return nf(x/1e6)+' Mio.'; return nf(x); }
+function unit(m){ if (m < 1000) return [1,'m']; if (m < 1e11) return [1e3,'km']; if (m < .05*LY) return [AU,'AE']; return [LY,'Lichtjahre']; }
+function fmtLen(m){ if (m < 1) return nf(m*100)+' cm'; const [d,u] = unit(m); return big(m/d)+' '+u; }
+function fmt2(m){
+  if (m < 1e5) return '';
+  if (m < 1e9) return '≈ '+nf(m/12742e3, 2)+' × Erde';
+  if (m < 1e11) return '≈ '+nf(m/1.3927e9, 2)+' × Sonne';
+  return big(m/1000)+' km';
+}
+
+/* ======================================================================
+   GLSL
+   ====================================================================== */
+const VERT = `#version 300 es
+in vec2 aP; uniform vec2 uRes, uCenter; uniform float uHalf, uExt; out vec2 vP;
+void main(){ vP = aP*uExt; vec2 px = uCenter + vec2(aP.x, -aP.y)*uHalf;
+  gl_Position = vec4(px.x/uRes.x*2.0-1.0, 1.0-px.y/uRes.y*2.0, 0.0, 1.0); }`;
+
+const PRE = `#version 300 es
+precision highp float; precision highp int;
+in vec2 vP; out vec4 fragColor;
+uniform float uT, uR, uSeed, uAlpha, uDpr, uEdge;
+uniform int uMode;
+uniform vec3 uA, uB, uC, uD, uDot;
+uniform vec4 uQ;
+float PX;
+const float PI = 3.14159265, TAU = 6.28318531;
+const vec3 LD = vec3(-0.62, 0.48, 0.62);
+
+/* Simplex-Noise 3D: Ashima Arts / Stefan Gustavson, MIT-Lizenz */
+vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
+float snoise(vec3 v){
+  const vec2 C=vec2(1.0/6.0,1.0/3.0); const vec4 D=vec4(0.0,0.5,1.0,2.0);
+  vec3 i=floor(v+dot(v,C.yyy)); vec3 x0=v-i+dot(i,C.xxx);
+  vec3 g=step(x0.yzx,x0.xyz); vec3 l=1.0-g; vec3 i1=min(g.xyz,l.zxy); vec3 i2=max(g.xyz,l.zxy);
+  vec3 x1=x0-i1+C.xxx; vec3 x2=x0-i2+C.yyy; vec3 x3=x0-D.yyy;
+  i=mod289(i);
+  vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));
+  float n_=0.142857142857; vec3 ns=n_*D.wyz-D.xzx;
+  vec4 j=p-49.0*floor(p*ns.z*ns.z); vec4 x_=floor(j*ns.z); vec4 y_=floor(j-7.0*x_);
+  vec4 x=x_*ns.x+ns.yyyy; vec4 y=y_*ns.x+ns.yyyy; vec4 h=1.0-abs(x)-abs(y);
+  vec4 b0=vec4(x.xy,y.xy); vec4 b1=vec4(x.zw,y.zw);
+  vec4 s0=floor(b0)*2.0+1.0; vec4 s1=floor(b1)*2.0+1.0; vec4 sh=-step(h,vec4(0.0));
+  vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy; vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+  vec3 p0=vec3(a0.xy,h.x); vec3 p1=vec3(a0.zw,h.y); vec3 p2=vec3(a1.xy,h.z); vec3 p3=vec3(a1.zw,h.w);
+  vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+  p0*=norm.x; p1*=norm.y; p2*=norm.z; p3*=norm.w;
+  vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0); m=m*m;
+  return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+}
+/* Hashes: Dave Hoskins, MIT-Lizenz */
+float hash12(vec2 p){ vec3 p3=fract(vec3(p.xyx)*0.1031); p3+=dot(p3,p3.yzx+33.33); return fract((p3.x+p3.y)*p3.z); }
+vec3 hash32(vec2 p){ vec3 p3=fract(vec3(p.xyx)*vec3(0.1031,0.1030,0.0973)); p3+=dot(p3,p3.yxz+33.33); return fract((p3.xxy+p3.yzz)*p3.zyx); }
+vec3 hash33(vec3 p3){ p3=fract(p3*vec3(0.1031,0.1030,0.0973)); p3+=dot(p3,p3.yxz+33.33); return fract((p3.xxy+p3.yxx)*p3.zyx); }
+
+/* Detailstufe: Oktaven verblassen, sobald sie kleiner als ~2 Pixel werden */
+float lodw(float f){ return clamp((1.0/(f*PX)-1.5)/2.0, 0.0, 1.0); }
+float fbm(vec3 p, float f, int oct){
+  float s=0.0, a=0.5;
+  for(int i=0;i<12;i++){ if(i>=oct) break; float w=lodw(f); if(w<=0.0) break;
+    s+=a*w*snoise(p*f); f*=2.03; a*=0.5; p+=vec3(1.7,-3.1,2.3); }
+  return s/(1.0-pow(0.5,float(oct)));
+}
+float rfbm(vec3 p, float f, int oct){
+  float s=0.0, a=0.5;
+  for(int i=0;i<12;i++){ if(i>=oct) break; float w=lodw(f); if(w<=0.0) break;
+    float n=1.0-abs(snoise(p*f)); s+=a*w*n*n; f*=2.07; a*=0.5; p+=vec3(4.1,1.3,-2.7); }
+  return s;
+}
+vec3 worley(vec3 p){
+  vec3 i=floor(p), f=fract(p); vec3 d=vec3(8.0);
+  for(int z=-1;z<=1;z++) for(int y=-1;y<=1;y++) for(int x=-1;x<=1;x++){
+    vec3 g=vec3(float(x),float(y),float(z)); vec3 r=g+hash33(i+g)-f; float e=dot(r,r);
+    if(e<d.x){ d.z=d.y; d.y=d.x; d.x=e; } else if(e<d.y){ d.z=d.y; d.y=e; } else if(e<d.z){ d.z=e; }
+  }
+  return sqrt(d);
+}
+mat3 rotX(float a){float c=cos(a),s=sin(a);return mat3(1.0,0.0,0.0, 0.0,c,s, 0.0,-s,c);}
+mat3 rotY(float a){float c=cos(a),s=sin(a);return mat3(c,0.0,-s, 0.0,1.0,0.0, s,0.0,c);}
+mat3 rotZ(float a){float c=cos(a),s=sin(a);return mat3(c,s,0.0, -s,c,0.0, 0.0,0.0,1.0);}
+mat2 rot2(float a){float c=cos(a),s=sin(a);return mat2(c,s,-s,c);}
+vec3 aces(vec3 x){ return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14),0.0,1.0); }
+vec3 bumpN(vec3 n, vec3 pos, float h, float k){
+  vec3 dpdx=dFdx(pos), dpdy=dFdy(pos); float dhx=dFdx(h)*k, dhy=dFdy(h)*k;
+  vec3 r1=cross(dpdy,n), r2=cross(n,dpdx); float det=dot(dpdx,r1);
+  if(abs(det)<1e-12) return n;
+  vec3 g=sign(det)*(dhx*r1+dhy*r2); return normalize(abs(det)*n-g);
+}
+float smin(float a,float b,float k){ float h=clamp(0.5+0.5*(b-a)/k,0.0,1.0); return mix(b,a,h)-k*h*(1.0-h); }
+float smax(float a,float b,float k){ return -smin(-a,-b,k); }
+float sdBox(vec3 p, vec3 b){ vec3 q=abs(p)-b; return length(max(q,0.0))+min(max(q.x,max(q.y,q.z)),0.0); }
+float sdRBox(vec3 p, vec3 b, float r){ return sdBox(p,b-r)-r; }
+float sdCap(vec3 p, vec3 a, vec3 b, float r){ vec3 pa=p-a, ba=b-a; float h=clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0); return length(pa-ba*h)-r; }
+float sdEll(vec3 p, vec3 r){ float k0=length(p/r); float k1=length(p/(r*r)); return k0*(k0-1.0)/k1; }
+float sdSeg(vec2 p, vec2 a, vec2 b){ vec2 pa=p-a, ba=b-a; float h=clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0); return length(pa-ba*h); }
+
+/* Krater-Höhenfeld: mehrere Zellgrößen, Schüssel + Wall, nur so fein wie sichtbar */
+float craters(vec3 p, float f0, float dens, float str){
+  float h=0.0, f=f0;
+  for(int k=0;k<7;k++){
+    float cw=clamp((0.4-f*PX)/0.2,0.0,1.0); if(cw<=0.0) break;
+    vec3 q=p*f+vec3(float(k)*13.7+uSeed); vec3 i=floor(q), fr=fract(q);
+    for(int z=-1;z<=1;z++) for(int y=-1;y<=1;y++) for(int x=-1;x<=1;x++){
+      vec3 g=vec3(float(x),float(y),float(z)); vec3 c=hash33(i+g);
+      if(c.z>dens) continue;
+      vec3 o=hash33(i+g+41.3)*0.6+0.2; float rad=0.12+0.3*c.x*c.x;
+      float d=length(g+o-fr)/rad;
+      if(d<2.0){ float bowl=d<1.0?(d*d-1.0):0.0; float rim=exp(-(d-1.0)*(d-1.0)*10.0)*0.28; h+=cw*(bowl*0.6+rim)*rad/f*0.5; }
+    }
+    f*=2.15;
+  }
+  return h*str;
+}
+/* Einzelsterne: pro Zellebene höchstens ein Stern, Ebenen werden beim Hineinzoomen aufgelöst */
+vec3 starLayers(vec2 q, float dens, float sc, float seed, float px){
+  vec3 acc=vec3(0.0); if(dens<=0.001) return acc; dens=clamp(dens,0.0,1.0);
+  for(int i=0;i<9;i++){
+    float cpx=1.0/(sc*px); if(cpx<2.5) break;
+    float fade=smoothstep(2.5,7.0,cpx);
+    vec2 g=floor(q*sc), f=fract(q*sc);
+    vec3 h=hash32(g+vec2(seed*17.31+float(i)*31.7, seed*5.13-float(i)*11.3));
+    if(h.z<dens){
+      vec2 c=0.25+0.5*h.xy; float d=length(f-c)*cpx/uDpr; float b=exp(-d*d*1.1);
+      float hc=hash12(g+seed*3.7+float(i));
+      vec3 col=mix(mix(vec3(1.0,0.66,0.42),vec3(0.72,0.82,1.0),hc),vec3(1.0),0.35);
+      float mag=(0.3+0.7*pow(hash12(g*1.31+seed+9.0+float(i)),2.5))*(1.8/(1.0+float(i)*0.5));
+      acc+=col*b*mag*fade;
+    }
+    sc*=2.2;
+  }
+  return acc;
+}
+`;
+
+const MAIN = `
+void main(){
+  PX = 1.0/uR;
+  if(uR < 1.5){ float d=length(vP)*uR; float rr=max(0.85,uR); float b=exp(-d*d/(rr*rr))*min(1.0,0.35+uR*1.2); fragColor=vec4(uDot*b,b)*uAlpha; return; }
+  vec4 c = shade(vP);
+  if(uEdge>0.0){ float rr = length(vP); c *= smoothstep(uEdge, 1.0+0.3*(uEdge-1.0), rr); }
+  fragColor = c*uAlpha;
+}`;
+
+const SRC = {};
+
+/* ---------- Planeten & Monde ---------- */
+SRC.planet = `
+uniform vec4 uRing; uniform vec3 uAtmo, uAxis; uniform float uHaze;
+float ringDens(float rr){
+  if(uRing.z<=0.0||rr<uRing.x||rr>uRing.y) return 0.0;
+  float d;
+  if(uRing.w<0.5){
+    d = 0.16*smoothstep(1.24,1.32,rr)*(1.0-smoothstep(1.515,1.53,rr))
+      + (0.6+0.35*smoothstep(1.53,1.8,rr))*smoothstep(1.515,1.535,rr)*(1.0-smoothstep(1.935,1.955,rr))
+      + 0.05*smoothstep(1.95,1.96,rr)*(1.0-smoothstep(2.02,2.03,rr))
+      + 0.62*smoothstep(2.02,2.035,rr)*(1.0-smoothstep(2.255,2.27,rr));
+    d *= 1.0-0.9*exp(-pow((rr-2.214)/0.005,2.0));
+  } else {
+    d = exp(-pow((rr-1.64)/0.006,2.0))*0.45 + exp(-pow((rr-1.72)/0.005,2.0))*0.3 + exp(-pow((rr-1.98)/0.018,2.0))*0.85;
+  }
+  d *= 1.0 + 0.3*lodw(60.0)*snoise(vec3(rr*60.0,0.5,uSeed)) + 0.18*lodw(300.0)*snoise(vec3(rr*300.0,1.5,uSeed)) + 0.1*lodw(1500.0)*snoise(vec3(rr*1500.0,2.5,uSeed));
+  return clamp(d,0.0,1.0)*uRing.z;
+}
+vec4 shade(vec2 p){
+  vec3 L = LD;
+  mat3 M = rotZ(uAxis.x)*rotX(uAxis.y);
+  vec3 nr = M*vec3(0.0,1.0,0.0);
+  float r2 = dot(p,p), rl = sqrt(r2);
+  vec4 res = vec4(0.0);
+  float zs = -9.0;
+  if(rl < 1.0){
+    float z = sqrt(1.0-r2); zs = z;
+    vec3 nv = vec3(p,z);
+    vec3 s = rotY(uT*uAxis.z)*(transpose(M)*nv);
+    vec3 alb = uA; float h = 0.0, wet = 0.0, cloud = 0.0; vec3 emis = vec3(0.0);
+    if(uMode==0){
+      int sp = int(uQ.z+0.5);
+      float mar = smoothstep(0.0,0.35, fbm(s+uSeed,1.1,6)*uQ.y + 0.1*fbm(s+2.0,4.0,6));
+      alb = mix(uA,uB,mar);
+      alb *= 0.8 + 0.4*(0.5+0.5*fbm(s+7.0,5.0,12));
+      h = craters(s,2.4,0.5,uQ.x*(1.0-0.5*mar)) + 0.004*fbm(s+3.0,7.0,12);
+      if(sp==1){
+        alb = mix(uA,uB,smoothstep(-0.1,0.45,fbm(s+uSeed,1.3,8)));
+        alb = mix(alb,uC,smoothstep(0.2,0.6,fbm(s+11.0,2.5,8))*0.5);
+        alb *= 0.85+0.3*(0.5+0.5*fbm(s+7.0,8.0,12));
+        float cap = smoothstep(0.92,0.945,abs(s.y)+0.04*fbm(s,6.0,6));
+        alb = mix(alb,vec3(0.93,0.92,0.9),cap);
+        h = craters(s,2.4,0.4,uQ.x) + 0.01*fbm(s+3.0,3.0,12);
+      } else if(sp==2){
+        vec3 hd = normalize(vec3(0.1,-0.25,1.0)), hd2 = normalize(vec3(0.38,-0.3,0.9));
+        float n5 = 0.06*fbm(s,5.0,6);
+        float heart = max(smoothstep(0.93,0.95,dot(s,hd)+n5), smoothstep(0.955,0.97,dot(s,hd2)+n5));
+        float belt = smoothstep(0.35,0.05,abs(s.y+0.12+0.08*fbm(s+4.0,2.0,6)));
+        alb = mix(uA,uB,belt*smoothstep(-0.2,0.3,fbm(s+9.0,3.0,6)+0.2));
+        alb *= 0.85+0.3*(0.5+0.5*fbm(s+7.0,6.0,12));
+        alb = mix(alb,uC,heart);
+        h = craters(s,2.4,0.4,uQ.x*(1.0-heart)) + 0.003*fbm(s+3.0,8.0,12)*(1.0-heart);
+      } else if(sp==3){
+        float spot = smoothstep(0.99975,0.9999,dot(s,normalize(vec3(0.25,0.18,0.95)))+0.00008*fbm(s,60.0,6))
+                   + 0.6*smoothstep(0.99985,0.99995,dot(s,normalize(vec3(0.27,0.17,0.947))));
+        alb = mix(alb,uC*1.2,clamp(spot,0.0,1.0));
+      }
+    } else if(uMode==1){
+      vec3 q = s + 0.18*vec3(fbm(s,1.4,4), fbm(s+5.2,1.4,4), fbm(s+9.1,1.4,4));
+      float e = fbm(q+uSeed,1.1,12) + 0.06;
+      float lat = abs(s.y);
+      if(e>0.0){
+        float moist = fbm(s+3.3,2.2,6);
+        float desert = clamp(smoothstep(0.18,0.0,abs(lat-0.32)) - moist*1.2, 0.0, 1.0);
+        alb = mix(vec3(0.12,0.22,0.08), vec3(0.55,0.45,0.28), desert);
+        alb = mix(alb, vec3(0.3,0.27,0.22), smoothstep(0.16,0.38,e));
+        alb *= 0.85+0.3*(0.5+0.5*fbm(s+12.0,10.0,12));
+        alb = mix(alb, vec3(0.9,0.92,0.95), smoothstep(0.74,0.8, lat+e*0.35+0.05*fbm(s,8.0,6)));
+        h = e*0.015;
+      } else {
+        alb = mix(vec3(0.05,0.2,0.3), vec3(0.008,0.04,0.13), smoothstep(0.0,0.12,-e));
+        wet = 1.0;
+      }
+      float ice = smoothstep(0.86,0.9,lat+0.04*fbm(s,5.0,6));
+      alb = mix(alb,vec3(0.92,0.94,0.97),ice); wet *= 1.0-ice;
+      vec3 cs = rotY(uT*0.005)*s;
+      vec3 cw = cs + 0.25*vec3(fbm(cs,1.5,5), fbm(cs+3.0,1.5,5), fbm(cs+6.0,1.5,5));
+      cloud = smoothstep(0.02,0.48, fbm(cw+uSeed+20.0,2.0,12) + 0.12*(smoothstep(0.1,0.3,lat)-0.4))*0.92;
+      if(e>0.0 && ice<0.5) emis = vec3(1.0,0.72,0.4)*0.35*smoothstep(0.5,0.8,0.5+0.5*fbm(s+40.0,22.0,6))*(1.0-cloud);
+    } else if(uMode==2){
+      vec3 q = s + 0.3*vec3(fbm(s,1.3,5), fbm(s+4.0,1.3,5), fbm(s+8.0,1.3,5));
+      float b = fbm(vec3(q.x*1.3,q.y*6.0,q.z*1.3)+uSeed,1.0,10);
+      alb = mix(uB,uA,clamp(0.5+0.6*b,0.0,1.0));
+      alb = mix(alb,uC,smoothstep(0.1,0.6,fbm(q+2.0,3.0,8))*0.35);
+    } else if(uMode==3){
+      float lat = s.y;
+      vec3 q = rotY(uT*0.012*sin(lat*19.0+uSeed))*s;
+      vec2 wv = vec2(fbm(q*vec3(1.0,5.0,1.0)+3.1,2.2,7), fbm(q*vec3(1.0,5.0,1.0)+8.7,2.2,7));
+      float t1 = fbm(vec3(q.x*3.0+wv.x,q.y*22.0,q.z*3.0+wv.y),1.0,12);
+      float y = lat + uQ.w*(0.028*wv.x + 0.008*t1);
+      float band = sin(y*uQ.x + 1.3*sin(y*uQ.x*0.31+uSeed));
+      float sel = snoise(vec3(y*uQ.x*0.4,uSeed,0.3));
+      alb = mix(uA,uB,clamp(0.5-0.5*band*uQ.y,0.0,1.0));
+      alb = mix(alb,uC,smoothstep(0.0,0.8,sel)*0.55);
+      alb *= 0.92+0.16*t1;
+      if(uQ.z>0.5){
+        vec3 gc = normalize(vec3(0.25,-0.36,0.9));
+        vec3 dl = q-gc; vec3 ex = normalize(cross(vec3(0.0,1.0,0.0),gc));
+        vec2 lc = vec2(dot(dl,ex)/0.15, dl.y/0.075);
+        float de = length(lc);
+        float ang = atan(lc.y,lc.x) + 3.0*exp(-de*1.5) + uT*0.05;
+        vec2 sw = vec2(cos(ang),sin(ang))*de;
+        float inner = fbm(vec3(sw*2.0,uSeed+5.0),1.0,10);
+        alb = mix(alb, uD*(0.85+0.35*inner), smoothstep(1.05,0.75,de));
+        alb = mix(alb, uC*1.03, exp(-pow((de-1.18)/0.12,2.0))*0.55);
+      }
+    } else {
+      float lat = s.y;
+      float b = fbm(vec3(s.x*1.5,s.y*9.0,s.z*1.5)+uSeed,1.0,10);
+      alb = mix(uA,uB,clamp(0.5+0.5*sin(lat*uQ.x+b*1.6)*uQ.y,0.0,1.0));
+      alb *= 0.94+0.12*b;
+      float cl = smoothstep(0.45,0.75,fbm(vec3(s.x*3.0,s.y*24.0,s.z*3.0)+5.0,1.0,12));
+      alb = mix(alb,uC,cl*uQ.w);
+      if(uQ.z>0.5){
+        vec3 gc = normalize(vec3(-0.25,-0.32,0.9)); vec3 dl = s-gc; vec3 ex = normalize(cross(vec3(0.0,1.0,0.0),gc));
+        vec2 lc = vec2(dot(dl,ex)/0.13, dl.y/0.06); float de = length(lc);
+        alb = mix(alb,uD,smoothstep(1.0,0.6,de));
+        alb = mix(alb,uC,exp(-pow((de-1.25)/0.15,2.0))*0.5*step(0.0,-lc.y));
+      }
+    }
+    vec3 n = bumpN(nv,nv,h,1.0);
+    float ndl0 = dot(nv,L), ndl = dot(n,L);
+    float dif = uMode==0 && uHaze<0.5 ? max(ndl,0.0)*smoothstep(-0.02,0.12,ndl0)
+                                      : clamp(ndl*0.85+0.15,0.0,1.0)*smoothstep(-0.25,0.25,ndl0);
+    vec3 col = alb*(dif*1.15+0.008);
+    if(wet>0.0){ vec3 hv = normalize(L+vec3(0.0,0.0,1.0)); col += vec3(1.0,0.95,0.85)*pow(max(dot(n,hv),0.0),70.0)*0.55*wet*step(0.0,ndl0)*(1.0-cloud); }
+    if(cloud>0.0){ float cd = clamp(ndl0*0.9+0.12,0.0,1.0)*smoothstep(-0.2,0.2,ndl0); col = mix(col*(1.0-cloud*0.35), vec3(0.97)*cd*1.05, cloud); }
+    col += emis*smoothstep(0.05,-0.2,ndl0);
+    if(uRing.z>0.0){ float dn = dot(L,nr); if(abs(dn)>1e-3){ float tq = -dot(nv,nr)/dn; if(tq>0.0){ col *= 1.0-0.75*ringDens(length(nv+L*tq)); } } }
+    if(uHaze>0.0){ float lim = pow(1.0-z,2.2); col = mix(col, uAtmo*smoothstep(-0.3,0.7,ndl0)*1.05, lim*uHaze); }
+    float aa = smoothstep(1.0,1.0-1.5*PX,rl);
+    res = vec4(col*aa,aa);
+  }
+  if(uHaze>0.0 && rl>1.0-2.0*PX){
+    float lit = clamp(dot(normalize(vec3(p,0.15)),L)*0.9+0.35,0.0,1.0);
+    float g = exp(-max(rl-1.0,0.0)/0.022)*lit*uHaze*0.8*smoothstep(1.0-2.0*PX,1.0,rl);
+    res = vec4(uAtmo*g,g*0.9) + res*(1.0-g*0.9);
+  }
+  if(uRing.z>0.0 && abs(nr.z)>1e-3){
+    float zr = -(p.x*nr.x+p.y*nr.y)/nr.z;
+    vec3 Rp = vec3(p,zr); float rr = length(Rp);
+    float d = ringDens(rr);
+    if(d>0.0 && (rl>=1.0 || zr>zs)){
+      float b = dot(Rp,L), c = dot(Rp,Rp)-1.0, disc = b*b-c;
+      float lit = 1.0-(b<0.0 ? smoothstep(-0.004,0.004,disc) : 0.0);
+      vec3 rc = uRing.w<0.5 ? mix(vec3(0.5,0.44,0.36),vec3(0.92,0.85,0.7),smoothstep(1.35,1.75,rr)) : vec3(0.55,0.6,0.62);
+      rc *= 0.92+0.16*snoise(vec3(rr*35.0,2.0,uSeed));
+      float il = (0.25+0.75*abs(dot(L,nr)))*lit+0.03;
+      res = vec4(rc*il*d,d) + res*(1.0-d);
+    }
+  }
+  return res;
+}`;
+
+/* ---------- Kleinkörper per Raymarching ---------- */
+SRC.rock = `
+float shapeD(vec3 q){
+  if(uMode==0) return smax(length(q)-0.98, abs(q.y)*0.85+length(q.xz)*0.62-0.76, 0.2);
+  if(uMode==1) return smin(sdEll(q-vec3(-0.3,-0.1,0.0),vec3(0.6,0.5,0.52)), sdEll(q-vec3(0.45,0.22,0.04),vec3(0.42,0.36,0.38)), 0.14);
+  if(uMode==2) return sdEll(q,vec3(1.0,0.72,0.8));
+  return smax(sdEll(q,vec3(1.0,0.93,0.97)), -(length(q-vec3(0.05,-1.3,0.25))-0.6), 0.12);
+}
+float sdf(vec3 q){ return shapeD(q) + uQ.z*fbm(q+uSeed,1.8,4); }
+vec4 shade(vec2 p){
+  if(dot(p,p)>1.25) return vec4(0.0);
+  mat3 Rv = rotX(0.4)*rotY(uT*0.045+uSeed);
+  mat3 Ri = transpose(Rv);
+  vec3 ro = Ri*vec3(p,1.6), rd = Ri*vec3(0.0,0.0,-1.0);
+  float t=0.0, dm=1e9, tm=0.0; bool hit=false;
+  for(int i=0;i<90;i++){ vec3 q=ro+rd*t; float d=sdf(q); if(d<dm){dm=d;tm=t;} if(d<0.0004){hit=true;break;} t+=max(d*0.75,0.002); if(t>3.2) break; }
+  float a = hit ? 1.0 : smoothstep(1.5*PX,0.0,dm);
+  if(a<=0.0) return vec4(0.0);
+  vec3 q = ro+rd*(hit?t:tm);
+  vec2 e = vec2(1.0,-1.0)*max(0.0015,PX*0.5);
+  vec3 n = normalize(e.xyy*sdf(q+e.xyy)+e.yyx*sdf(q+e.yyx)+e.yxy*sdf(q+e.yxy)+e.xxx*sdf(q+e.xxx));
+  float h = craters(q,2.2,0.5,uQ.x) + 0.006*fbm(q+5.0,9.0,12);
+  if(uQ.y>0.0){
+    vec3 w1 = worley(q*16.0+uSeed), w2 = worley(q*40.0+uSeed+3.0);
+    h += uQ.y*(0.007*smoothstep(0.45,0.0,w1.x)*lodw(16.0) + 0.0035*smoothstep(0.45,0.0,w2.x)*lodw(40.0));
+  }
+  if(uQ.w>0.5){
+    float gr = abs(sin(dot(q,normalize(vec3(1.0,0.35,0.2)))*48.0 + 2.0*fbm(q,3.0,4)));
+    h -= 0.004*smoothstep(0.2,0.0,gr)*smoothstep(-0.3,0.2,q.x)*lodw(48.0);
+  }
+  n = bumpN(n,q,h,1.0);
+  vec3 nw = Rv*n;
+  float ndl = dot(nw,LD);
+  vec3 alb = uA*(0.72+0.56*(0.5+0.5*fbm(q+9.0,3.0,12)));
+  vec3 col = alb*(max(ndl,0.0)*1.35 + 0.014);
+  return vec4(col*a,a);
+}`;
+
+/* ---------- Astronaut und ISS als Distanzfelder ---------- */
+SRC.craft = `
+vec2 mapA(vec3 p){
+  float helmet = length(p-vec3(0.0,0.70,0.02))-0.19;
+  float torso = sdRBox(p-vec3(0.0,0.30,0.0), vec3(0.2,0.25,0.12), 0.08);
+  float hips = sdRBox(p-vec3(0.0,0.0,0.0), vec3(0.16,0.08,0.11), 0.07);
+  float pack = sdRBox(p-vec3(0.0,0.33,-0.19), vec3(0.2,0.27,0.08), 0.04);
+  float legL = min(sdCap(p,vec3(-0.1,-0.02,0.0),vec3(-0.15,-0.45,0.06),0.085), sdCap(p,vec3(-0.15,-0.45,0.06),vec3(-0.17,-0.83,-0.02),0.078));
+  float legR = min(sdCap(p,vec3(0.1,-0.02,0.0),vec3(0.17,-0.42,0.1),0.085), sdCap(p,vec3(0.17,-0.42,0.1),vec3(0.24,-0.78,0.0),0.078));
+  float boots = min(sdRBox(p-vec3(-0.17,-0.88,0.02),vec3(0.065,0.05,0.11),0.035), sdRBox(p-vec3(0.245,-0.83,0.03),vec3(0.065,0.05,0.11),0.035));
+  float armL = min(sdCap(p,vec3(-0.25,0.47,0.0),vec3(-0.38,0.2,0.08),0.075), sdCap(p,vec3(-0.38,0.2,0.08),vec3(-0.35,-0.04,0.16),0.066));
+  float armR = min(sdCap(p,vec3(0.25,0.47,0.0),vec3(0.43,0.64,0.06),0.075), sdCap(p,vec3(0.43,0.64,0.06),vec3(0.47,0.9,0.1),0.066));
+  float gloves = min(length(p-vec3(-0.35,-0.09,0.17))-0.07, length(p-vec3(0.48,0.96,0.1))-0.07);
+  float chest = sdRBox(p-vec3(0.0,0.33,0.17), vec3(0.11,0.07,0.04), 0.012);
+  float suit = smin(smin(torso,hips,0.06), min(min(legL,legR),min(armL,armR)), 0.05);
+  suit = smin(suit, length(p-vec3(0.0,0.55,0.0))-0.13, 0.03);
+  vec2 r = vec2(suit,0.0);
+  if(helmet<r.x) r = vec2(helmet,1.0);
+  if(pack<r.x) r = vec2(pack,3.0);
+  float dark = min(min(boots,gloves),chest);
+  if(dark<r.x) r = vec2(dark,2.0);
+  return r;
+}
+vec2 mapI(vec3 p){
+  vec3 tp = p-vec3(0.0,0.05,0.0);
+  float truss = sdBox(tp, vec3(0.93,0.016,0.016));
+  vec3 lp = tp; lp.x = mod(lp.x+0.016,0.032)-0.016;
+  truss = max(truss, -sdBox(lp, vec3(0.011,0.03,0.011)));
+  vec2 r = vec2(truss,1.0);
+  float mods = sdCap(p,vec3(0.0,0.0,0.5),vec3(0.0,0.0,-0.62),0.038);
+  mods = min(mods, sdCap(p,vec3(-0.17,0.0,0.43),vec3(0.17,0.0,0.43),0.036));
+  mods = min(mods, sdCap(p,vec3(0.0,0.0,-0.2),vec3(0.0,-0.09,-0.2),0.028));
+  mods = min(mods, sdCap(p,vec3(0.0,0.0,0.0),vec3(0.0,0.05,0.0),0.025));
+  if(mods<r.x) r = vec2(mods,2.0);
+  for(int i=0;i<4;i++){
+    float x = i==0?-0.86:(i==1?-0.62:(i==2?0.62:0.86));
+    vec3 q = rotX(0.5)*(p-vec3(x,0.05,0.0));
+    float pn = sdBox(vec3(q.x,q.y,abs(q.z)-0.37), vec3(0.052,0.0025,0.33));
+    float mast = sdCap(q,vec3(0.0,0.0,-0.7),vec3(0.0,0.0,0.7),0.004);
+    if(pn<r.x) r = vec2(pn,3.0);
+    if(mast<r.x) r = vec2(mast,1.0);
+  }
+  float rad = sdBox(vec3(abs(p.x)-0.3,p.y-0.05,p.z+0.13), vec3(0.03,0.0025,0.11));
+  if(rad<r.x) r = vec2(rad,4.0);
+  float ru = sdBox(vec3(abs(p.x)-0.2,p.y,p.z+0.52), vec3(0.13,0.0025,0.028));
+  if(ru<r.x) r = vec2(ru,3.0);
+  return r;
+}
+vec2 map(vec3 p){ return uMode==0 ? mapA(p) : mapI(p); }
+float softsh(vec3 ro, vec3 rd){ float res=1.0, t=0.01; for(int i=0;i<28;i++){ float h=map(ro+rd*t).x; res=min(res,12.0*h/t); t+=clamp(h,0.006,0.1); if(res<0.01||t>2.0) break; } return clamp(res,0.0,1.0); }
+vec4 shade(vec2 p){
+  if(dot(p,p)>1.44) return vec4(0.0);
+  mat3 Rv = uMode==0 ? rotZ(-0.18+0.08*sin(uT*0.25))*rotY(0.5+0.25*sin(uT*0.11))*rotX(0.08)
+                     : rotZ(0.12)*rotX(1.2)*rotY(0.3+uT*0.012);
+  mat3 Ri = transpose(Rv);
+  vec3 ro = Ri*vec3(p*(uMode==0?1.02:1.0),2.0), rd = Ri*vec3(0.0,0.0,-1.0);
+  if(uMode==0) ro += Ri*vec3(0.0,0.06,0.0);
+  float t=0.0, dm=1e9, tm=0.0; bool hit=false;
+  for(int i=0;i<110;i++){ float d=map(ro+rd*t).x; if(d<dm){dm=d;tm=t;} if(d<0.0003){hit=true;break;} t+=max(d*0.9,0.0015); if(t>4.0) break; }
+  float a = hit ? 1.0 : smoothstep(1.4*PX,0.0,dm);
+  if(a<=0.0) return vec4(0.0);
+  vec3 q = ro+rd*(hit?t:tm);
+  float mat = map(q).y;
+  vec2 e = vec2(1.0,-1.0)*0.0007;
+  vec3 n = normalize(e.xyy*map(q+e.xyy).x+e.yyx*map(q+e.yyx).x+e.yxy*map(q+e.yxy).x+e.xxx*map(q+e.xxx).x);
+  vec3 L = LD, V = vec3(0.0,0.0,1.0);
+  vec3 alb = vec3(0.85); float ks = 0.08, shin = 16.0; bool mirror = false; vec3 tint = vec3(1.0);
+  if(uMode==0){
+    if(mat<0.5){
+      float fab = fbm(q+1.0,40.0,8);
+      n = bumpN(n,q,0.0012*fab+0.0006*fbm(q,140.0,6),1.0);
+      alb = vec3(0.86,0.87,0.88)*(0.94+0.08*fab);
+      if(q.y<-0.28 && q.y>-0.34) alb = vec3(0.7,0.12,0.1);
+      float seam = smoothstep(0.004,0.0,abs(fract(q.y*9.0)-0.5)-0.47)*step(abs(q.x),0.24);
+      alb *= 1.0-0.12*seam;
+    } else if(mat<1.5){
+      vec3 hc = normalize(q-vec3(0.0,0.70,0.02));
+      if(dot(hc,normalize(vec3(0.0,-0.08,1.0)))>0.5){ mirror = true; tint = vec3(1.0,0.68,0.22); }
+      else { alb = vec3(0.9); ks = 0.35; shin = 60.0; }
+    } else if(mat<2.5){ alb = vec3(0.22,0.23,0.25); ks = 0.2; shin = 30.0; }
+    else { alb = vec3(0.74,0.75,0.77)*(0.95+0.08*fbm(q,30.0,6)); }
+  } else {
+    if(mat<1.5){ alb = vec3(0.5,0.5,0.52); ks = 0.45; shin = 40.0; }
+    else if(mat<2.5){ float mli = fbm(q,60.0,8); n = bumpN(n,q,0.0008*mli,1.0); alb = vec3(0.86,0.86,0.84)*(0.92+0.1*mli); ks = 0.25; shin = 20.0; }
+    else if(mat<3.5){
+      float gx = abs(fract(q.x*95.0)-0.5), gz = abs(fract(q.z*48.0)-0.5);
+      float grid = max(smoothstep(0.44,0.48,gx), smoothstep(0.44,0.48,gz));
+      alb = mix(vec3(0.05,0.08,0.2), vec3(0.62,0.48,0.24), grid*0.8);
+      ks = 0.7; shin = 50.0;
+    } else { alb = vec3(0.92); ks = 0.1; }
+  }
+  vec3 nw = Rv*n;
+  float sh = softsh(q+n*0.004, Ri*L);
+  float dif = max(dot(nw,L),0.0)*sh;
+  vec3 bounce = vec3(0.25,0.42,0.75)*max(dot(nw,normalize(vec3(0.3,-0.9,0.3))),0.0)*0.35;
+  vec3 hv = normalize(L+V);
+  vec3 col;
+  if(mirror){
+    vec3 rf = reflect(-V,nw);
+    vec3 env = mix(vec3(0.02,0.018,0.015), vec3(0.18,0.22,0.3), smoothstep(0.0,-0.8,rf.y));
+    float fr = 0.25+0.75*pow(1.0-max(dot(nw,V),0.0),3.0);
+    col = tint*(env*1.2+0.04) + tint*pow(max(dot(rf,L),0.0),300.0)*5.0*sh + vec3(fr*0.06);
+  } else {
+    col = alb*(dif*1.25 + bounce + 0.03) + vec3(1.0,0.97,0.9)*pow(max(dot(nw,hv),0.0),shin)*ks*sh;
+  }
+  col = aces(col*1.3);
+  return vec4(col*a,a);
+}`;
+
+/* ---------- Sterne ---------- */
+SRC.star = `
+vec4 shade(vec2 p){
+  float r = length(p);
+  vec3 c = uA;
+  vec3 col = vec3(0.0);
+  if(r<1.0){
+    float z = sqrt(1.0-r*r); vec3 s = rotY(uT*0.008)*vec3(p,z);
+    float mu = z; float limb = 1.0-0.6*(1.0-mu)-0.15*(1.0-mu)*(1.0-mu);
+    float g;
+    if(uQ.x>0.5){
+      vec3 w = worley(s*2.2+vec3(0.0,0.0,uT*0.01));
+      float cells = smoothstep(0.0,0.7,w.y-w.x);
+      g = 0.55*cells + 0.45*(0.5+0.5*fbm(s+uSeed,2.5,12));
+      vec3 w2 = worley(s*9.0+vec3(uT*0.02));
+      g += (smoothstep(0.0,0.5,w2.y-w2.x)-0.5)*0.25*lodw(9.0);
+      g = g*1.3-0.25;
+      g *= 1.0-0.5*smoothstep(0.35,0.6,fbm(s+9.0,1.2,4));
+    } else {
+      float f = uQ.z;
+      float w0 = clamp((0.3-f*PX)/0.15,0.0,1.0);
+      vec3 w = worley(s*f+vec3(0.0,0.0,uT*0.04));
+      float gran = smoothstep(0.0,0.45,w.y-w.x);
+      float w1 = clamp((0.3-f*4.0*PX)/0.15,0.0,1.0);
+      vec3 w2 = worley(s*f*4.0+vec3(uT*0.1));
+      g = mix(0.5,gran,w0) + (smoothstep(0.0,0.45,w2.y-w2.x)-0.5)*0.3*w1;
+      g += 0.25*fbm(s+uSeed,3.0,12);
+      if(uQ.w>0.5){
+        float spn = smoothstep(0.62,0.7,fbm(s*vec3(1.0,3.0,1.0)+uSeed,2.2,6))*smoothstep(0.5,0.15,abs(abs(s.y)-0.25));
+        g -= spn*1.3;
+      }
+    }
+    float I = limb*(0.75+0.5*g);
+    vec3 cs = mix(vec3(dot(c,vec3(0.3,0.5,0.2))), c, 1.9);
+    cs = mix(cs*vec3(1.0,0.72,0.45), cs, mu);
+    col = max(cs,0.0)*I*1.45*smoothstep(1.0,1.0-1.5*PX,r);
+  }
+  float rr = max(r,1.0);
+  float ang = atan(p.y,p.x);
+  float str = 0.75+0.5*fbm(vec3(cos(ang)*2.0,sin(ang)*2.0,uT*0.02+uSeed),1.0,6);
+  float glow = exp(-(rr-1.0)*7.0)*0.5*str + 0.07/(rr*rr*rr)*uQ.y + 0.02/rr;
+  glow *= smoothstep(2.6,1.4,r);
+  vec3 cg = max(mix(vec3(dot(c,vec3(0.3,0.5,0.2))), c, 2.0),0.0);
+  col += cg*glow*(r<1.0?0.15:0.8);
+  return vec4(aces(col),1.0);
+}`;
+
+/* ---------- Bahnen ---------- */
+SRC.orbits = `
+uniform vec4 uOrb[8]; uniform vec3 uOrbC[8]; uniform int uN;
+vec4 shade(vec2 p){
+  float r = length(p); vec3 col = vec3(0.0);
+  for(int i=0;i<8;i++){
+    if(i>=uN) break; vec4 o = uOrb[i];
+    float line = smoothstep(1.5*PX,0.0,abs(r-o.x));
+    col += (o.z>0.5 ? vec3(0.95,0.76,0.48)*0.85 : vec3(0.62,0.68,0.86)*0.42)*line;
+    vec2 pp = o.x*vec2(cos(o.y),sin(o.y));
+    float d = length(p-pp)/PX/uDpr;
+    col += uOrbC[i]*(exp(-d*d/5.0)*1.6 + exp(-d/6.0)*0.12);
+  }
+  if(uQ.x>0.5){ float bd = smoothstep(0.068,0.075,r)*smoothstep(0.11,0.1,r); col += starLayers(p,bd*0.7,60.0,uSeed,PX)*vec3(0.9,0.85,0.75)*0.8 + vec3(0.6,0.55,0.5)*bd*0.04; }
+  float ds = r/PX/uDpr; col += vec3(1.0,0.85,0.6)*(exp(-ds*ds/9.0)*2.0 + exp(-ds/14.0)*0.4);
+  return vec4(aces(col),1.0);
+}`;
+
+/* ---------- Heliosphäre ---------- */
+SRC.helio = `
+uniform vec4 uVoy;
+vec4 shade(vec2 p){
+  float r0 = length(p); float r = length(p*vec2(1.0,1.06)); float ang = atan(p.y,p.x);
+  vec3 col = vec3(0.0);
+  float turb = fbm(vec3(p*3.0,uT*0.01+uSeed),1.0,8);
+  float rs = 1.0+0.04*turb;
+  float shell = exp(-pow((r-0.95*rs)/0.05,2.0));
+  col += vec3(0.32,0.48,1.0)*(shell*0.45*(0.5+0.8*max(fbm(vec3(p*9.0,uSeed+2.0),1.0,12)+0.2,0.0)) + smoothstep(rs,0.7,r)*0.06);
+  col += vec3(0.75,0.5,1.0)*exp(-pow((r-1.02*rs)/0.02,2.0))*0.18;
+  col += vec3(0.55,0.7,1.0)*0.5*smoothstep(1.5*PX,0.0,abs(r0-0.75))*step(0.5,fract(ang*36.0/TAU));
+  float orbs[4] = float[4](5.2,9.58,19.2,30.07);
+  for(int i=0;i<4;i++) col += vec3(0.6,0.66,0.85)*0.35*smoothstep(1.4*PX,0.0,abs(r0-orbs[i]/120.0));
+  for(int k=0;k<2;k++){
+    vec2 v = k==0 ? uVoy.xy : uVoy.zw;
+    float sd = sdSeg(p,vec2(0.0),v); float hh = dot(p,normalize(v));
+    col += vec3(0.95,0.75,0.45)*0.55*smoothstep(1.3*PX,0.0,sd)*step(0.5,fract(hh*50.0));
+    float d = length(p-v)/PX/uDpr; col += vec3(1.0,0.85,0.6)*exp(-d*d/4.0)*1.5;
+  }
+  float ds = r0/PX/uDpr; col += vec3(1.0,0.85,0.6)*(exp(-ds*ds/8.0)*2.0+exp(-ds/12.0)*0.35);
+  col *= smoothstep(1.75,1.5,r0);
+  return vec4(aces(col),1.0);
+}`;
+
+/* ---------- Oortsche Wolke ---------- */
+SRC.oort = `
+vec4 shade(vec2 p){
+  float r = length(p);
+  float sig = (r<1.0 ? sqrt(1.0-r*r) : 0.0)*0.6 + exp(-r*5.0)*0.5;
+  vec3 col = vec3(0.4,0.55,1.0)*sig*0.06*(0.7+0.6*fbm(vec3(p*3.0,uSeed),1.0,8));
+  col += starLayers(p,sig*0.5,20.0,uSeed,PX)*vec3(0.75,0.85,1.0);
+  float ds = r/PX/uDpr; col += vec3(1.0,0.85,0.6)*(exp(-ds*ds/6.0)*2.0+exp(-ds/10.0)*0.3);
+  return vec4(aces(col),1.0);
+}`;
+
+/* ---------- Nachbarschaft ---------- */
+SRC.proxima = `
+vec4 shade(vec2 p){
+  float r = length(p), ang = atan(p.y,p.x);
+  vec3 col = vec3(0.3,0.4,1.0)*0.05*smoothstep(1.0,0.0,r);
+  col += vec3(0.75,0.82,1.0)*0.8*smoothstep(1.6*PX,0.0,abs(r-1.0))*step(0.45,fract(ang*60.0/TAU));
+  vec2 ac = uQ.xy;
+  col += vec3(0.95,0.75,0.45)*0.5*smoothstep(1.2*PX,0.0,sdSeg(p,vec2(0.0),ac))*step(0.5,fract(dot(p,normalize(ac))*40.0));
+  col += starLayers(p,0.05*smoothstep(1.08,0.9,r),12.0,uSeed,PX)*0.6;
+  float d0 = r/PX/uDpr, d1 = length(p-ac)/PX/uDpr;
+  col += vec3(1.0,0.85,0.6)*(exp(-d0*d0/8.0)*2.2+exp(-d0/12.0)*0.35);
+  col += vec3(1.0,0.65,0.4)*(exp(-d1*d1/8.0)*2.0+exp(-d1/12.0)*0.35);
+  return vec4(aces(col),1.0);
+}`;
+
+/* ---------- Emissionsnebel ---------- */
+SRC.nebula = `
+vec4 shade(vec2 p){
+  float r = length(p);
+  vec2 w = vec2(fbm(vec3(p*1.4,uSeed),1.0,6), fbm(vec3(p*1.4,uSeed+5.0),1.0,6));
+  vec2 q = p+0.38*w;
+  vec2 qe = q*vec2(1.0,1.2);
+  float env = exp(-dot(qe,qe)*2.6);
+  float ha = env*(0.45+0.75*max(fbm(vec3(q*2.6,uSeed+1.0),1.0,12)+0.3,0.0));
+  float fil = pow(rfbm(vec3(q*3.2,uSeed+2.0),1.0,12),2.0)*env;
+  vec2 c = q-vec2(0.05,-0.02);
+  float o3 = exp(-dot(c,c)*9.0)*(0.6+0.6*fbm(vec3(q*4.0,uSeed+3.0),1.0,12));
+  vec2 dc = p-vec2(-0.3,0.35);
+  float dust = smoothstep(0.0,0.5,fbm(vec3(p*2.0+vec2(0.7,-0.4),uSeed+7.0),1.0,12))*exp(-dot(dc,dc)*2.5)*2.2
+             + smoothstep(0.2,0.6,fbm(vec3(p*3.5,uSeed+8.0),1.0,12))*0.6*env;
+  vec3 col = ha*vec3(1.0,0.24,0.34)*1.5 + fil*vec3(1.0,0.5,0.55)*0.9 + o3*vec3(0.3,0.95,0.85)*1.3;
+  col *= exp(-dust*vec3(1.6,1.9,2.2));
+  col += vec3(0.9,0.93,1.0)*exp(-length(p-vec2(0.03,-0.01))*30.0)*2.5;
+  col += starLayers(p,0.06+0.25*env,10.0,uSeed,PX)*exp(-dust*0.8);
+  col *= smoothstep(1.2,0.7,r);
+  return vec4(aces(col),1.0);
+}`;
+
+/* ---------- Kugelsternhaufen ---------- */
+SRC.cluster = `
+vec4 shade(vec2 p){
+  float r = length(p), a = 0.16;
+  float sig = 1.0/pow(1.0+r*r/(a*a),2.0);
+  vec3 col = vec3(1.0,0.85,0.62)*(sig*0.9 + 0.08*exp(-r*3.0));
+  float dd = clamp(sig*2.0+0.05,0.0,1.0)*smoothstep(1.3,0.5,r);
+  col += starLayers(p,dd,16.0,uSeed,PX)*1.1 + starLayers(p,dd,23.0,uSeed+7.0,PX)*0.9 + starLayers(p,dd,33.0,uSeed+13.0,PX)*0.7;
+  return vec4(aces(col),1.0);
+}`;
+
+/* ---------- Galaxien ---------- */
+SRC.galaxy = `
+vec4 galaxy(vec2 q, float arms, float pk, float bar, float barA, float warm, float seed){
+  float r = length(q), th = atan(q.y,q.x);
+  float edge = smoothstep(1.05,0.7,r);
+  float disk = exp(-r/0.38)*edge;
+  float bulge = exp(-pow(r/0.07,1.3));
+  vec2 bq = rot2(barA)*q;
+  float barv = bar*exp(-pow(bq.x/0.2,2.0)-pow(bq.y/0.055,2.0));
+  float warp = fbm(vec3(q*2.5,seed),1.0,6)*1.4;
+  float phi = th - log(max(r,0.02))*pk;
+  float armv = pow(0.5+0.5*cos(arms*phi+warp),2.5);
+  float dustArm = pow(0.5+0.5*cos(arms*phi+warp-0.55),5.0);
+  float clump = fbm(vec3(q*7.0,seed+3.0),1.0,10);
+  float rIn = smoothstep(0.06,0.22,r);
+  float young = disk*armv*(0.5+1.2*max(clump+0.15,0.0))*rIn;
+  float old = disk*0.45 + bulge*2.2 + barv*1.1;
+  float hii = disk*armv*rIn*smoothstep(0.35,0.75,fbm(vec3(q*22.0,seed+9.0),1.0,8));
+  float dust = disk*(dustArm*1.4+0.25)*(0.4+0.9*max(fbm(vec3(q*11.0,seed+5.0),1.0,12)+0.3,0.0))*smoothstep(0.05,0.18,r);
+  vec3 oldC = mix(vec3(1.0,0.84,0.62),vec3(1.0,0.76,0.52),warm);
+  vec3 col = young*vec3(0.55,0.68,1.0)*1.5 + old*oldC*1.1 + hii*vec3(1.0,0.3,0.5)*2.2;
+  col *= exp(-dust*1.6*vec3(1.0,1.2,1.45));
+  return vec4(col, clamp(young*1.2+old*0.3,0.0,1.0)*edge*exp(-dust*0.6));
+}
+vec4 shade(vec2 p){
+  vec3 col = vec3(0.0);
+  if(uMode==0){
+    vec4 g = galaxy(p,4.0,4.2,1.0,0.45,0.0,uSeed);
+    col = g.rgb + starLayers(p,g.a,18.0,uSeed,PX);
+    col *= smoothstep(1.15,0.95,length(p));
+  } else if(uMode==1){
+    vec2 q = rot2(0.62)*p; q.y /= 0.3;
+    vec4 g = galaxy(q,2.0,7.5,0.3,0.2,1.0,uSeed);
+    col = g.rgb + starLayers(p,g.a*0.6,18.0,uSeed,PX);
+    col += vec3(1.0,0.88,0.7)*exp(-length(p-vec2(0.06,-0.1))/0.012)*0.7;
+    vec2 m = rot2(0.9)*(p-vec2(-0.28,0.3)); m.y /= 0.55;
+    col += vec3(1.0,0.88,0.7)*exp(-length(m)/0.03)*0.35;
+    col *= smoothstep(1.15,0.95,length(p));
+  } else {
+    float px0 = PX;
+    col += vec3(0.25,0.3,0.8)*0.025*exp(-length(p)*1.5);
+    vec2 c0 = vec2(-0.25,0.1), c1 = vec2(0.25,-0.05), c2 = vec2(0.36,0.1);
+    { float s = 0.012; vec2 q = (p-c0)/s; if(dot(q,q)<1.7){ PX = px0/s; vec4 g = galaxy(q,4.0,4.2,1.0,0.45,0.0,uSeed); col += g.rgb + starLayers(q,g.a,18.0,uSeed,PX); PX = px0; }
+      col += vec3(0.85,0.88,1.0)*(exp(-length(p-c0)/0.008)*1.1 + exp(-length(p-c0)/0.04)*0.12); }
+    { float s = 0.024; vec2 pq = (p-c1)/s; vec2 q = rot2(0.62)*pq; q.y /= 0.3;
+      if(dot(pq,pq)<1.7){ PX = px0/s; vec4 g = galaxy(q,2.0,7.5,0.3,0.2,1.0,uSeed+2.0); col += g.rgb + starLayers(pq,g.a*0.6,18.0,uSeed,PX); PX = px0; }
+      col += vec3(1.0,0.9,0.8)*(exp(-length(p-c1)/0.012)*1.2 + exp(-length(p-c1)/0.06)*0.14); }
+    { float s = 0.0075; vec2 q = rot2(0.4)*(p-c2)/s; q.y /= 0.7;
+      if(dot(q,q)<2.5){ PX = px0/s; vec4 g = galaxy(q,2.0,3.5,0.0,0.0,0.0,uSeed+4.0); col += g.rgb*0.8; PX = px0; }
+      col += vec3(0.85,0.88,1.0)*exp(-length(p-c2)/0.006)*0.6; }
+    float dd = (0.5*(exp(-dot(p-c0,p-c0)/0.006)+exp(-dot(p-c1,p-c1)/0.01)) + 0.03)*smoothstep(1.05,0.75,length(p));
+    col += starLayers(p,dd*0.6,7.0,uSeed+3.0,PX)*vec3(0.85,0.85,1.0)*0.9;
+    for(int k=0;k<70;k++){ vec3 h = hash33(vec3(float(k),uSeed,3.7)); vec2 cc = (k<50) ? ((k<25?c0:c1) + (h.xy-0.5)*0.28) : (h.xy-0.5)*1.5; float sz = 0.002+0.006*h.z*h.z; col += vec3(0.85,0.87,1.0)*exp(-length(p-cc)/sz)*0.35*(0.4+h.z); }
+  }
+  return vec4(aces(col*1.1),1.0);
+}`;
+
+/* ---------- Kosmisches Netz ---------- */
+SRC.web = `
+vec2 webField(vec2 q, float f0, float seed){
+  vec2 w = vec2(fbm(vec3(q*1.3,seed),1.0,5), fbm(vec3(q*1.3,seed+3.3),1.0,5))*0.3;
+  float d = 0.0, nd = 0.0, amp = 1.0, f = f0;
+  for(int i=0;i<6;i++){
+    float cpx = 1.0/(f*PX); if(cpx<5.0) break;
+    float fd = smoothstep(5.0,12.0,cpx);
+    vec3 F = worley(vec3((q+w)*f, seed*1.37+float(i)*7.1));
+    d += amp*fd*exp(-(F.y-F.x)*24.0);
+    nd += amp*fd*exp(-(F.z-F.x)*11.0);
+    amp *= 0.5; f *= 2.4;
+  }
+  return vec2(d,nd);
+}
+vec4 shade(vec2 p){
+  float r = length(p);
+  vec2 q = p; float mask; float f0 = 3.0;
+  if(uMode==0){ q = rot2(0.3)*p; q.y /= 0.5; mask = smoothstep(1.0,0.45,length(q)); }
+  else if(uMode==1){ mask = smoothstep(1.0,0.55,r); }
+  else if(uMode==2){ q = rot2(-0.18)*p; q.y /= 0.26; mask = smoothstep(1.0,0.35,length(q)); f0 = 4.0; }
+  else { mask = smoothstep(0.935,0.9,r); f0 = 5.0; }
+  vec2 wf = webField(p,f0,uSeed);
+  float dens = wf.x*mask, nd = wf.y*mask;
+  vec3 col = vec3(0.3,0.36,0.95)*dens*0.16 + vec3(1.0,0.72,0.42)*pow(nd,1.6)*0.6;
+  col += starLayers(p,clamp(dens*0.1+nd*0.6,0.0,1.0),22.0,uSeed,PX)*vec3(0.9,0.92,1.0)*0.8;
+  if(uMode==0) col += vec3(1.0,0.82,0.6)*(exp(-r/0.05)*1.2 + exp(-r/0.15)*0.25);
+  if(uMode==1){
+    float th = atan(p.y,p.x);
+    float tw = th + 0.55*sin(r*5.0+1.0) + 0.8*fbm(vec3(p*1.6,uSeed+4.0),1.0,4);
+    float K = 46.0;
+    float sp = TAU*r/K/PX/uDpr;
+    float fl = abs(fract(tw*K/TAU)-0.5)*sp;
+    float line = smoothstep(1.3,0.0,fl)*smoothstep(3.0,8.0,sp)*smoothstep(0.02,0.25,r)*smoothstep(1.0,0.7,r);
+    col += vec3(1.0,0.93,0.85)*line*0.5 + vec3(1.0,0.8,0.55)*exp(-r/0.06)*0.8;
+  }
+  if(uMode==3){
+    float cm = fbm(vec3(p*9.0,uSeed+11.0),1.0,12);
+    vec3 cmb = mix(vec3(0.12,0.28,1.0),vec3(1.0,0.5,0.12),smoothstep(-0.35,0.35,cm));
+    col += cmb*smoothstep(0.915,0.94,r)*smoothstep(1.0,0.975,r)*1.1;
+    col += vec3(1.0,0.55,0.25)*exp(-max(r-0.99,0.0)/0.02)*0.25*step(0.97,r);
+    col *= smoothstep(1.1,1.0,r);
+  }
+  return vec4(aces(col),1.0);
+}`;
+
+/* ---------- Hintergrund: Sternfeld in drei Ebenen, die beim Zoomen nach innen wandern ---------- */
+const BG = PRE + `
+uniform vec2 uRes; uniform float uZ;
+void main(){
+  vec2 fc = gl_FragCoord.xy; vec2 c = uRes*0.5; float m = max(uRes.x,uRes.y)*0.62;
+  vec2 u = (fc-c)/m; PX = 1.0/m;
+  vec3 col = vec3(0.010,0.012,0.022);
+  col += vec3(0.06,0.05,0.12)*0.3*smoothstep(0.0,0.8,fbm(vec3(u*1.2,uZ*0.05),1.0,5));
+  for(int l=0;l<3;l++){
+    float ph = fract(uZ*0.2+float(l)/3.0);
+    float sc = pow(2.3,1.0-ph), fd = pow(sin(PI*ph),1.4);
+    float G = 30.0;
+    vec2 q = u/sc*G; vec2 g = floor(q), f = fract(q);
+    vec3 h = hash32(g+float(l)*37.0);
+    if(h.z<0.42){
+      vec2 cc = 0.2+0.6*h.xy; float d = length(f-cc)*m*sc/G/uDpr;
+      float b = exp(-d*d*0.7)*fd*(0.25+0.75*pow(h.x*h.y,1.5));
+      float tw = 0.75+0.25*sin(uT*(0.6+h.y)+h.x*20.0);
+      col += mix(vec3(1.0,0.85,0.7),vec3(0.75,0.85,1.0),h.y)*b*tw*0.9;
+    }
+  }
+  fragColor = vec4(col,1.0);
+}`;
+
+/* ======================================================================
+   WebGL
+   ====================================================================== */
+const $ = id => document.getElementById(id);
+
+/* ======================================================================
+   Deine Angaben für Impressum und Spendenlink – bitte ausfüllen
+   ====================================================================== */
+const SITE = {
+  name:   'Sebastian Feurle',
+  street: 'Wallgrabenstr. 4B',
+  city:   '89340 Leipheim',
+  email:  'keytok.headpiece472@passmail.net',
+  paypal: 'https://paypal.me/sebastianfeurle'
+};
+(function setupMeta(){
+  const addr = $('impAddr'); [SITE.name, SITE.street, SITE.city].forEach((l, i) => { if (i) addr.appendChild(document.createElement('br')); addr.appendChild(document.createTextNode(l)); });
+  const m = $('impMail'), a = document.createElement('a'); a.href = 'mailto:' + SITE.email; a.textContent = SITE.email; m.appendChild(a);
+  $('coffee').href = SITE.paypal; $('coffee').title = 'Über PayPal einen Kaffee spendieren';
+  const dlg = $('imp');
+  $('impBtn').addEventListener('click', () => { if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', ''); });
+  $('impClose').addEventListener('click', () => { if (dlg.close) dlg.close(); else dlg.removeAttribute('open'); });
+  dlg.addEventListener('click', e => { if (e.target === dlg && dlg.close) dlg.close(); });
+})();
+const dialogOpen = () => $('imp').open;
+const glc = $('gl'), ov = $('ov'), octx = ov.getContext('2d');
+const gl = glc.getContext('webgl2', {alpha:false, antialias:false, premultipliedAlpha:true, powerPreference:'high-performance'});
+const PEXT = gl && gl.getExtension('KHR_parallel_shader_compile');
+let vao = null, vsh = null;
+const PROGS = {};
+if (gl) {
+  vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+  const vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  vsh = gl.createShader(gl.VERTEX_SHADER); gl.shaderSource(vsh, VERT); gl.compileShader(vsh);
+} else {
+  const d = document.createElement('div'); d.className = 'nogl';
+  d.textContent = 'Dieser Browser unterstützt kein WebGL 2. Die Objekte lassen sich deshalb nicht zeichnen; Texte und Lineal funktionieren weiter.';
+  document.body.appendChild(d);
+}
+function makeProg(name){
+  const fs = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(fs, name === 'bg' ? BG : PRE + SRC[name] + MAIN); gl.compileShader(fs);
+  const p = gl.createProgram(); gl.attachShader(p, vsh); gl.attachShader(p, fs);
+  gl.bindAttribLocation(p, 0, 'aP'); gl.linkProgram(p);
+  return PROGS[name] = {p, fs, u:{}, ok:false, bad:false};
+}
+function prog(name){
+  if (!gl) return null;
+  const e = PROGS[name] || makeProg(name);
+  if (e.bad) return null;
+  if (!e.ok) {
+    if (PEXT && !gl.getProgramParameter(e.p, PEXT.COMPLETION_STATUS_KHR)) return null;
+    if (!gl.getProgramParameter(e.p, gl.LINK_STATUS)) { console.error(name, gl.getShaderInfoLog(e.fs) || gl.getProgramInfoLog(e.p)); e.bad = true; return null; }
+    e.ok = true;
+  }
+  return e;
+}
+function U(e, n){ if (!(n in e.u)) e.u[n] = gl.getUniformLocation(e.p, n); return e.u[n]; }
+/* Shader vorkompilieren: zuerst die nahen, dann der Rest im Leerlauf */
+const KINDS = ['bg','craft','rock','planet','star','orbits','helio','oort','proxima','nebula','cluster','galaxy','web'];
+if (gl) {
+  if (PEXT) KINDS.forEach(k => PROGS[k] || makeProg(k));
+  else { ['bg','craft'].forEach(k => prog(k)); let i = 0; const idle = () => { while (i < KINDS.length && PROGS[KINDS[i]]) i++; if (i < KINDS.length) { prog(KINDS[i]); (window.requestIdleCallback || setTimeout)(idle, 60); } }; setTimeout(idle, 300); }
+}
+
+/* ======================================================================
+   Bühne
+   ====================================================================== */
+let W = 0, H = 0, dpr = 1, OX = 0, OY = 0, VM = 0, MAXD = 0, GW = 0, GH = 0, KG = 1;
+let quality = innerWidth < 760 ? .8 : 1;
+let avoid = [];
+function sizeGL(){
+  const s = Math.min(dpr, 2)*quality;
+  GW = Math.max(1, Math.round(W*s)); GH = Math.max(1, Math.round(H*s));
+  if (glc.width !== GW || glc.height !== GH) { glc.width = GW; glc.height = GH; }
+  KG = GW / W;
+}
+function measureAvoid(){
+  avoid = [document.getElementById('panel'), document.getElementById('dock'), document.querySelector('.top .readout')]
+    .map(el => el.getBoundingClientRect()).filter(r => r.width > 0)
+    .map(r => ({l:r.left-6, t:r.top-6, r:r.right+6, b:r.bottom+6}));
+}
+function resize(){
+  dpr = clamp(window.devicePixelRatio || 1, 1, 3); W = innerWidth; H = innerHeight;
+  const od = Math.min(dpr, 2); ov.width = Math.round(W*od); ov.height = Math.round(H*od);
+  const narrow = W < 760;
+  OX = narrow ? W/2 : W/2 + Math.min(170, W*.09);
+  OY = narrow ? H*.36 : H*.46;
+  VM = narrow ? Math.min(W, H*.6) : Math.min(W*.8, H*.86);
+  MAXD = Math.max(W, H);
+  sizeGL(); measureAvoid();
+}
+addEventListener('resize', resize); resize();
+
+function setVec(e, n, v){ if (v) gl.uniform3fv(U(e, n), v); }
+function drawObj(o, X, Y, R, a, time, extra){
+  const e = prog(o.k); if (!e) return;
+  gl.useProgram(e.p);
+  const half = Math.max(R*o.ext, 3);
+  gl.uniform2f(U(e,'uRes'), GW, GH); gl.uniform2f(U(e,'uCenter'), X, Y);
+  gl.uniform1f(U(e,'uHalf'), half); gl.uniform1f(U(e,'uExt'), half/R);
+  gl.uniform1f(U(e,'uR'), R); gl.uniform1f(U(e,'uT'), time); gl.uniform1f(U(e,'uSeed'), o.seed);
+  gl.uniform1f(U(e,'uAlpha'), a); gl.uniform1f(U(e,'uDpr'), KG); gl.uniform1f(U(e,'uEdge'), o.solid ? 0 : o.ext);
+  gl.uniform3fv(U(e,'uDot'), o.dotv);
+  const g = o.g;
+  gl.uniform1i(U(e,'uMode'), g.mode || 0);
+  setVec(e,'uA',g.A); setVec(e,'uB',g.B); setVec(e,'uC',g.C); setVec(e,'uD',g.D);
+  gl.uniform4fv(U(e,'uQ'), g.Q || [0,0,0,0]);
+  if (o.k === 'planet') {
+    gl.uniform4fv(U(e,'uRing'), g.ring || [0,0,0,0]); gl.uniform3fv(U(e,'uAtmo'), g.atmo || [0,0,0]);
+    gl.uniform3fv(U(e,'uAxis'), g.axis || [0,0,.01]); gl.uniform1f(U(e,'uHaze'), g.haze || 0);
+  } else if (o.k === 'orbits') {
+    const orb = new Float32Array(32), oc = new Float32Array(24);
+    o.orbits.forEach((q, i) => { orb.set([q.r, q.cur, q.hi ? 1 : 0, 0], i*4); oc.set(q.c, i*3); });
+    gl.uniform4fv(U(e,'uOrb'), orb); gl.uniform3fv(U(e,'uOrbC'), oc); gl.uniform1i(U(e,'uN'), o.orbits.length);
+    gl.uniform4fv(U(e,'uQ'), [o.belt ? 1 : 0, 0, 0, 0]);
+  } else if (o.k === 'helio') {
+    gl.uniform4fv(U(e,'uVoy'), [o.marks[1].x, o.marks[1].y, o.marks[2].x, o.marks[2].y]);
+  } else if (o.k === 'proxima') {
+    gl.uniform4fv(U(e,'uQ'), [o.marks[1].x, o.marks[1].y, 0, 0]);
+  }
+  gl.blendFunc(gl.ONE, o.solid ? gl.ONE_MINUS_SRC_ALPHA : gl.ONE);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+
+const FONT_LAB = '500 13px "Hanken Grotesk", "Segoe UI", system-ui, sans-serif';
+const FONT_MONO = '11px "JetBrains Mono", ui-monospace, Consolas, monospace';
+const smooth = (a, b, x) => { const t = clamp((x - a)/(b - a), 0, 1); return t*t*(3 - 2*t); };
+const hits = (x0, y0, x1, y1) => avoid.some(r => x0 < r.r && x1 > r.l && y0 < r.b && y1 > r.t);
+const twCache = {};
+function textW(s, font){ const k = font + s; if (!(k in twCache)) { octx.font = font; twCache[k] = octx.measureText(s).width; } return twCache[k]; }
+
+let lastR = 0;
+function render(time){
+  const kk = clamp((time - (lastR || time))*10, 0, 1); lastR = time;
+  const i = Math.min(N-2, Math.floor(t)), f = t - i;
+  const w = Math.exp(Math.log(WV[i])*(1-f) + Math.log(WV[i+1])*f);
+  const cam = C[i] + (C[i+1] - C[i]) * ((w - WV[i]) / (WV[i+1] - WV[i]));
+  const s = VM / w;
+  const T = reduce ? 0 : time;
+  const labels = [], marks = [], discs = [];
+
+  if (gl) {
+    gl.viewport(0, 0, GW, GH);
+    gl.disable(gl.BLEND);
+    const bg = prog('bg');
+    if (bg) {
+      gl.useProgram(bg.p);
+      gl.uniform2f(U(bg,'uRes'), GW, GH); gl.uniform2f(U(bg,'uCenter'), GW/2, GH/2);
+      gl.uniform1f(U(bg,'uHalf'), Math.max(GW, GH)); gl.uniform1f(U(bg,'uExt'), 1);
+      gl.uniform1f(U(bg,'uZ'), Math.log10(w)); gl.uniform1f(U(bg,'uT'), T); gl.uniform1f(U(bg,'uDpr'), KG);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    } else { gl.clearColor(.01,.012,.022,1); gl.clear(gl.COLOR_BUFFER_BIT); }
+    gl.enable(gl.BLEND);
+  }
+
+  for (let j = 0; j < N; j++) {
+    const o = OBJ[j], R = o.d/2*s, X = (C[j] - cam)*s + OX, Y = OY, E = R*o.ext;
+    if (R < .03 || X + E < -40 || X - E > W + 40) continue;
+    let a = 1;
+    if (!o.solid && E/MAXD > 2.5) a = clamp(1 - (E/MAXD - 2.5)/5, 0, 1);
+    if (a <= 0) continue;
+    if (o.orbits) for (const q of o.orbits) q.cur = q.a + T*.12/Math.pow(q.au, 1.5);
+    if (gl) drawObj(o, X*KG, Y*KG, R*KG, a, T + j*3.1);
+
+    const dpx = 2*R;
+    if (R > 4) discs.push([X, Y, R*(o.k === 'star' ? 1.05 : o.lx ? o.lx*.9 : 1), j]);
+    let la = smooth(5, 30, dpx) * clamp((VM*.9 - dpx)/(VM*.3), 0, 1) * a * (1 - smooth(1.15, 1.75, Math.abs(j - t)));
+    if (X < 0 || X > W) la = 0;
+    if (la > .02) {
+      const off = Math.max(R*(o.k === 'star' ? 1.08 : o.k === 'craft' ? .98 : 1), 3);
+      const tw = Math.max(textW(o.n, FONT_LAB), textW(fmtLen(o.d), FONT_MONO));
+      const lx = clamp(X, 10 + tw/2, W - 10 - tw/2);
+      const ly = Y + off + 20;
+      labels.push([lx, ly, o, la, 1 - smooth(.3, .5, Math.abs(j - t)), j]);
+    }
+    if (o.marks || o.orbits) {
+      const ma = smooth(150, 330, dpx) * a * clamp((3*MAXD - dpx)/MAXD, 0, 1);
+      if (ma > .02) {
+        const list = o.marks || [{x:0,y:0,l:'Sonne'}].concat(o.orbits.filter(q => q.l).map(q => ({x:q.r*Math.cos(q.cur), y:q.r*Math.sin(q.cur), l:q.l})));
+        for (const m of list) marks.push([X + m.x*R, Y - m.y*R, m.l, ma]);
+      }
+    }
+  }
+
+  const od = ov.width / W;
+  octx.setTransform(od, 0, 0, od, 0, 0);
+  octx.clearRect(0, 0, W, H);
+  labels.sort((a, b) => (b[4] - a[4]) || (b[2].d - a[2].d));
+  const placed = [];
+  const free = (x0, y0, x1, y1) => !placed.some(r => x0 < r[2] && x1 > r[0] && y0 < r[3] && y1 > r[1]);
+  octx.textAlign = 'center';
+  const onDisc = (b, own) => discs.some(([cx, cy, cr, k]) => { if (k === own) return false; const nx = clamp(cx, b[0], b[2]), ny = clamp(cy, b[1], b[3]); return (nx-cx)**2 + (ny-cy)**2 < cr*cr; });
+  for (const [x, y, o, la, act, j] of labels) {
+    const tw = Math.max(textW(o.n, FONT_LAB), textW(fmtLen(o.d), FONT_MONO));
+    const box = [x - tw/2 - 4, y - 14, x + tw/2 + 4, y + 24];
+    const ok = !hits(box[0], box[1], box[2], box[3]) && free(box[0], box[1], box[2], box[3]) && !onDisc(box, j);
+    o.blk = o.blk === undefined ? (ok ? 1 : 0) : o.blk + ((ok ? 1 : 0) - o.blk)*kk;
+    if (la*o.blk < .01) continue;
+    if (ok) placed.push(box);
+    octx.globalAlpha = la*o.blk;
+    octx.font = FONT_LAB; octx.fillStyle = '#e1e5f2'; octx.fillText(o.n, x, y);
+    octx.font = FONT_MONO; octx.fillStyle = '#8a92aa'; octx.fillText(fmtLen(o.d), x, y + 20);
+    if (act > .01) { const nw = textW(o.n, FONT_LAB)*act; octx.globalAlpha = la*o.blk*act; octx.fillStyle = '#f2c27c'; octx.fillRect(x - nw/2, y + 5, nw, 1.5); }
+  }
+  octx.textAlign = 'left';
+  for (const [x, y, l, ma] of marks) {
+    if (x < -20 || x > W + 20 || y < -20 || y > H + 20) continue;
+    const tw = textW(l, FONT_MONO);
+    if (hits(x - 6, y - 26, x + 20 + tw, y + 6) || !free(x - 6, y - 26, x + 20 + tw, y + 6)) continue;
+    placed.push([x - 6, y - 26, x + 20 + tw, y + 6]);
+    octx.globalAlpha = ma;
+    octx.strokeStyle = '#f2c27c'; octx.lineWidth = 1.2;
+    octx.beginPath(); octx.arc(x, y, 5, 0, TAU); octx.stroke();
+    octx.beginPath(); octx.moveTo(x + 4, y - 4); octx.lineTo(x + 13, y - 13); octx.stroke();
+    octx.font = FONT_MONO; octx.fillStyle = '#f5d6a6'; octx.fillText(l, x + 16, y - 14);
+  }
+  octx.globalAlpha = 1;
+  if (!gl) { /* ohne WebGL bleiben nur Punkte */ }
+  hud(s, w);
+}
+
+/* ======================================================================
+   Oberfläche
+   ====================================================================== */
+const panel = $('panel'), rail = $('rail'), cursor = $('cursor'), tip = $('tip');
+const pos = L => (L - LMIN)/(LMAX - LMIN);
+(function buildRail(){
+  const ticks = $('ticks'), dots = $('dots');
+  for (let p = 0; p <= 27; p++) {
+    const el = document.createElement('div'); el.className = 'tick' + (p % 3 === 0 ? ' maj' : '') + (p % 9 === 0 ? ' lab' : '');
+    el.style.left = pos(p)*100 + '%';
+    if (p % 3 === 0) { const sp = document.createElement('span'); sp.textContent = '10' + sup(p) + ' m'; el.appendChild(sp); }
+    ticks.appendChild(el);
+  }
+  OBJ.forEach((o, j) => { const d = document.createElement('div'); d.className = 'odot'; d.style.left = pos(FL[j])*100 + '%'; dots.appendChild(d); o.dotEl = d; });
+})();
+
+let focus = -1, lastFov = '', lastBar = '';
+function setFocus(j){
+  if (j === focus) return;
+  if (focus >= 0) OBJ[focus].dotEl.classList.remove('on');
+  focus = j; const o = OBJ[j]; o.dotEl.classList.add('on');
+  $('idx').textContent = String(j + 1).padStart(2, '0') + ' / ' + N;
+  $('cat').textContent = o.cat; $('name').textContent = o.n;
+  $('size').textContent = fmtLen(o.d); $('size2').textContent = fmt2(o.d); $('desc').textContent = o.t;
+  const more = $('more'); more.textContent = '';
+  const link = (href, label, title) => { const a = document.createElement('a'); a.href = href; a.target = '_blank'; a.rel = 'noopener'; a.textContent = label + ' ↗'; a.title = title; more.appendChild(a); };
+  link(wikiURL(o), 'Wikipedia', o.n + ' bei Wikipedia');
+  if (NASA[o.n]) link(NASA[o.n], 'NASA', o.n + ' bei der NASA');
+  panel.classList.remove('swap'); void panel.offsetWidth; panel.classList.add('swap');
+  rail.setAttribute('aria-valuenow', j + 1); rail.setAttribute('aria-valuetext', o.n + ', ' + fmtLen(o.d));
+  measureAvoid();
+}
+function hud(s, w){
+  setFocus(clamp(Math.round(t), 0, N-1));
+  const vis = W / s, fv = fmtLen(vis);
+  if (fv !== lastFov) { lastFov = fv; $('fov').textContent = fv; $('pow').textContent = '≈ 10' + sup(Math.round(Math.log10(vis))) + ' m'; }
+  const m = 110 / s, [div, u] = unit(m), v = m/div, p = 10 ** Math.floor(Math.log10(v)), n = v/p, nice = (n >= 5 ? 5 : n >= 2 ? 2 : 1)*p;
+  $('bar').style.width = (nice*div*s).toFixed(1) + 'px';
+  const bl = big(nice) + ' ' + (u === 'Lichtjahre' ? 'Lj' : u);
+  if (bl !== lastBar) { lastBar = bl; $('barlbl').textContent = bl; }
+  cursor.style.left = clamp(pos(Math.log10(w/FR)), 0, 1)*100 + '%';
+}
+
+/* ======================================================================
+   Steuerung
+   ====================================================================== */
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let t = 0, targetT = 0, vel = 0, touring = false, last = 0, interacted = false;
+function touch(){ if (!interacted) { interacted = true; $('hint').classList.add('gone'); } }
+function userMove(){ touch(); if (touring) setTour(false); }
+function setTour(on){
+  touring = on; $('tour').setAttribute('aria-pressed', on);
+  $('tourLbl').textContent = on ? 'Pause' : 'Tour';
+  $('tourIcon').innerHTML = on ? '<path d="M8 5v14M16 5v14"/>' : '<path d="M8 5l11 7-11 7z"/>';
+  if (on && targetT >= N - 1.01) { targetT = 0; t = 0; }
+  touch();
+}
+const step = d => { userMove(); targetT = clamp(d > 0 ? Math.floor(targetT + .001) + 1 : Math.ceil(targetT - .001) - 1, 0, N-1); };
+
+addEventListener('wheel', e => {
+  if (dialogOpen()) return;
+  if (e.target.closest && e.target.closest('.dock') && !e.target.closest('.rail')) return;
+  e.preventDefault(); userMove();
+  const k = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
+  targetT = clamp(targetT + (e.deltaY + e.deltaX)*k*.0017, 0, N-1);
+}, {passive: false});
+
+let drag = null;
+ov.addEventListener('pointerdown', e => { drag = {x: e.clientX, y: e.clientY, tm: performance.now(), v: 0}; ov.setPointerCapture(e.pointerId); vel = 0; userMove(); });
+ov.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const d = (drag.y - e.clientY) + (drag.x - e.clientX), now = performance.now(), dt = Math.max(1, now - drag.tm);
+  const dT = d * (e.pointerType === 'touch' ? .009 : .006);
+  targetT = clamp(targetT + dT, 0, N-1);
+  drag.v = drag.v*.6 + (dT/dt*1000)*.4; drag.x = e.clientX; drag.y = e.clientY; drag.tm = now;
+});
+const endDrag = () => { if (drag && performance.now() - drag.tm < 80) vel = clamp(drag.v, -6, 6); drag = null; };
+ov.addEventListener('pointerup', endDrag); ov.addEventListener('pointercancel', endDrag);
+
+addEventListener('keydown', e => {
+  if (dialogOpen()) return;
+  const k = e.key;
+  if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown' || (k === ' ' && e.target === document.body)) { e.preventDefault(); step(1); }
+  else if (k === 'ArrowLeft' || k === 'ArrowUp' || k === 'PageUp') { e.preventDefault(); step(-1); }
+  else if (k === 'Home') { e.preventDefault(); userMove(); targetT = 0; }
+  else if (k === 'End') { e.preventDefault(); userMove(); targetT = N-1; }
+});
+$('prev').addEventListener('click', () => step(-1));
+$('next').addEventListener('click', () => step(1));
+$('tour').addEventListener('click', () => setTour(!touring));
+
+function railT(clientX){
+  const r = rail.getBoundingClientRect(), L = LMIN + clamp((clientX - r.left)/r.width, 0, 1)*(LMAX - LMIN);
+  if (L <= FL[0]) return 0; if (L >= FL[N-1]) return N-1;
+  let j = 0; while (j < N-2 && FL[j+1] <= L) j++;
+  return j + (L - FL[j])/(FL[j+1] - FL[j]);
+}
+function nearest(clientX){
+  const r = rail.getBoundingClientRect(); let best = 0, bd = 1e9;
+  FL.forEach((L, j) => { const d = Math.abs(r.left + pos(L)*r.width - clientX); if (d < bd) { bd = d; best = j; } });
+  return [best, bd];
+}
+let railDrag = false;
+rail.addEventListener('pointerdown', e => { railDrag = true; rail.setPointerCapture(e.pointerId); userMove(); const [j, d] = nearest(e.clientX); targetT = d < 8 ? j : railT(e.clientX); });
+rail.addEventListener('pointermove', e => {
+  const [j, d] = nearest(e.clientX), r = rail.getBoundingClientRect();
+  if (railDrag) targetT = railT(e.clientX);
+  if (d < 10 || railDrag) { const jj = railDrag ? clamp(Math.round(railT(e.clientX)), 0, N-1) : j; tip.textContent = OBJ[jj].n; tip.style.left = pos(FL[jj])*r.width + 'px'; tip.classList.add('show'); }
+  else tip.classList.remove('show');
+});
+rail.addEventListener('pointerup', () => { railDrag = false; });
+rail.addEventListener('pointerleave', () => { if (!railDrag) tip.classList.remove('show'); });
+
+/* Bildrate halten: Auflösung passt sich an */
+let ema = 16, qT = 0;
+function frame(now){
+  const dtms = last ? now - last : 16, dt = Math.min(.05, dtms/1000); last = now;
+  ema = ema*.94 + Math.min(dtms, 100)*.06; qT += dt;
+  if (qT > 1.2) { qT = 0;
+    if (ema > 25 && quality > .5) { quality = Math.max(.5, quality*.82); sizeGL(); }
+    else if (ema < 13.5 && quality < 1) { quality = Math.min(1, quality*1.1); sizeGL(); } }
+  if (touring) {
+    const fr = targetT - Math.floor(targetT);
+    targetT += dt*.42*(.2 + .8*Math.pow(Math.sin(Math.PI*fr), 2));
+    if (targetT >= N-1) { targetT = N-1; setTour(false); }
+  }
+  if (Math.abs(vel) > .002) { targetT = clamp(targetT + vel*dt, 0, N-1); vel *= Math.exp(-dt*3.5); } else vel = 0;
+  t += (targetT - t) * (reduce ? 1 : 1 - Math.exp(-dt*6.5));
+  if (Math.abs(targetT - t) < 1e-5) t = targetT;
+  render(now/1000);
+  requestAnimationFrame(frame);
+}
+
+const start = data => {
+  if (data && typeof data.t === 'number') t = targetT = clamp(data.t, 0, N-1);
+  setFocus(clamp(Math.round(t), 0, N-1));
+  requestAnimationFrame(frame);
+};
+const hot = window.claude && window.claude.hot;
+if (hot && hot.snapshot) hot.snapshot(() => ({t: targetT}));
+hot && hot.ready ? hot.ready(start) : start((hot && hot.data) || {});
+})();
+</script>
+
+</body>
+</html>
