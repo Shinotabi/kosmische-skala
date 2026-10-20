@@ -133,7 +133,7 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--body);ov
 .imp-in .x{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:18px;border:1px solid var(--faint);background:none;color:var(--ink);cursor:pointer;display:grid;place-items:center}
 .imp-in .x svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
 @media (max-width:760px){.imp-in{padding:24px 20px}.imp-in h2{font-size:30px}}
-.intro{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px 16px;background:radial-gradient(70% 60% at 50% 50%,rgba(4,5,10,.72),rgba(4,5,10,.94));transition:opacity 1.4s ease,visibility 0s 1.4s}
+.intro{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px 16px;background:radial-gradient(70% 60% at 50% 50%,rgba(4,5,10,.5),rgba(4,5,10,.88));transition:opacity 1.4s ease,visibility 0s 1.4s}
 .intro.out{opacity:0;visibility:hidden}
 .intro-in{text-align:center;max-width:680px}
 .intro-eye{font:500 11px var(--mono);letter-spacing:.26em;text-transform:uppercase;color:var(--dim);margin:0 0 24px;opacity:0;animation:introUp 1.2s .3s forwards}
@@ -1653,10 +1653,10 @@ function render(time){
   const i = Math.min(N-2, Math.floor(t)), f = t - i;
   const w = Math.exp(Math.log(WV[i])*(1-f) + Math.log(WV[i+1])*f);
   const cam = C[i] + (C[i+1] - C[i]) * ((w - WV[i]) / (WV[i+1] - WV[i]));
-  const s = VM / (w*(1 + introZ));
+  const s = VM / w * (1 + .75*introW);
+  const OXc = OX + (W/2 - OX)*introW;
   const T = reduce ? 0 : time;
   const labels = [], marks = [], discs = [];
-  const introShift = introZ < 0 ? (-introZ/.6)*(OBJ[0].d/2*s)*.62 : 0;
 
   if (gl) {
     gl.viewport(0, 0, GW, GH);
@@ -1673,7 +1673,7 @@ function render(time){
   }
 
   for (let j = 0; j < N; j++) {
-    const o = OBJ[j], R = o.d/2*s, X = (C[j] - cam)*s + OX, Y = OY + introShift, E = R*o.ext;
+    const o = OBJ[j], R = o.d/2*s, X = (C[j] - cam)*s + OXc, Y = OY + (H/2 - OY)*introW, E = R*o.ext;
     if (R < .03 || X + E < -40 || X - E > W + 40) continue;
     let a = 1;
     if (!o.solid && E/MAXD > 2.5) a = clamp(1 - (E/MAXD - 2.5)/5, 0, 1);
@@ -1855,7 +1855,7 @@ function setTour(on){
 const step = d => { userMove(); targetT = clamp(d > 0 ? Math.floor(targetT + .001) + 1 : Math.ceil(targetT - .001) - 1, 0, N-1); };
 
 addEventListener('wheel', e => {
-  if (dialogOpen() || introActive) { if (introActive) e.preventDefault(); return; }
+  if (dialogOpen() || introActive || introT0) { if (introActive || introT0) e.preventDefault(); return; }
   if (e.target.closest && e.target.closest('.dock') && !e.target.closest('.rail')) return;
   e.preventDefault(); userMove();
   const k = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
@@ -1876,6 +1876,7 @@ ov.addEventListener('pointerup', endDrag); ov.addEventListener('pointercancel', 
 
 addEventListener('keydown', e => {
   if (introActive) { if (e.key === 'Enter') { e.preventDefault(); introGo(true); } else if (e.key === 'Escape') introGo(false); return; }
+  if (introT0) return;
   if (dialogOpen()) return;
   const k = e.key;
   if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown' || (k === ' ' && e.target === document.body)) { e.preventDefault(); step(1); }
@@ -1958,7 +1959,7 @@ function audioScale(L){
 const PENTA = [0, 2, 4, 7, 9];
 let sfxLast = 0;
 function sfx(j){
-  if (!SND.on || !SND.C) return;
+  if (!SND.on || !SND.C || introT0) return;
   const now = performance.now(); if (now - sfxLast < 170) return; sfxLast = now;
   const C = SND.C, t = C.currentTime;
   const src = C.createBufferSource(); src.buffer = SND.noise;
@@ -1971,12 +1972,26 @@ function sfx(j){
   const og = C.createGain(); og.gain.setValueAtTime(0, t + .08); og.gain.linearRampToValueAtTime(.03, t + .12); og.gain.exponentialRampToValueAtTime(.0001, t + 2.4);
   o.connect(og); og.connect(SND.verb); og.connect(SND.dry); o.start(t + .08); o.stop(t + 2.5);
 }
+function sfxDive(){
+  if (!SND.on || !SND.C) return;
+  const C = SND.C, t = C.currentTime, d = INTRO_MS/1000;
+  const src = C.createBufferSource(); src.buffer = SND.noise; src.loop = true;
+  const bp = C.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = .9;
+  bp.frequency.setValueAtTime(2200, t); bp.frequency.exponentialRampToValueAtTime(180, t + d);
+  const g = C.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.07, t + d*.45); g.gain.linearRampToValueAtTime(0, t + d + .6);
+  src.connect(bp); bp.connect(g); g.connect(SND.verb); g.connect(SND.dry); src.start(t); src.stop(t + d + .8);
+  const o = C.createOscillator(); o.type = 'sine';
+  o.frequency.setValueAtTime(392, t + d - .4);
+  const og = C.createGain(); og.gain.setValueAtTime(0, t + d - .4); og.gain.linearRampToValueAtTime(.035, t + d - .3); og.gain.exponentialRampToValueAtTime(.0001, t + d + 3);
+  o.connect(og); og.connect(SND.verb); og.connect(SND.dry); o.start(t + d - .4); o.stop(t + d + 3.1);
+}
 $('sndBtn').addEventListener('click', () => audioOn(!SND.on));
 
 /* ======================================================================
    Intro
    ====================================================================== */
-let introActive = false, introT0 = 0, introZ = 0;
+let introActive = false, introT0 = 0, introW = 0;
+const INTRO_FROM = OBJ.findIndex(o => o.n === 'Sonnensystem'), INTRO_MS = 5600;
 function introSetup(skip){
   const el = $('intro');
   if (skip) { el.remove(); document.documentElement.classList.add('ui'); return; }
@@ -1988,7 +2003,8 @@ function introSetup(skip){
     [...word].forEach(ch => { const sp = document.createElement('span'); sp.style.setProperty('--i', li++); sp.textContent = ch; w.appendChild(sp); });
     ttl.appendChild(w);
   });
-  introActive = true; introZ = reduce ? 0 : -.6;
+  introActive = true; introW = 1;
+  t = targetT = INTRO_FROM;
   $('introSound').addEventListener('click', () => introGo(true));
   $('introQuiet').addEventListener('click', () => introGo(false));
   setTimeout(() => { try { $('introSound').focus({preventScroll: true}); } catch (e) {} }, 2200);
@@ -1998,8 +2014,8 @@ function introGo(sound){
   introActive = false;
   if (sound) audioOn(true);
   $('intro').classList.add('out');
-  document.documentElement.classList.add('ui');
-  introT0 = reduce ? 0 : performance.now(); if (reduce) introZ = 0;
+  if (reduce) { t = targetT = 0; introW = 0; document.documentElement.classList.add('ui'); }
+  else { introT0 = performance.now(); sfxDive(); }
   setTimeout(() => { const el = $('intro'); if (el) el.remove(); }, 1600);
 }
 
@@ -2008,7 +2024,13 @@ let ema = 16, qT = 0;
 function frame(now){
   const dtms = last ? now - last : 16, dt = Math.min(.05, dtms/1000); last = now;
   ema = ema*.94 + Math.min(dtms, 100)*.06; qT += dt;
-  if (introT0) { const k = Math.min(1, (now - introT0)/2800); introZ = -.6*Math.pow(1 - k, 3); if (k >= 1) { introT0 = 0; introZ = 0; } }
+  if (introT0) {
+    /* Flug vom Sonnensystem zum Astronauten: langsam los, zügig durch die Mitte, sanft ankommen */
+    const k = Math.min(1, (now - introT0)/INTRO_MS), e = k < .5 ? 16*k**5 : 1 - (-2*k + 2)**5/2;
+    t = targetT = INTRO_FROM*(1 - e);
+    introW = Math.pow(1 - Math.min(1, k/.4), 2);
+    if (k >= 1) { introT0 = 0; introW = 0; t = targetT = 0; document.documentElement.classList.add('ui'); }
+  }
   if (qT > 1.2) { qT = 0;
     if (ema > 25 && quality > .5) { quality = Math.max(.5, quality*.82); sizeGL(); }
     else if (ema < 13.5 && quality < 1) { quality = Math.min(1, quality*1.1); sizeGL(); } }
