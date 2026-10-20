@@ -133,10 +133,9 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--body);ov
 .imp-in .x{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:18px;border:1px solid var(--faint);background:none;color:var(--ink);cursor:pointer;display:grid;place-items:center}
 .imp-in .x svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
 @media (max-width:760px){.imp-in{padding:24px 20px}.imp-in h2{font-size:30px}}
-.intro{position:fixed;inset:0;z-index:20;display:grid;place-items:start center;padding:calc(env(safe-area-inset-top,0px) + 9vh) 16px 24px;background:var(--void);overflow:hidden;transition:opacity 1.5s ease .25s,visibility 0s 1.8s}
+.intro{position:fixed;inset:0;z-index:20;display:grid;place-items:start center;padding:calc(env(safe-area-inset-top,0px) + 9vh) 16px 24px;background:var(--void);overflow:hidden;transition:opacity .9s ease 1.7s,visibility 0s 2.6s}
 .intro.out{opacity:0;visibility:hidden}
 #introCv{position:absolute;inset:0;width:100%;height:100%;transform-origin:50% 70%;transition:transform 1.8s cubic-bezier(.55,0,.2,1),filter 1.8s ease}
-.intro.out #introCv{transform:scale(2.6);filter:blur(6px)}
 .intro-in{position:relative;text-align:center;max-width:680px;text-shadow:0 0 28px rgba(4,5,10,.9),0 0 8px rgba(4,5,10,.6);transition:opacity .6s ease,transform .9s ease}
 .intro.out .intro-in{opacity:0;transform:scale(.96)}
 .intro-eye{font:500 11px var(--mono);letter-spacing:.26em;text-transform:uppercase;color:var(--dim);margin:0 0 24px;opacity:0;animation:introUp 1.2s .3s forwards}
@@ -1611,15 +1610,52 @@ ${kind === 'truss' ? `
     if (i < 7) { m.visible = false; return; }
     m.material = issMat(i === 31 || i === 11 ? 'panel' : i === 32 ? 'rad' : i === 10 ? 'truss' : 'module', m.matrixWorld.clone());
   }));
+  const pc = document.createElement('canvas'); pc.width = pc.height = 64;
+  const px = pc.getContext('2d'), pg = px.createRadialGradient(32, 32, 0, 32, 32, 32);
+  pg.addColorStop(0, 'rgba(255,255,255,1)'); pg.addColorStop(.35, 'rgba(225,235,255,.55)'); pg.addColorStop(1, 'rgba(225,235,255,0)');
+  px.fillStyle = pg; px.fillRect(0, 0, 64, 64);
+  T3.puffTex = new THREE.CanvasTexture(pc);
   Object.assign(T3, {state: 'ready', R3, scene, cam, sun, rim});
+}
+/* Steuerdüsen: gelegentliche kurze Stöße, eine weiche Feder holt den Astronauten zurück */
+const RCS = {x: 0, y: 0, vx: 0, vy: 0, rz: 0, vr: 0, next: 4, lt: 0, puffs: [], kick: null};
+function rcsFire(dx, dy, md){
+  const THREE = window.THREE;
+  RCS.vx += dx*.06; RCS.vy += dy*.045; RCS.vr += (Math.random() - .5)*.06;
+  /* Gas tritt auf der Gegenseite aus, an den Ecken des Rucksacks */
+  const nozzles = dx ? [[-dx*.36, .5], [-dx*.36, -.05]] : [[-.3, dy > 0 ? -.12 : .62], [.3, dy > 0 ? -.12 : .62]];
+  for (const [nx, ny] of nozzles) for (let i = 0; i < 6; i++) {
+    const m = new THREE.SpriteMaterial({map: T3.puffTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0});
+    const sp = new THREE.Sprite(m); sp.position.set(nx, ny, .2); sp.scale.setScalar(.04);
+    const sp2 = .55 + Math.random()*.5, jit = (Math.random() - .5)*.35;
+    md.holder.add(sp);
+    RCS.puffs.push({sp, md, vx: (dx ? -dx : jit)*sp2, vy: (dy ? -dy : jit)*sp2, life: -i*.03});
+  }
+  if (typeof sfxPuff === 'function') sfxPuff();
+}
+function rcsStep(time, md){
+  const dt = Math.min(.05, Math.max(0, time - (RCS.lt || time))); RCS.lt = time;
+  if (RCS.kick) { rcsFire(RCS.kick[0], RCS.kick[1], md); RCS.kick = null; RCS.next = time + 5; }
+  else if (time > RCS.next && !reduce) {
+    const d = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 0], [-1, 0]][Math.random()*6|0];
+    rcsFire(d[0], d[1], md); RCS.next = time + 3.5 + Math.random()*5;
+  }
+  RCS.vx += (-RCS.x*.55 - RCS.vx*.55)*dt; RCS.vy += (-RCS.y*.55 - RCS.vy*.55)*dt; RCS.vr += (-RCS.rz*.5 - RCS.vr*.6)*dt;
+  RCS.x += RCS.vx*dt; RCS.y += RCS.vy*dt; RCS.rz += RCS.vr*dt;
+  for (let i = RCS.puffs.length - 1; i >= 0; i--) {
+    const q = RCS.puffs[i]; q.life += dt/.9;
+    if (q.life >= 1) { q.md.holder.remove(q.sp); q.sp.material.dispose(); RCS.puffs.splice(i, 1); continue; }
+    if (q.life < 0) continue;
+    q.sp.position.x += q.vx*dt; q.sp.position.y += q.vy*dt; q.vx *= .93; q.vy *= .93;
+    q.sp.scale.setScalar(.05 + q.life*.38);
+    q.sp.material.opacity = .5*Math.pow(1 - q.life, 2);
+  }
 }
 /* Pro Bild: Modell statt Shader verwenden, wenn es geladen ist */
 function t3Use(o, X, Y, R, a){
-  if (o.k !== 'craft') return false;
-  const md = T3.state === 'ready' ? T3.models[o.g.mode || 0] : null;
-  /* Solange das Modell lädt, nichts zeichnen; erst nach 9 s ohne Modell den Shader-Ersatz zeigen */
-  if (!md || !md.ready) return T3.state !== 'failed' && performance.now() < 9000 && R >= 1.2;
-  if (R < 1.2) return false;
+  if (T3.state !== 'ready' || o.k !== 'craft') return false;
+  const md = T3.models[o.g.mode || 0];
+  if (!md || !md.ready || R < 1.2) return false;
   T3.draws.push({md, X, Y, R, a, mode: o.g.mode || 0});
   return true;
 }
@@ -1634,9 +1670,11 @@ function t3Render(time){
   for (const d of T3.draws) {
     const {md, X, Y, R, mode} = d;
     md.holder.visible = true;
-    md.holder.position.set(X - W/2, H/2 - Y, 0);
+    if (mode === 0) rcsStep(time, md);
+    const ox = mode === 0 ? RCS.x*R : 0, oy = mode === 0 ? RCS.y*R : 0;
+    md.holder.position.set(X - W/2 + ox, H/2 - Y + oy, 0);
     md.holder.scale.setScalar(R);
-    if (mode === 0) md.spin.rotation.set(0.07 + 0.03*Math.sin(time*0.21), Math.PI + 0.38 + 0.14*Math.sin(time*0.13), 0.035*Math.sin(time*0.17));
+    if (mode === 0) md.spin.rotation.set(0.07 + 0.03*Math.sin(time*0.21), Math.PI + 0.38 + 0.14*Math.sin(time*0.13), 0.035*Math.sin(time*0.17) + RCS.rz);
     else md.spin.rotation.set(0.32, Math.PI/2 + 0.06*Math.sin(time*0.04), 0.02);
     if (R > big) { big = R; main = d; }
   }
@@ -1676,7 +1714,8 @@ function render(time){
   }
 
   for (let j = 0; j < N; j++) {
-    const o = OBJ[j], R = o.d/2*s, X = (C[j] - cam)*s + OX, Y = OY, E = R*o.ext;
+    const o = OBJ[j], R = o.d/2*s, X = (C[j] - cam)*s + OX, Y = OY - (j === 0 ? astroDrop : 0), E = R*o.ext;
+    if (j > 0 && (introActive || introT0)) continue;
     if (R < .03 || X + E < -40 || X - E > W + 40) continue;
     let a = 1;
     if (!o.solid && E/MAXD > 2.5) a = clamp(1 - (E/MAXD - 2.5)/5, 0, 1);
@@ -1977,7 +2016,7 @@ function sfx(j){
 }
 function sfxDive(){
   if (!SND.on || !SND.C) return;
-  const C = SND.C, t = C.currentTime, d = INTRO_MS/1000 + .4;
+  const C = SND.C, t = C.currentTime, d = ZOOM_MS/1000 + .4;
   const src = C.createBufferSource(); src.buffer = SND.noise; src.loop = true;
   const bp = C.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = .9;
   bp.frequency.setValueAtTime(2200, t); bp.frequency.exponentialRampToValueAtTime(180, t + d);
@@ -1988,13 +2027,22 @@ function sfxDive(){
   const og = C.createGain(); og.gain.setValueAtTime(0, t + d - .4); og.gain.linearRampToValueAtTime(.035, t + d - .3); og.gain.exponentialRampToValueAtTime(.0001, t + d + 3);
   o.connect(og); og.connect(SND.verb); og.connect(SND.dry); o.start(t + d - .4); o.stop(t + d + 3.1);
 }
+function sfxPuff(){
+  if (!SND.on || !SND.C || focus !== 0) return;
+  const C = SND.C, t = C.currentTime;
+  const src = C.createBufferSource(); src.buffer = SND.noise;
+  const hp = C.createBiquadFilter(); hp.type = 'bandpass'; hp.frequency.value = 3200; hp.Q.value = .6;
+  const g = C.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.03, t + .03); g.gain.exponentialRampToValueAtTime(.0001, t + .45);
+  src.connect(hp); hp.connect(g); g.connect(SND.dry); g.connect(SND.verb); src.start(t, Math.random()*3); src.stop(t + .5);
+}
 $('sndBtn').addEventListener('click', () => audioOn(!SND.on));
 
 /* ======================================================================
    Intro
    ====================================================================== */
 let introActive = false, introT0 = 0;
-const INTRO_MS = 1800;
+const ZOOM_MS = 2400, DROP_AT = 2300, DROP_MS = 2600, INTRO_MS = DROP_AT + DROP_MS;
+let astroDrop = 0;
 function introSetup(skip){
   const el = $('intro');
   if (skip) { el.remove(); document.documentElement.classList.add('ui'); return; }
@@ -2033,9 +2081,16 @@ function orreryStart(){
     for (const [x, y, b, ph] of stars) { g.globalAlpha = (.25 + .6*b)*(reduce ? 1 : .7 + .3*Math.sin(T*(.5 + b) + ph)); g.fillStyle = b > .85 ? '#ffe9c8' : '#dfe6ff'; g.fillRect(x*Wc, y*Hc, b*1.6, b*1.6); }
     g.globalAlpha = 1;
     const cx = Wc/2, cy = Hc*.7, Rr = Math.min(Wc*.62, Hc*.95)*.66, tilt = .34 + .04*Math.sin(T*.05), rot = T*.012;
+    /* Hineinzoomen: zwischen Erd- und Marsbahn hindurch, bis nur Sterne bleiben */
+    let Z = 1;
+    if (ORR.z0) { const k = Math.min(1, (now - ORR.z0)/ZOOM_MS); Z = Math.exp(Math.pow(k, 2.1)*Math.log(110)); }
+    const fx = cx + Rr*.4, fy = cy + Rr*tilt*.12;
+    g.setTransform(dp*Z, 0, 0, dp*Z, dp*fx*(1 - Z), dp*fy*(1 - Z));
+    cv.style.opacity = Math.max(0, 1 - (Z - 1)/70);
     const P = (r, a) => { const x = Math.cos(a + rot)*r, z = Math.sin(a + rot)*r; return [cx + x*Rr, cy + z*Rr*tilt, z]; };
     /* Bahnen */
     g.lineWidth = 1;
+    g.lineWidth = 1/Z;
     for (const q of PL) { g.beginPath(); g.ellipse(cx, cy, q.r*Rr, q.r*Rr*tilt, 0, 0, TAU); g.strokeStyle = 'rgba(160,178,230,.13)'; g.stroke(); }
     /* Gürtel */
     for (const [r, a, b] of belt) { const [x, y] = P(r, a + T*.035/Math.pow(r, 1.5)); g.globalAlpha = .18 + .3*b; g.fillStyle = '#c8bca8'; g.fillRect(x, y, 1.1, 1.1); }
@@ -2072,7 +2127,7 @@ function introGo(sound){
   if (sound) audioOn(true);
   $('intro').classList.add('out');
   if (reduce) { document.documentElement.classList.add('ui'); orreryStop(); }
-  else { introT0 = performance.now(); sfxDive(); setTimeout(() => document.documentElement.classList.add('ui'), 700); setTimeout(orreryStop, INTRO_MS + 200); }
+  else { introT0 = performance.now(); ORR.z0 = introT0; sfxDive(); setTimeout(() => document.documentElement.classList.add('ui'), DROP_AT + 1700); setTimeout(orreryStop, DROP_AT + 300); }
   setTimeout(() => { const el = $('intro'); if (el) el.remove(); }, INTRO_MS + 300);
 }
 
@@ -2081,7 +2136,13 @@ let ema = 16, qT = 0;
 function frame(now){
   const dtms = last ? now - last : 16, dt = Math.min(.05, dtms/1000); last = now;
   ema = ema*.94 + Math.min(dtms, 100)*.06; qT += dt;
-  if (introT0 && now - introT0 > INTRO_MS) introT0 = 0;
+  if (introActive) astroDrop = H*1.4;
+  else if (introT0) {
+    const e = now - introT0;
+    if (e < DROP_AT) astroDrop = H*1.4;
+    else { const k = Math.min(1, (e - DROP_AT)/DROP_MS); astroDrop = H*1.4*Math.pow(1 - k, 3); if (k > .72 && !RCS.braked) { RCS.braked = true; RCS.kick = [0, 1]; } }
+    if (e > INTRO_MS) { introT0 = 0; astroDrop = 0; }
+  }
   if (qT > 1.2) { qT = 0;
     if (ema > 25 && quality > .5) { quality = Math.max(.5, quality*.82); sizeGL(); }
     else if (ema < 13.5 && quality < 1) { quality = Math.min(1, quality*1.1); sizeGL(); } }
