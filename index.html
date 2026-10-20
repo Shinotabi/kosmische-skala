@@ -31,7 +31,8 @@ html,body{height:100%}
 body{margin:0;background:var(--void);color:var(--ink);font-family:var(--body);overflow:hidden;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
 #gl,#tc,#ov{position:fixed;inset:0;width:100%;height:100%;display:block}
 #gl,#tc{pointer-events:none}
-#ov{touch-action:none}
+#ov{touch-action:none;cursor:grab}
+#ov:active{cursor:grabbing}
 .veil{position:fixed;inset:0;pointer-events:none;background:
   radial-gradient(120% 90% at 60% 45%,transparent 55%,rgba(2,3,8,.7) 100%),
   linear-gradient(90deg,rgba(3,4,9,.7) 0%,rgba(3,4,9,0) 38%)}
@@ -203,7 +204,7 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--body);ov
     <h3>Inhalte und Links</h3>
     <p>Die Texte, Größenangaben und Zusammensetzungen sind sorgfältig zusammengestellt, aber ohne Gewähr. Die Zusammensetzungen stammen unter anderem aus den Planetary Fact Sheets der NASA und den Ergebnissen der Planck-Mission. Bei vielen Objekten sind die Werte Schätzungen der Forschung. Für die Inhalte verlinkter Seiten wie Wikipedia oder NASA sind deren Betreiber verantwortlich.</p>
     <h3>Darstellungen</h3>
-    <p>Alle Himmelskörper werden live im Browser berechnet. Sie sind maßstabsgetreu in der Größe, Oberflächen und Farben sind aber künstlerische Annäherungen und keine Fotos. Die 3D-Modelle des Raumanzugs (EMU) und der ISS stammen aus den <a href="https://science.nasa.gov/3d-resources/" target="_blank" rel="noopener">NASA 3D Resources</a>; Materialien und Texturen der ISS wurden ergänzt.</p>
+    <p>Alle Himmelskörper werden live im Browser berechnet. Sie sind maßstabsgetreu in der Größe, Oberflächen und Farben sind aber künstlerische Annäherungen und keine Fotos. Die Erdoberfläche ist das Bild „Blue Marble“ der NASA (Visible Earth). Die 3D-Modelle des Raumanzugs (EMU) und der ISS stammen aus den <a href="https://science.nasa.gov/3d-resources/" target="_blank" rel="noopener">NASA 3D Resources</a>; Materialien und Texturen der ISS wurden ergänzt.</p>
     <h3>Datenschutz</h3>
     <p>Diese Seite setzt keine Cookies und verwendet kein Tracking. Beim Aufruf verarbeitet der Webhoster technisch notwendige Daten wie IP-Adresse, Zeitpunkt und Browserkennung in Server-Logfiles, um die Seite auszuliefern und abzusichern (Art. 6 Abs. 1 lit. f DSGVO). Die Schriften werden über <span id="fontHost">Bunny Fonts (BunnyWay d.o.o., Slowenien)</span> geladen, die 3D-Bibliothek three.js über das Content-Delivery-Netzwerk jsDelivr; dabei wird deine IP-Adresse an diese Dienste übermittelt. Links zu Wikipedia, NASA und PayPal führen zu externen Anbietern, deren Datenschutzbestimmungen ab dem Aufruf gelten.</p>
     <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung sowie ein Beschwerderecht bei einer Datenschutz-Aufsichtsbehörde. Verantwortlich ist die oben genannte Person.</p>
@@ -248,37 +249,37 @@ const OBJ = [
   {n:'Vesta', d:525e3, k:'rock', cat:'Asteroid', dot:'#a9a39c', g:{mode:3, A:[.55,.52,.49], Q:[1,0,.03,0]},
    t:'Der hellste Asteroid am Himmel. Ein Einschlagbecken an seinem Südpol ist mit rund 500 km fast so breit wie Vesta selbst.'},
   {n:'Ceres', d:939e3, k:'planet', cat:'Zwergplanet', dot:'#8d8984',
-   g:{mode:0, A:[.42,.4,.38], B:[.3,.29,.28], C:[.95,.95,.95], Q:[1,.4,3,0], axis:[.05,.1,.01]},
+   g:{mode:0, A:[.42,.4,.38], B:[.3,.29,.28], C:[.95,.95,.95], Q:[1,.4,3,0], axis:[0.05,0.1,-0.12]},
    t:'Der größte Körper im Asteroidengürtel und ein Zwergplanet. Die hellen Flecken im Krater Occator sind Ablagerungen aus Salz.'},
   {n:'Pluto', d:2377e3, k:'planet', cat:'Zwergplanet', dot:'#d8b892',
-   g:{mode:0, A:[.76,.6,.46], B:[.33,.18,.11], C:[.95,.91,.85], Q:[.5,.8,2,0], axis:[.2,-.25,.006]},
+   g:{mode:0, A:[.76,.6,.46], B:[.33,.18,.11], C:[.95,.91,.85], Q:[.5,.8,2,0], axis:[0.2,-0.25,0.0078]},
    t:'Seit 2006 zählt Pluto als Zwergplanet. Sein helles „Herz“ ist eine weite Ebene aus gefrorenem Stickstoff.'},
   {n:'Mond', d:3474e3, k:'planet', cat:'Mond', dot:'#c9c7c2',
-   g:{mode:0, A:[.62,.61,.59], B:[.27,.27,.28], C:[.8,.8,.78], Q:[1.1,1,0,0], axis:[.03,.05,.004]},
+   g:{mode:0, A:[.62,.61,.59], B:[.27,.27,.28], C:[.8,.8,.78], Q:[1.1,1,0,0], axis:[0.03,0.05,-0.0018]},
    t:'Der Mond ist etwas mehr als ein Viertel so breit wie die Erde. Sein Licht braucht gut eine Sekunde bis zu uns.'},
   {n:'Merkur', d:4879e3, k:'planet', cat:'Planet', dot:'#a8a097',
-   g:{mode:0, A:[.55,.52,.49], B:[.43,.41,.39], C:[.75,.73,.7], Q:[1.3,.4,0,0], axis:[0,0,.006]},
+   g:{mode:0, A:[.55,.52,.49], B:[.43,.41,.39], C:[.75,.73,.7], Q:[1.3,.4,0,0], axis:[0,0,-0.00085]},
    t:'Der kleinste und sonnennächste Planet. Tagsüber wird es über 400 °C heiß, nachts kühlt er auf rund −180 °C ab.'},
   {n:'Mars', d:6779e3, k:'planet', cat:'Planet', dot:'#d27a4f',
-   g:{mode:0, A:[.72,.36,.2], B:[.38,.19,.11], C:[.86,.56,.36], Q:[.35,.9,1,0], axis:[.44,.2,.01], haze:.25, atmo:[.95,.62,.45]},
+   g:{mode:0, A:[.72,.36,.2], B:[.38,.19,.11], C:[.86,.56,.36], Q:[.35,.9,1,0], axis:[0.44,0.2,-0.049], haze:.25, atmo:[.95,.62,.45]},
    t:'Auf dem Mars steht Olympus Mons, der höchste Vulkan im Sonnensystem. Er ragt rund 22 km über seine Umgebung.'},
   {n:'Venus', d:12104e3, k:'planet', cat:'Planet', dot:'#f0d8a4',
-   g:{mode:2, A:[.93,.82,.6], B:[.78,.64,.42], C:[.99,.94,.82], Q:[0,0,0,0], axis:[.05,.05,.004], haze:.8, atmo:[1,.9,.7]},
+   g:{mode:2, A:[.93,.82,.6], B:[.78,.64,.42], C:[.99,.94,.82], Q:[0,0,0,0], axis:[0.05,0.05,0.0002], haze:.8, atmo:[1,.9,.7]},
    t:'Fast so groß wie die Erde. Unter ihrer dichten Hülle aus Kohlendioxid ist es mit rund 465 °C heißer als auf dem Merkur.'},
   {n:'Erde', d:12742e3, k:'planet', cat:'Planet', dot:'#7fb0ff',
-   g:{mode:1, A:[0,0,0], Q:[0,0,0,0], axis:[.41,.15,.012], haze:.55, atmo:[.35,.6,1]},
+   g:{mode:1, A:[0,0,0], Q:[0,0,0,0], axis:[0.41,0.15,-0.05], haze:.55, atmo:[.35,.6,1]},
    t:'Unser Planet. Jeder Mensch, der je gelebt hat, lebte hier.'},
   {n:'Neptun', d:49244e3, k:'planet', cat:'Planet', dot:'#5f86f0',
-   g:{mode:4, A:[.22,.36,.85], B:[.14,.25,.68], C:[.88,.92,1], D:[.06,.1,.35], Q:[14,.35,1,.55], axis:[.3,.15,.01], haze:.7, atmo:[.5,.66,1]},
+   g:{mode:4, A:[.22,.36,.85], B:[.14,.25,.68], C:[.88,.92,1], D:[.06,.1,.35], Q:[14,.35,1,.55], axis:[0.3,0.15,-0.075], haze:.7, atmo:[.5,.66,1]},
    t:'Der äußerste Planet. Hier wehen die schnellsten Winde des Sonnensystems mit über 2.000 km/h.'},
   {n:'Uranus', d:50724e3, k:'planet', cat:'Planet', dot:'#a9e0e3',
-   g:{mode:4, A:[.62,.85,.88], B:[.54,.78,.82], C:[.82,.96,.96], D:[0,0,0], Q:[10,.15,0,.06], axis:[1.35,.3,.006], haze:.8, atmo:[.75,.95,.95], ring:[1.6,2.02,.8,1]},
+   g:{mode:4, A:[.62,.85,.88], B:[.54,.78,.82], C:[.82,.96,.96], D:[0,0,0], Q:[10,.15,0,.06], axis:[1.35,0.3,0.07], haze:.8, atmo:[.75,.95,.95], ring:[1.6,2.02,.8,1]},
    t:'Seine Rotationsachse ist um 98 Grad gekippt. Deshalb rollt Uranus fast liegend um die Sonne.'},
   {n:'Saturn', d:116460e3, k:'planet', lx:2.3, cat:'Planet', dot:'#e6cf9d',
-   g:{mode:3, A:[.9,.8,.6], B:[.74,.6,.4], C:[.96,.91,.77], D:[0,0,0], Q:[34,.45,0,.6], axis:[-.38,.42,.008], haze:.3, atmo:[.95,.86,.66], ring:[1.24,2.27,1,0]},
+   g:{mode:3, A:[.9,.8,.6], B:[.74,.6,.4], C:[.96,.91,.77], D:[0,0,0], Q:[34,.45,0,.6], axis:[-0.38,0.42,-0.11], haze:.3, atmo:[.95,.86,.66], ring:[1.24,2.27,1,0]},
    t:'Seine Hauptringe sind gut 270.000 km breit, aber an vielen Stellen nur etwa zehn Meter dick.'},
   {n:'Jupiter', d:139820e3, k:'planet', cat:'Planet', dot:'#e3c6a2',
-   g:{mode:3, A:[.88,.76,.62], B:[.6,.4,.26], C:[.97,.93,.86], D:[.74,.33,.2], Q:[40,.8,1,1], axis:[.05,.06,.006], haze:.3, atmo:[.95,.88,.75]},
+   g:{mode:3, A:[.88,.76,.62], B:[.6,.4,.26], C:[.97,.93,.86], D:[.74,.33,.2], Q:[40,.8,1,1], axis:[0.05,0.06,-0.12], haze:.3, atmo:[.95,.88,.75]},
    t:'Der größte Planet. Im Großen Roten Fleck, einem Sturm, der seit Jahrhunderten tobt, hätte die Erde Platz.'},
   {n:'Sonne', d:1.3927e9, k:'star', T:5772, cat:'Stern', dot:'#ffd27a', g:{Q:[0,1,60,1]},
    t:'Die Sonne enthält 99,8 % der Masse des Sonnensystems. Rund 1,3 Millionen Erden würden in sie hineinpassen.'},
@@ -420,7 +421,6 @@ const PRE = `#version 300 es
 precision highp float; precision highp int;
 in vec2 vP; out vec4 fragColor;
 uniform float uT, uR, uSeed, uAlpha, uDpr, uEdge;
-uniform vec2 uRot;
 uniform int uMode;
 uniform vec3 uA, uB, uC, uD, uDot;
 uniform vec4 uQ;
@@ -549,7 +549,7 @@ const SRC = {};
 
 /* ---------- Planeten & Monde ---------- */
 SRC.planet = `
-uniform vec4 uRing; uniform vec3 uAtmo, uAxis; uniform float uHaze;
+uniform vec4 uRing; uniform vec3 uAtmo, uAxis; uniform float uHaze, uHasTex; uniform sampler2D uTex;
 float ringDens(float rr){
   if(uRing.z<=0.0||rr<uRing.x||rr>uRing.y) return 0.0;
   float d;
@@ -575,7 +575,7 @@ vec4 shade(vec2 p){
   if(rl < 1.0){
     float z = sqrt(1.0-r2); zs = z;
     vec3 nv = vec3(p,z);
-    vec3 s = rotY(uT*uAxis.z + uRot.x)*(transpose(M)*(uRing.z > 0.0 ? nv : rotX(-uRot.y)*nv));
+    vec3 s = rotY(uT*uAxis.z)*(transpose(M)*nv);
     vec3 alb = uA; float h = 0.0, wet = 0.0, cloud = 0.0; vec3 emis = vec3(0.0);
     if(uMode==0){
       int sp = int(uQ.z+0.5);
@@ -604,6 +604,21 @@ vec4 shade(vec2 p){
                    + 0.6*smoothstep(0.99985,0.99995,dot(s,normalize(vec3(0.27,0.17,0.947))));
         alb = mix(alb,uC*1.2,clamp(spot,0.0,1.0));
       }
+    } else if(uMode==1 && uHasTex>0.5){
+      float lon = atan(s.x, s.z), lat = asin(clamp(s.y,-1.0,1.0));
+      vec2 uv = vec2(lon/TAU + 0.5, 0.5 - lat/PI);
+      vec3 tx = textureLod(uTex, uv, max(log2(PX*2048.0/TAU), 0.0)).rgb;
+      float ocean = smoothstep(0.08,0.16, tx.b - max(tx.r,tx.g))*smoothstep(0.22,0.1, max(tx.r,tx.g));
+      vec3 sea = vec3(0.012,0.06,0.17)*(0.85+0.3*(0.5+0.5*fbm(s+2.0,3.0,6)));
+      alb = mix(pow(tx, vec3(1.08))*1.04, sea, ocean);
+      wet = ocean;
+      h = (1.0-ocean)*0.003*fbm(s+1.0,40.0,8);
+      float lat0 = abs(s.y);
+      vec3 cs = rotY(-uT*0.004)*s;
+      vec3 cw = cs + 0.25*vec3(fbm(cs,1.5,5), fbm(cs+3.0,1.5,5), fbm(cs+6.0,1.5,5));
+      cloud = smoothstep(0.18,0.62, fbm(cw+uSeed+20.0,2.0,12) + 0.1*(smoothstep(0.1,0.3,lat0)-0.4))*0.75;
+      float land = (1.0-ocean)*step(dot(tx,vec3(0.33)),0.62);
+      emis = vec3(1.0,0.72,0.4)*0.35*land*smoothstep(0.5,0.8,0.5+0.5*fbm(s+40.0,22.0,6))*(1.0-cloud);
     } else if(uMode==1){
       vec3 q = s + 0.18*vec3(fbm(s,1.4,4), fbm(s+5.2,1.4,4), fbm(s+9.1,1.4,4));
       float e = fbm(q+uSeed,1.1,12) + 0.06;
@@ -712,7 +727,7 @@ float shapeD(vec3 q){
 float sdf(vec3 q){ return shapeD(q) + uQ.z*fbm(q+uSeed,1.8,4); }
 vec4 shade(vec2 p){
   if(dot(p,p)>1.25) return vec4(0.0);
-  mat3 Rv = rotX(0.4 + uRot.y)*rotY(uT*0.045 + uSeed + uRot.x);
+  mat3 Rv = rotX(0.4)*rotY(uT*0.045+uSeed);
   mat3 Ri = transpose(Rv);
   vec3 ro = Ri*vec3(p,1.6), rd = Ri*vec3(0.0,0.0,-1.0);
   float t=0.0, dm=1e9, tm=0.0; bool hit=false;
@@ -992,7 +1007,7 @@ vec4 shade(vec2 p){
   vec3 c = uA;
   vec3 col = vec3(0.0);
   if(r<1.0){
-    float z = sqrt(1.0-r*r); vec3 s = rotY(uT*0.008 + uRot.x)*(rotX(-uRot.y)*vec3(p,z));
+    float z = sqrt(1.0-r*r); vec3 s = rotY(uT*0.008)*vec3(p,z);
     float mu = z; float limb = 1.0-0.6*(1.0-mu)-0.15*(1.0-mu)*(1.0-mu);
     float g;
     if(uQ.x>0.5){
@@ -1292,16 +1307,34 @@ const gl = glc.getContext('webgl2', {alpha:false, antialias:false, premultiplied
 const PEXT = gl && gl.getExtension('KHR_parallel_shader_compile');
 let vao = null, vsh = null;
 const PROGS = {};
+let earthTex = null, dummyTex = null;
 if (gl) {
   vao = gl.createVertexArray(); gl.bindVertexArray(vao);
   const vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
   gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
   vsh = gl.createShader(gl.VERTEX_SHADER); gl.shaderSource(vsh, VERT); gl.compileShader(vsh);
+  setupTextures();
 } else {
   const d = document.createElement('div'); d.className = 'nogl';
   d.textContent = 'Dieser Browser unterstützt kein WebGL 2. Die Objekte lassen sich deshalb nicht zeichnen; Texte und Lineal funktionieren weiter.';
   document.body.appendChild(d);
+}
+function setupTextures(){
+  dummyTex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, dummyTex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0,0,0,255]));
+  const img = new Image();
+  img.onload = () => {
+    const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    earthTex = t;
+  };
+  img.src = 'textures/earth.jpg';
 }
 function makeProg(name){
   const fs = gl.createShader(gl.FRAGMENT_SHADER);
@@ -1372,7 +1405,6 @@ function drawObj(o, X, Y, R, a, time, extra){
   gl.uniform1f(U(e,'uR'), R); gl.uniform1f(U(e,'uT'), time); gl.uniform1f(U(e,'uSeed'), o.seed);
   gl.uniform1f(U(e,'uAlpha'), a); gl.uniform1f(U(e,'uDpr'), KG); gl.uniform1f(U(e,'uEdge'), o.solid ? 0 : o.ext);
   gl.uniform3fv(U(e,'uDot'), o.dotv);
-  gl.uniform2f(U(e,'uRot'), o.rot ? o.rot.yaw : 0, o.rot ? o.rot.pitch : 0);
   const g = o.g;
   gl.uniform1i(U(e,'uMode'), g.mode || 0);
   setVec(e,'uA',g.A); setVec(e,'uB',g.B); setVec(e,'uC',g.C); setVec(e,'uD',g.D);
@@ -1380,6 +1412,9 @@ function drawObj(o, X, Y, R, a, time, extra){
   if (o.k === 'planet') {
     gl.uniform4fv(U(e,'uRing'), g.ring || [0,0,0,0]); gl.uniform3fv(U(e,'uAtmo'), g.atmo || [0,0,0]);
     gl.uniform3fv(U(e,'uAxis'), g.axis || [0,0,.01]); gl.uniform1f(U(e,'uHaze'), g.haze || 0);
+    const tx = o.n === 'Erde' && earthTex;
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tx || dummyTex);
+    gl.uniform1i(U(e,'uTex'), 0); gl.uniform1f(U(e,'uHasTex'), tx ? 1 : 0);
   } else if (o.k === 'orbits') {
     const orb = new Float32Array(32), oc = new Float32Array(24);
     o.orbits.forEach((q, i) => { orb.set([q.r, q.cur, q.hi ? 1 : 0, 0], i*4); oc.set(q.c, i*3); });
@@ -1544,7 +1579,7 @@ function t3Use(o, X, Y, R, a){
   if (T3.state !== 'ready' || o.k !== 'craft') return false;
   const md = T3.models[o.g.mode || 0];
   if (!md || !md.ready || R < 1.2) return false;
-  T3.draws.push({md, X, Y, R, a, mode: o.g.mode || 0, rot: o.rot});
+  T3.draws.push({md, X, Y, R, a, mode: o.g.mode || 0});
   return true;
 }
 function t3Render(time){
@@ -1556,12 +1591,12 @@ function t3Render(time){
   if (!T3.draws.length) { if (T3.drawn) { R3.clear(); T3.drawn = false; } return; }
   let big = 1, main = T3.draws[0];
   for (const d of T3.draws) {
-    const {md, X, Y, R, mode} = d, uy = d.rot ? d.rot.yaw : 0, up = d.rot ? d.rot.pitch : 0;
+    const {md, X, Y, R, mode} = d;
     md.holder.visible = true;
     md.holder.position.set(X - W/2, H/2 - Y, 0);
     md.holder.scale.setScalar(R);
-    if (mode === 0) md.spin.rotation.set(0.07 + 0.03*Math.sin(time*0.21) + up, Math.PI + 0.38 + 0.14*Math.sin(time*0.13) + uy, 0.035*Math.sin(time*0.17));
-    else md.spin.rotation.set(0.32 + up, Math.PI/2 + 0.06*Math.sin(time*0.04) + uy, 0.02);
+    if (mode === 0) md.spin.rotation.set(0.07 + 0.03*Math.sin(time*0.21), Math.PI + 0.38 + 0.14*Math.sin(time*0.13), 0.035*Math.sin(time*0.17));
+    else md.spin.rotation.set(0.32, Math.PI/2 + 0.06*Math.sin(time*0.04), 0.02);
     if (R > big) { big = R; main = d; }
   }
   cam.left = -W/2; cam.right = W/2; cam.top = H/2; cam.bottom = -H/2;
@@ -1575,19 +1610,6 @@ function t3Render(time){
   T3.draws.length = 0;
 }
 
-/* Drehen per Ziehen: Planeten, Monde, Kleinkörper, Sterne und die 3D-Modelle */
-const ROT = new Set(['craft','rock','planet','star']);
-let hitList = [], hitLast = [], hoverJ = -1;
-OBJ.forEach(o => { if (ROT.has(o.k)) o.rot = {yaw: 0, pitch: 0, vy: 0, vp: 0}; });
-function hitAt(x, y){
-  let best = -1, br = 1e9;
-  for (const [cx, cy, cr, j] of hitLast) { const d = Math.hypot(x - cx, y - cy); if (d < cr && cr < br) { best = j; br = cr; } }
-  return best;
-}
-function spinStep(dt){
-  for (const o of OBJ) { const r = o.rot; if (!r || (drag && drag.rot === o)) continue;
-    if (Math.abs(r.vy) > .001 || Math.abs(r.vp) > .001) { r.yaw += r.vy*dt; r.pitch = clamp(r.pitch + r.vp*dt, -1.2, 1.2); const k = Math.exp(-dt*2.5); r.vy *= k; r.vp *= k; } }
-}
 let lastR = 0;
 function render(time){
   const kk = clamp((time - (lastR || time))*10, 0, 1); lastR = time;
@@ -1597,7 +1619,6 @@ function render(time){
   const s = VM / w;
   const T = reduce ? 0 : time;
   const labels = [], marks = [], discs = [];
-  hitList = [];
 
   if (gl) {
     gl.viewport(0, 0, GW, GH);
@@ -1624,7 +1645,6 @@ function render(time){
 
     const dpx = 2*R;
     if (R > 4) discs.push([X, Y, R*(o.k === 'star' ? 1.05 : o.lx ? o.lx*.9 : 1), j]);
-    if (ROT.has(o.k) && R > 12) hitList.push([X, Y, R*(o.k === 'craft' ? .9 : 1), j]);
     let la = smooth(5, 30, dpx) * clamp((VM*.9 - dpx)/(VM*.3), 0, 1) * a * (1 - smooth(1.15, 1.75, Math.abs(j - t)));
     if (X < 0 || X > W) la = 0;
     if (la > .02) {
@@ -1644,7 +1664,6 @@ function render(time){
   }
 
   t3Render(T);
-  hitLast = hitList;
   const od = ov.width / W;
   octx.setTransform(od, 0, 0, od, 0, 0);
   octx.clearRect(0, 0, W, H);
@@ -1663,7 +1682,6 @@ function render(time){
     octx.globalAlpha = la*o.blk;
     octx.font = FONT_LAB; octx.fillStyle = '#e1e5f2'; octx.fillText(o.n, x, y);
     octx.font = FONT_MONO; octx.fillStyle = '#8a92aa'; octx.fillText(fmtLen(o.d), x, y + 20);
-    if (j === hoverJ) { octx.fillStyle = '#f2c27c'; octx.fillText('↻ Ziehen zum Drehen', x, y + 38); }
     if (act > .01) { const nw = textW(o.n, FONT_LAB)*act; octx.globalAlpha = la*o.blk*act; octx.fillStyle = '#f2c27c'; octx.fillRect(x - nw/2, y + 5, nw, 1.5); }
   }
   octx.textAlign = 'left';
@@ -1806,42 +1824,15 @@ addEventListener('wheel', e => {
 }, {passive: false});
 
 let drag = null;
-ov.addEventListener('pointerdown', e => {
-  const j = hitAt(e.clientX, e.clientY);
-  drag = {x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, tm: performance.now(), v: 0, hit: j, touch: e.pointerType !== 'mouse', mode: null, rot: null};
-  if (j >= 0 && !drag.touch) { drag.mode = 'rot'; drag.rot = OBJ[j].rot; drag.rot.vy = drag.rot.vp = 0; ov.style.cursor = 'grabbing'; }
-  ov.setPointerCapture(e.pointerId); vel = 0; userMove();
-});
+ov.addEventListener('pointerdown', e => { drag = {x: e.clientX, y: e.clientY, tm: performance.now(), v: 0}; ov.setPointerCapture(e.pointerId); vel = 0; userMove(); });
 ov.addEventListener('pointermove', e => {
-  if (!drag) {
-    const j = e.pointerType === 'mouse' ? hitAt(e.clientX, e.clientY) : -1;
-    if (j !== hoverJ) { hoverJ = j; ov.style.cursor = j >= 0 ? 'grab' : ''; }
-    return;
-  }
-  if (!drag.mode) {
-    const mx = e.clientX - drag.x0, my = e.clientY - drag.y0;
-    if (Math.hypot(mx, my) < 6) return;
-    if (drag.hit >= 0 && Math.abs(mx) > Math.abs(my)) { drag.mode = 'rot'; drag.rot = OBJ[drag.hit].rot; drag.rot.vy = drag.rot.vp = 0; }
-    else drag.mode = 'zoom';
-  }
-  if (drag.mode === 'rot') {
-    const now = performance.now(), dt = Math.max(1, now - drag.tm)/1000, r = drag.rot;
-    const dy = (e.clientX - drag.x)*.012, dp = drag.touch ? 0 : (e.clientY - drag.y)*.012;
-    r.yaw += dy; r.pitch = clamp(r.pitch + dp, -1.2, 1.2);
-    r.vy = r.vy*.5 + dy/dt*.5; r.vp = r.vp*.5 + dp/dt*.5;
-    drag.x = e.clientX; drag.y = e.clientY; drag.tm = now;
-    return;
-  }
+  if (!drag) return;
   const d = (drag.y - e.clientY) + (drag.x - e.clientX), now = performance.now(), dt = Math.max(1, now - drag.tm);
   const dT = d * (e.pointerType === 'touch' ? .009 : .006);
   targetT = clamp(targetT + dT, 0, N-1);
   drag.v = drag.v*.6 + (dT/dt*1000)*.4; drag.x = e.clientX; drag.y = e.clientY; drag.tm = now;
 });
-const endDrag = () => {
-  if (drag && drag.mode === 'rot') { const r = drag.rot; if (performance.now() - drag.tm > 80) r.vy = r.vp = 0; r.vy = clamp(r.vy, -8, 8); r.vp = clamp(r.vp, -8, 8); ov.style.cursor = hoverJ >= 0 ? 'grab' : ''; }
-  else if (drag && drag.mode === 'zoom' && performance.now() - drag.tm < 80) vel = clamp(drag.v, -6, 6);
-  drag = null;
-};
+const endDrag = () => { if (drag && performance.now() - drag.tm < 80) vel = clamp(drag.v, -6, 6); drag = null; };
 ov.addEventListener('pointerup', endDrag); ov.addEventListener('pointercancel', endDrag);
 
 addEventListener('keydown', e => {
@@ -1891,7 +1882,6 @@ function frame(now){
     targetT += dt*.42*(.2 + .8*Math.pow(Math.sin(Math.PI*fr), 2));
     if (targetT >= N-1) { targetT = N-1; setTour(false); }
   }
-  spinStep(dt);
   if (Math.abs(vel) > .002) { targetT = clamp(targetT + vel*dt, 0, N-1); vel *= Math.exp(-dt*3.5); } else vel = 0;
   t += (targetT - t) * (reduce ? 1 : 1 - Math.exp(-dt*6.5));
   if (Math.abs(targetT - t) < 1e-5) t = targetT;
