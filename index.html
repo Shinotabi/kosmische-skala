@@ -2633,7 +2633,7 @@ function frame(now){
    Reichweitenmessung mit Umami Cloud: keine Cookies, keine personenbezogenen Profile.
    Läuft nur auf der eigenen Domain, nicht in Vorschauen oder lokal.
    ====================================================================== */
-const UMAMI_ID = '';   /* Website-ID aus Umami Cloud eintragen */
+const UMAMI_ID = 'b879d6be-3d8d-49e5-b4ba-878de1994c63';   /* Website-ID aus Umami Cloud eintragen */
 const STATS = {sent: new Set(), max: -1, vis: 0};
 function track(name, data){ try { if (window.umami && umami.track) umami.track(name, data); } catch (e) {} }
 function trackOnce(key, name, data){ if (STATS.sent.has(key)) return; STATS.sent.add(key); track(name, data); }
