@@ -9,7 +9,24 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Kosmische Skala">
 <meta property="og:description" content="Maßstabsgetreuer Zoom durchs All: vom Astronauten bis zum Rand des beobachtbaren Universums, 40 Objekte über 27 Größenordnungen.">
-<meta name="twitter:card" content="summary">
+<meta property="og:url" content="https://kosmische-skala.de/">
+<meta property="og:site_name" content="Kosmische Skala">
+<meta property="og:locale" content="de_DE">
+<meta property="og:image" content="https://kosmische-skala.de/og.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Kosmische Skala: Titel über einem Planetarium des Sonnensystems">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Kosmische Skala">
+<meta name="twitter:description" content="Maßstabsgetreuer Zoom durchs All: vom Astronauten bis zum Rand des beobachtbaren Universums, 40 Objekte über 27 Größenordnungen.">
+<meta name="twitter:image" content="https://kosmische-skala.de/og.png">
+<link rel="canonical" href="https://kosmische-skala.de/">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js" as="script">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js" as="script">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/libs/meshopt_decoder.js" as="script">
+<link rel="preload" href="models/emu.glb" as="fetch" crossorigin>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%227%22%20fill%3D%22%2304050a%22%2F%3E%3Ccircle%20cx%3D%2216%22%20cy%3D%2216%22%20r%3D%226%22%20fill%3D%22%23f2c27c%22%2F%3E%3Ccircle%20cx%3D%2216%22%20cy%3D%2216%22%20r%3D%2211%22%20fill%3D%22none%22%20stroke%3D%22%2393b4ff%22%20stroke-opacity%3D%22.5%22%2F%3E%3C%2Fsvg%3E">
 <link rel="preconnect" href="https://fonts.bunny.net">
 <link rel="stylesheet" href="https://fonts.bunny.net/css?family=fraunces:300,300i,400|hanken-grotesk:400,500,600|jetbrains-mono:400,500&display=swap">
@@ -1685,7 +1702,7 @@ function t3Init(){
   R3.outputEncoding = THREE.sRGBEncoding;
   R3.toneMapping = THREE.ACESFilmicToneMapping; R3.toneMappingExposure = 1.0;
   R3.physicallyCorrectLights = true;
-  R3.shadowMap.enabled = true; R3.shadowMap.type = THREE.PCFSoftShadowMap;
+  R3.shadowMap.enabled = true; R3.shadowMap.type = THREE.PCFSoftShadowMap; R3.autoClear = false;
   const scene = new THREE.Scene();
   const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, -10, 10);
 
@@ -1844,6 +1861,8 @@ function t3Use(o, X, Y, R, a){
   if (T3.state !== 'ready' || o.k !== 'craft') return false;
   const md = T3.models[o.g.mode || 0];
   if (!md || !md.ready || R < 1.2) return false;
+  /* Außerhalb des Bildes: weder Modell noch Platzhalter zeichnen */
+  if (X + R*1.3 < 0 || X - R*1.3 > W || Y + R*1.3 < 0 || Y - R*1.3 > H) return true;
   T3.draws.push({md, X, Y, R, a, mode: o.g.mode || 0});
   return true;
 }
@@ -1854,25 +1873,32 @@ function t3Render(time){
   if (T3.pr !== pr || T3.w !== W || T3.h !== H) { R3.setPixelRatio(pr); R3.setSize(W, H, false); T3.pr = pr; T3.w = W; T3.h = H; }
   for (const k in T3.models) T3.models[k].holder.visible = false;
   if (!T3.draws.length) { if (T3.drawn) { R3.clear(); T3.drawn = false; } return; }
-  let big = 1, main = T3.draws[0];
+  cam.left = -W/2; cam.right = W/2; cam.top = H/2; cam.bottom = -H/2;
+  /* Größtes Modell zuerst, kleinere darüber; jedes mit eigener, mitgeführter Schattenkamera,
+     damit der Schatten beim Einschweben oder Wechsel des größten Modells nicht springt */
+  T3.draws.sort((m, n) => n.R - m.R);
+  R3.clear();
   for (const d of T3.draws) {
     const {md, X, Y, R, mode} = d;
-    md.holder.visible = true;
     if (mode === 0) rcsStep(time, md);
     const ox = mode === 0 ? RCS.x*R : 0, oy = mode === 0 ? RCS.y*R : 0;
     md.holder.position.set(X - W/2 + ox, H/2 - Y + oy, 0);
     md.holder.scale.setScalar(R);
     if (mode === 0) md.spin.rotation.set(0.07 + 0.03*Math.sin(time*0.21), Math.PI + 0.38 + 0.14*Math.sin(time*0.13), 0.035*Math.sin(time*0.17) + RCS.rz);
     else md.spin.rotation.set(0.32, Math.PI/2 + 0.06*Math.sin(time*0.04), 0.02);
-    if (R > big) { big = R; main = d; }
   }
-  cam.left = -W/2; cam.right = W/2; cam.top = H/2; cam.bottom = -H/2;
-  cam.near = -big*4; cam.far = big*4; cam.updateProjectionMatrix();
-  const p = main.md.holder.position, s = main.R;
-  sun.position.set(p.x - 0.62*s*2.5, p.y + 0.48*s*2.5, 0.62*s*2.5); sun.target.position.copy(p);
-  const sc = sun.shadow.camera; sc.left = sc.bottom = -s*1.35; sc.right = sc.top = s*1.35; sc.near = 0; sc.far = s*6; sc.updateProjectionMatrix();
-  rim.position.set(p.x + s, p.y - s*0.3, -s*2); rim.target.position.copy(p);
-  R3.render(scene, cam);
+  for (const d of T3.draws) {
+    for (const e of T3.draws) e.md.holder.visible = e === d;
+    const p = d.md.holder.position, s = d.R;
+    cam.near = -s*4; cam.far = s*4; cam.updateProjectionMatrix();
+    sun.position.set(p.x - 0.62*s*2.5, p.y + 0.48*s*2.5, 0.62*s*2.5); sun.target.position.copy(p);
+    const sc = sun.shadow.camera; sc.left = sc.bottom = -s*1.35; sc.right = sc.top = s*1.35; sc.near = 0; sc.far = s*6; sc.updateProjectionMatrix();
+    /* Versatz in Weltmaß (Pixel) mitskalieren, sonst flimmert Schattenakne */
+    sun.shadow.normalBias = s*0.0035;
+    rim.position.set(p.x + s, p.y - s*0.3, -s*2); rim.target.position.copy(p);
+    R3.clearDepth();
+    R3.render(scene, cam);
+  }
   T3.drawn = true;
   T3.draws.length = 0;
 }
@@ -2074,10 +2100,10 @@ function hud(s, w){
   const vis = W / s, fv = fmtLen(vis);
   if (fv !== lastFov) { lastFov = fv; $('fov').textContent = fv; $('pow').textContent = '≈ 10' + sup(Math.round(Math.log10(vis))) + ' m'; }
   const m = 110 / s, [div, u] = unit(m), v = m/div, p = 10 ** Math.floor(Math.log10(v)), n = v/p, nice = (n >= 5 ? 5 : n >= 2 ? 2 : 1)*p;
-  $('bar').style.width = (nice*div*s).toFixed(1) + 'px';
+  const bw = (nice*div*s).toFixed(1) + 'px'; if (bw !== hud.bw) { hud.bw = bw; $('bar').style.width = bw; }
   const bl = big(nice) + ' ' + (u === 'Lichtjahre' ? 'Lj' : u);
   if (bl !== lastBar) { lastBar = bl; $('barlbl').textContent = bl; }
-  cursor.style.left = clamp(pos(Math.log10(w/FR)), 0, 1)*100 + '%';
+  const cl = (clamp(pos(Math.log10(w/FR)), 0, 1)*100).toFixed(3) + '%'; if (cl !== hud.cl) { hud.cl = cl; cursor.style.left = cl; }
   audioScale(Math.log10(w/FR));
 }
 
@@ -2315,7 +2341,7 @@ function orreryStart(){
         continue;
       }
       const {q, a, x, y, z} = it, sz = q.sz*Math.max(.8, Math.min(1.5, Rr/420))*(1 + z*.12);
-      for (let k = 1; k <= 26; k++) { const [tx, ty] = P(q.r, a - k*.018/q.r); g.globalAlpha = .22*(1 - k/26); g.fillStyle = q.c; g.beginPath(); g.arc(tx, ty, sz*.45, 0, TAU); g.fill(); }
+      for (let k = 1; k <= 16; k++) { const [tx, ty] = P(q.r, a - k*.0293/q.r); g.globalAlpha = .24*(1 - k/16); g.fillStyle = q.c; g.beginPath(); g.arc(tx, ty, sz*.45, 0, TAU); g.fill(); }
       g.globalAlpha = 1;
       const lx = (cx - x), ly = (cy - y), ll = Math.hypot(lx, ly) || 1;
       const sh = g.createRadialGradient(x + lx/ll*sz*.5, y + ly/ll*sz*.5, sz*.1, x, y, sz*1.05);
@@ -2405,7 +2431,7 @@ $('detOpen').addEventListener('click', openDetail);
 $('detBack').addEventListener('click', closeDetail);
 
 /* Bildrate halten: Auflösung passt sich an */
-let ema = 16, qT = 0;
+let ema = 16, qT = 0, introR = 0;
 function frame(now){
   const dtms = last ? now - last : 16, dt = Math.min(.05, dtms/1000); last = now;
   ema = ema*.94 + Math.min(dtms, 100)*.06; qT += dt;
@@ -2429,7 +2455,7 @@ function frame(now){
   if (Math.abs(vel) > .002) { targetT = clamp(targetT + vel*dt, 0, N-1); vel *= Math.exp(-dt*3.5); } else vel = 0;
   t += (targetT - t) * (reduce ? 1 : 1 - Math.exp(-dt*6.5));
   if (Math.abs(targetT - t) < 1e-5) t = targetT;
-  render(now/1000);
+  if (!introActive || now - introR > 400) { introR = now; render(now/1000); }
   requestAnimationFrame(frame);
 }
 
