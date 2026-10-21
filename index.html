@@ -234,6 +234,18 @@ html.ui .scalebar,html.ui #ov{transition-delay:1.6s}
   .veil{background:radial-gradient(120% 90% at 50% 35%,transparent 50%,rgba(2,3,8,.7) 100%),linear-gradient(0deg,rgba(3,4,9,.85) 0%,rgba(3,4,9,0) 50%)}
 }
 @media (prefers-reduced-motion:reduce){.intro *{animation-duration:.01s!important;animation-delay:0s!important}.comp-bar i,.comp-rows li{transition:none}.panel.swap .anim{animation:none}.scalebar .bar{transition:none}}
+
+.det-ctl{position:fixed;z-index:14;left:calc((100% - min(480px,100%))/2 + 20px);bottom:26px;transform:translate(-50%,10px);display:flex;flex-direction:column;align-items:center;gap:10px;opacity:0;pointer-events:none;transition:opacity .5s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+body.detail-on .det-ctl{opacity:1;transform:translate(-50%,0);pointer-events:auto;transition-delay:.45s}
+.det-hint{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:#aab2c8;padding:6px 12px;border-radius:14px;background:rgba(8,10,18,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:opacity .8s ease}
+.det-ctl.used .det-hint{opacity:0}
+.det-btns{display:flex;gap:2px;padding:3px;border-radius:22px;background:rgba(8,10,18,.6);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.det-btns button{appearance:none;border:0;background:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--ink);transition:background .2s}
+.det-btns button:hover{background:rgba(255,255,255,.08)}
+.det-btns button:focus-visible{outline:2px solid #f2c27c;outline-offset:1px}
+.det-btns svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+@media (max-width:759px){.det-ctl,body.detail-on .det-ctl{left:auto;right:12px;bottom:calc(62% + 10px);transform:none;flex-direction:row;gap:8px}.det-hint{font-size:10px}.det-btns button{width:34px;height:34px}}
+@media (prefers-reduced-motion:reduce){.det-ctl,.det-hint{transition:none}}
 </style>
 </head>
 <body>
@@ -272,6 +284,14 @@ html.ui .scalebar,html.ui #ov{transition-delay:1.6s}
   <div class="more anim" id="more"></div>
 </section>
 
+<div class="det-ctl" id="detCtl" aria-label="Ansicht des Objekts">
+  <span class="det-hint" id="detHint"></span>
+  <div class="det-btns">
+    <button type="button" id="detZout" aria-label="Herauszoomen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"/></svg></button>
+    <button type="button" id="detZreset" aria-label="Ansicht zurücksetzen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4.5v4h4"/></svg></button>
+    <button type="button" id="detZin" aria-label="Hineinzoomen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12M12 6v12"/></svg></button>
+  </div>
+</div>
 <aside class="detail" id="detail" role="dialog" aria-modal="false" aria-labelledby="detName" aria-hidden="true">
   <div class="det-scroll" id="detScroll">
     <button type="button" class="det-back" id="detBack"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Zurück zur Skala</button>
@@ -649,6 +669,7 @@ const PRE = `#version 300 es
 precision highp float; precision highp int;
 in vec2 vP; out vec4 fragColor;
 uniform float uT, uR, uSeed, uAlpha, uDpr, uEdge;
+uniform vec2 uRot;
 uniform int uMode;
 uniform vec3 uA, uB, uC, uD, uDot;
 uniform vec4 uQ;
@@ -795,7 +816,7 @@ float ringDens(float rr){
 }
 vec4 shade(vec2 p){
   vec3 L = LD;
-  mat3 M = rotZ(uAxis.x)*rotX(uAxis.y);
+  mat3 M = rotX(uRot.y)*rotZ(uAxis.x)*rotX(uAxis.y);
   vec3 nr = M*vec3(0.0,1.0,0.0);
   float r2 = dot(p,p), rl = sqrt(r2);
   vec4 res = vec4(0.0);
@@ -803,7 +824,7 @@ vec4 shade(vec2 p){
   if(rl < 1.0){
     float z = sqrt(1.0-r2); zs = z;
     vec3 nv = vec3(p,z);
-    vec3 s = rotY(uT*uAxis.z)*(transpose(M)*nv);
+    vec3 s = rotY(uT*uAxis.z + uRot.x)*(transpose(M)*nv);
     vec3 alb = uA; float h = 0.0, wet = 0.0, cloud = 0.0; vec3 emis = vec3(0.0);
     if(uMode==0){
       int sp = int(uQ.z+0.5);
@@ -955,7 +976,7 @@ float shapeD(vec3 q){
 float sdf(vec3 q){ return shapeD(q) + uQ.z*fbm(q+uSeed,1.8,4); }
 vec4 shade(vec2 p){
   if(dot(p,p)>1.25) return vec4(0.0);
-  mat3 Rv = rotX(0.4)*rotY(uT*0.045+uSeed);
+  mat3 Rv = rotX(0.4 + uRot.y)*rotY(uT*0.045 + uSeed + uRot.x);
   mat3 Ri = transpose(Rv);
   vec3 ro = Ri*vec3(p,1.6), rd = Ri*vec3(0.0,0.0,-1.0);
   float t=0.0, dm=1e9, tm=0.0; bool hit=false;
@@ -1236,7 +1257,7 @@ vec4 shade(vec2 p){
   vec3 col = vec3(0.0);
   float warm = smoothstep(1.0, 0.85, c.b);
   if(r<1.0){
-    float z = sqrt(1.0-r*r); vec3 s = rotY(uT*0.008)*vec3(p,z);
+    float z = sqrt(1.0-r*r); vec3 s = rotY(uT*0.008 + uRot.x)*(rotX(-uRot.y)*vec3(p,z));
     float mu = z; float limb = 1.0-0.6*(1.0-mu)-0.15*(1.0-mu)*(1.0-mu);
     float g;
     if(uQ.x>0.5){
@@ -1648,6 +1669,7 @@ function drawObj(o, X, Y, R, a, time, extra){
   gl.uniform1f(U(e,'uR'), R); gl.uniform1f(U(e,'uT'), time); gl.uniform1f(U(e,'uSeed'), o.seed);
   gl.uniform1f(U(e,'uAlpha'), a); gl.uniform1f(U(e,'uDpr'), KG); gl.uniform1f(U(e,'uEdge'), o.solid ? 0 : o.ext);
   gl.uniform3fv(U(e,'uDot'), o.dotv);
+  gl.uniform2f(U(e,'uRot'), o.rot ? o.rot.yaw : 0, o.rot ? o.rot.pitch : 0);
   const g = o.g;
   gl.uniform1i(U(e,'uMode'), g.mode || 0);
   setVec(e,'uA',g.A); setVec(e,'uB',g.B); setVec(e,'uC',g.C); setVec(e,'uD',g.D);
@@ -1863,7 +1885,7 @@ function t3Use(o, X, Y, R, a){
   if (!md || !md.ready || R < 1.2) return false;
   /* Außerhalb des Bildes: weder Modell noch Platzhalter zeichnen */
   if (X + R*1.3 < 0 || X - R*1.3 > W || Y + R*1.3 < 0 || Y - R*1.3 > H) return true;
-  T3.draws.push({md, X, Y, R, a, mode: o.g.mode || 0});
+  T3.draws.push({md, X, Y, R, a, mode: o.g.mode || 0, rot: o.rot});
   return true;
 }
 function t3Render(time){
@@ -1879,13 +1901,13 @@ function t3Render(time){
   T3.draws.sort((m, n) => n.R - m.R);
   R3.clear();
   for (const d of T3.draws) {
-    const {md, X, Y, R, mode} = d;
+    const {md, X, Y, R, mode} = d, uy = d.rot ? d.rot.yaw : 0, up = d.rot ? d.rot.pitch : 0;
     if (mode === 0) rcsStep(time, md);
     const ox = mode === 0 ? RCS.x*R : 0, oy = mode === 0 ? RCS.y*R : 0;
     md.holder.position.set(X - W/2 + ox, H/2 - Y + oy, 0);
     md.holder.scale.setScalar(R);
-    if (mode === 0) md.spin.rotation.set(0.07 + 0.03*Math.sin(time*0.21), Math.PI + 0.38 + 0.14*Math.sin(time*0.13), 0.035*Math.sin(time*0.17) + RCS.rz);
-    else md.spin.rotation.set(0.32, Math.PI/2 + 0.06*Math.sin(time*0.04), 0.02);
+    if (mode === 0) md.spin.rotation.set(0.07 + 0.03*Math.sin(time*0.21) + up, Math.PI + 0.38 + 0.14*Math.sin(time*0.13) + uy, 0.035*Math.sin(time*0.17) + RCS.rz);
+    else md.spin.rotation.set(0.32 + up, Math.PI/2 + 0.06*Math.sin(time*0.04) + uy, 0.02);
   }
   for (const d of T3.draws) {
     for (const e of T3.draws) e.md.holder.visible = e === d;
@@ -1913,13 +1935,11 @@ function render(time){
   const dk = det.j >= 0 ? det.k*det.k*(3 - 2*det.k) : 0;
   if (dk > 0) {
     /* Detailansicht: Kamera rahmt das gewählte Objekt groß, links neben der Seitenleiste */
-    const o = OBJ[det.j], narrow = W < 760;
-    const vmD = narrow ? Math.min(W*.9, H*.36) : Math.min(W*.52, H*.8);
-    const fr = o.k === 'star' ? 1.55 : o.k === 'helio' ? 1.9 : o.k === 'cluster' ? 1.4 : o.k === 'craft' ? 1.08 : 1.18;
-    s = Math.exp(Math.log(s)*(1 - dk) + Math.log(vmD/(o.d*(o.lx || 1)*fr))*dk);
+    const o = OBJ[det.j], b = detBase();
+    s = Math.exp(Math.log(s)*(1 - dk) + (Math.log(b.vmD/(o.d*(o.lx || 1)*b.fr)) + Math.log(det.z))*dk);
     camX = cam + (C[det.j] - cam)*dk;
-    oxx = OX + ((narrow ? W/2 : (W - Math.min(480, W))/2 + 20) - OX)*dk;
-    oyy = OY + ((narrow ? H*.2 : H*.5) - OY)*dk;
+    oxx = OX + (b.ox + det.px - OX)*dk;
+    oyy = OY + (b.oy + det.py - OY)*dk;
   }
   const T = reduce ? 0 : time;
   const labels = [], marks = [], discs = [];
@@ -1944,7 +1964,9 @@ function render(time){
     if (dk > .15 && j !== det.j) continue;
     if (R < .03 || X + E < -40 || X - E > W + 40) continue;
     let a = 1;
-    if (!o.solid && E/MAXD > 2.5) a = clamp(1 - (E/MAXD - 2.5)/5, 0, 1);
+    /* Systeme blenden aus, wenn sie viel größer als das Bild sind; im Detailzoom gilt die Zoomstufe nicht */
+    const zd = j === det.j ? Math.pow(Math.max(1, det.z), dk) : 1;
+    if (!o.solid && E/MAXD/zd > 2.5) a = clamp(1 - (E/MAXD/zd - 2.5)/5, 0, 1);
     if (a <= 0) continue;
     if (o.orbits) for (const q of o.orbits) q.cur = q.a + T*.12/Math.pow(q.au, 1.5);
     if (gl && !t3Use(o, X, Y, R, a)) drawObj(o, X*KG, Y*KG, R*KG, a, T + j*3.1);
@@ -1961,7 +1983,7 @@ function render(time){
       labels.push([lx, ly, o, la, 1 - smooth(.3, .5, Math.abs(j - t)), j]);
     }
     if (o.marks || o.orbits) {
-      const ma = smooth(150, 330, dpx) * a * clamp((3*MAXD - dpx)/MAXD, 0, 1) * (j === det.j ? 1 : 1 - dk);
+      const ma = smooth(150, 330, dpx) * a * clamp((3*MAXD - dpx/zd)/MAXD, 0, 1) * (j === det.j ? 1 : 1 - dk);
       if (ma > .02) {
         const list = o.marks || [{x:0,y:0,l:'Sonne'}].concat(o.orbits.filter(q => q.l).map(q => ({x:q.r*Math.cos(q.cur), y:q.r*Math.sin(q.cur), l:q.l})));
         for (const m of list) marks.push([X + m.x*R, Y - m.y*R, m.l, ma]);
@@ -2125,7 +2147,13 @@ const step = d => { userMove(); targetT = clamp(d > 0 ? Math.floor(targetT + .00
 
 addEventListener('wheel', e => {
   if (e.target.closest && e.target.closest('.detail')) return;
-  if (det.target) { e.preventDefault(); return; }
+  if (det.target) {
+    e.preventDefault();
+    const k = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
+    /* Trackpad-Pinch kommt als Rad mit gedrückter Strg-Taste und kleinen Werten */
+    detZoom(Math.exp(-e.deltaY*k*(e.ctrlKey ? .012 : .0022)), e.clientX, e.clientY);
+    return;
+  }
   if (dialogOpen() || introActive || introT0) { if (introActive || introT0) e.preventDefault(); return; }
   if (e.target.closest && e.target.closest('.dock') && !e.target.closest('.rail')) return;
   e.preventDefault(); userMove();
@@ -2134,24 +2162,86 @@ addEventListener('wheel', e => {
 }, {passive: false});
 
 let drag = null;
-ov.addEventListener('pointerdown', e => { if (det.target) return; drag = {x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t0: performance.now(), tm: performance.now(), v: 0}; ov.setPointerCapture(e.pointerId); vel = 0; userMove(); });
+ov.addEventListener('pointerdown', e => { if (det.target) { detDown(e); return; } drag = {x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t0: performance.now(), tm: performance.now(), v: 0}; ov.setPointerCapture(e.pointerId); vel = 0; userMove(); });
 ov.addEventListener('pointermove', e => {
-  if (!drag) { if (e.pointerType === 'mouse' && !det.target) ov.style.cursor = onFocusObject(e.clientX, e.clientY) ? 'zoom-in' : ''; return; }
+  if (dptr.pts.has(e.pointerId)) { detMove(e); return; }
+  if (!drag) { if (e.pointerType === 'mouse') ov.style.cursor = det.target ? (OBJ[det.j].rot ? 'grab' : 'move') : onFocusObject(e.clientX, e.clientY) ? 'zoom-in' : ''; return; }
   const d = (drag.y - e.clientY) + (drag.x - e.clientX), now = performance.now(), dt = Math.max(1, now - drag.tm);
   const dT = d * (e.pointerType === 'touch' ? .009 : .006);
   targetT = clamp(targetT + dT, 0, N-1);
   drag.v = drag.v*.6 + (dT/dt*1000)*.4; drag.x = e.clientX; drag.y = e.clientY; drag.tm = now;
 });
 const endDrag = e => {
+  if (e && dptr.pts.has(e.pointerId)) { detUp(e); return; }
   if (drag && e && e.type === 'pointerup' && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 6 && performance.now() - drag.t0 < 450 && onFocusObject(e.clientX, e.clientY)) { drag = null; vel = 0; openDetail(); return; }
   if (drag && performance.now() - drag.tm < 80) vel = clamp(drag.v, -6, 6); drag = null;
 };
 ov.addEventListener('pointerup', endDrag); ov.addEventListener('pointercancel', endDrag);
+/* Detailansicht: ein Zeiger dreht (bzw. verschiebt), zwei Finger zoomen und verschieben */
+function detPair(){ const [a, b] = [...dptr.pts.values()]; return [Math.hypot(a.x - b.x, a.y - b.y), (a.x + b.x)/2, (a.y + b.y)/2]; }
+function detDown(e){
+  if (det.k < .5) return;
+  ov.setPointerCapture(e.pointerId);
+  dptr.pts.set(e.pointerId, {x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t0: performance.now()});
+  const r = OBJ[det.j].rot;
+  if (dptr.pts.size === 2) { dptr.mode = 'pinch'; [dptr.d0, dptr.mx, dptr.my] = detPair(); if (r) { r.vy = r.vp = 0; } }
+  else if (dptr.pts.size === 1) {
+    dptr.mode = r && e.button === 0 && !e.shiftKey ? 'rot' : 'pan'; dptr.tm = performance.now();
+    if (r) { r.vy = r.vp = 0; r.ret = false; }
+    if (e.pointerType === 'mouse') ov.style.cursor = dptr.mode === 'rot' ? 'grabbing' : 'move';
+  }
+}
+function detMove(e){
+  const q = dptr.pts.get(e.pointerId), dx = e.clientX - q.x, dy = e.clientY - q.y;
+  q.x = e.clientX; q.y = e.clientY;
+  if (Math.hypot(q.x - q.x0, q.y - q.y0) > 4) detUsed();
+  if (dptr.mode === 'pinch' && dptr.pts.size === 2) {
+    const [d, mx, my] = detPair();
+    if (dptr.d0 > 0) detZoom(d/dptr.d0, mx, my);
+    det.pxt += mx - dptr.mx; det.pyt += my - dptr.my; detClampPan();
+    det.px = det.pxt; det.py = det.pyt;
+    [dptr.d0, dptr.mx, dptr.my] = [d, mx, my];
+  } else if (dptr.mode === 'rot') {
+    const r = OBJ[det.j].rot, now = performance.now(), dt = Math.max(8, now - dptr.tm)/1000;
+    /* gleiches Drehgefühl unabhängig von der Darstellungsgröße */
+    const g = 2.4/Math.max(120, detBase().r1*det.z*2), ay = dx*g, ap = dy*g;
+    r.yaw += ay; r.pitch = clamp(r.pitch + ap, -1.3, 1.3);
+    r.vy = r.vy*.4 + ay/dt*.6; r.vp = r.vp*.4 + ap/dt*.6; dptr.tm = now;
+  } else if (dptr.mode === 'pan') {
+    det.pxt += dx; det.pyt += dy; detClampPan(); det.px = det.pxt; det.py = det.pyt;
+  }
+}
+function detUp(e){
+  const q = dptr.pts.get(e.pointerId); dptr.pts.delete(e.pointerId);
+  const now = performance.now();
+  if (dptr.mode === 'rot') { const r = OBJ[det.j].rot; if (now - dptr.tm > 90) r.vy = r.vp = 0; r.vy = clamp(r.vy, -9, 9); r.vp = clamp(r.vp, -6, 6); }
+  /* Doppeltippen setzt zurück (Maus nutzt dblclick) */
+  if (q && e.type === 'pointerup' && e.pointerType !== 'mouse' && Math.hypot(e.clientX - q.x0, e.clientY - q.y0) < 10 && now - q.t0 < 300) {
+    if (now - dptr.lastTap < 350) { detReset(); dptr.lastTap = 0; } else dptr.lastTap = now;
+  }
+  if (dptr.pts.size === 1) { const [r] = dptr.pts.values(); r.x0 = r.x; r.y0 = r.y; dptr.mode = 'pan'; dptr.tm = now; }
+  else if (!dptr.pts.size) { dptr.mode = null; if (e.pointerType === 'mouse' && det.target) ov.style.cursor = OBJ[det.j].rot ? 'grab' : 'move'; }
+}
+ov.addEventListener('dblclick', e => { if (det.target) { e.preventDefault(); detReset(); } });
+$('detZin').addEventListener('click', () => { const b = detBase(); detZoom(1.6, b.ox + det.pxt, b.oy + det.pyt); });
+$('detZout').addEventListener('click', () => { const b = detBase(); detZoom(1/1.6, b.ox + det.pxt, b.oy + det.pyt); });
+$('detZreset').addEventListener('click', detReset);
 
 addEventListener('keydown', e => {
   if (introActive) { if (e.key === 'Enter') { e.preventDefault(); introGo(true); } else if (e.key === 'Escape') introGo(false); return; }
   if (introT0) return;
-  if (det.target) { if (e.key === 'Escape') { e.preventDefault(); closeDetail(); } return; }
+  if (det.target) {
+    const k = e.key, r = OBJ[det.j].rot, b = detBase();
+    if (e.target.id === 'detScroll' && k !== 'Escape') return;
+    if (k === 'Escape') { e.preventDefault(); closeDetail(); }
+    else if (k === '+' || k === '=') { e.preventDefault(); detZoom(1.4, b.ox + det.pxt, b.oy + det.pyt); }
+    else if (k === '-' || k === '_') { e.preventDefault(); detZoom(1/1.4, b.ox + det.pxt, b.oy + det.pyt); }
+    else if (k === '0') { e.preventDefault(); detReset(); }
+    else if (/^Arrow/.test(k)) { e.preventDefault(); detUsed();
+      const dx = k === 'ArrowLeft' ? -1 : k === 'ArrowRight' ? 1 : 0, dy = k === 'ArrowUp' ? -1 : k === 'ArrowDown' ? 1 : 0;
+      if (r) { r.ret = false; r.vy += dx*1.6; r.vp += dy*1.2; } else { det.pxt -= dx*60; det.pyt -= dy*60; detClampPan(); } }
+    return;
+  }
   if (dialogOpen()) return;
   const k = e.key;
   if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown' || (k === ' ' && e.target === document.body)) { e.preventDefault(); step(1); }
@@ -2367,7 +2457,42 @@ function introGo(sound){
 /* ======================================================================
    Detailansicht
    ====================================================================== */
-const det = {j: -1, k: 0, target: 0};
+const det = {j: -1, k: 0, target: 0, z: 1, zt: 1, px: 0, py: 0, pxt: 0, pyt: 0};
+/* Drehbar sind Körper mit Oberfläche; Systeme (Galaxien, Nebel, Haufen, Bahnen) lassen sich verschieben */
+const ROT = new Set(['craft','rock','planet','star']);
+OBJ.forEach(o => { if (ROT.has(o.k)) o.rot = {yaw: 0, pitch: 0, vy: 0, vp: 0, ret: false}; });
+/* Lage des Objekts in der Detailansicht bei Zoom 1 und der freie Bildbereich daneben */
+function detBase(){
+  const o = OBJ[det.j], narrow = W < 760;
+  const vmD = narrow ? Math.min(W*.9, H*.36) : Math.min(W*.52, H*.8);
+  const fr = o.k === 'star' ? 1.55 : o.k === 'helio' ? 1.9 : o.k === 'cluster' ? 1.4 : o.k === 'craft' ? 1.08 : 1.18;
+  const vr = narrow ? W : W - Math.min(480, W), vb = narrow ? H*.38 : H;
+  return {vmD, fr, ox: narrow ? W/2 : vr/2 + 20, oy: narrow ? H*.2 : H*.5, r1: vmD/(2*fr), vr, vb};
+}
+function detClampPan(){
+  const b = detBase(), rz = b.r1*det.zt, mx = Math.max(0, rz - 40), my = Math.max(0, rz - 40);
+  det.pxt = clamp(det.pxt, 40 - b.ox - mx, b.vr - 40 - b.ox + mx);
+  det.pyt = clamp(det.pyt, 40 - b.oy - my, b.vb - 40 - b.oy + my);
+}
+/* Zoomen um einen Bildpunkt: dieser Punkt bleibt unter dem Finger bzw. Zeiger */
+function detZoom(f, cx, cy){
+  const b = detBase(), z0 = det.zt, z1 = clamp(z0*f, .5, 8), k = z1/z0;
+  const ox = b.ox + det.pxt, oy = b.oy + det.pyt;
+  det.pxt = cx + (ox - cx)*k - b.ox; det.pyt = cy + (oy - cy)*k - b.oy;
+  det.zt = z1; detClampPan(); detUsed();
+}
+function detReset(){
+  det.zt = 1; det.pxt = det.pyt = 0;
+  const r = det.j >= 0 && OBJ[det.j].rot; if (r) { r.vy = r.vp = 0; r.ret = true; }
+}
+function detUsed(){ $('detCtl').classList.add('used'); }
+function spinStep(dt){
+  for (const o of OBJ) { const r = o.rot; if (!r || (dptr.mode === 'rot' && det.j >= 0 && OBJ[det.j] === o)) continue;
+    if (r.ret) { const k = 1 - Math.exp(-dt*5); r.yaw += (Math.round(r.yaw/TAU)*TAU - r.yaw)*k; r.pitch -= r.pitch*k;
+      if (Math.abs(r.yaw - Math.round(r.yaw/TAU)*TAU) < 1e-3 && Math.abs(r.pitch) < 1e-3) { r.yaw = r.pitch = 0; r.ret = false; } continue; }
+    if (Math.abs(r.vy) > .001 || Math.abs(r.vp) > .001) { r.yaw += r.vy*dt; r.pitch = clamp(r.pitch + r.vp*dt, -1.3, 1.3); const k = Math.exp(-dt*2.6); r.vy *= k; r.vp *= k; } }
+}
+const dptr = {pts: new Map(), mode: null, d0: 0, mx: 0, my: 0, tm: 0, lastTap: 0};
 let lastDiscs = [];
 function onFocusObject(x, y){
   for (const [cx, cy, cr, j] of lastDiscs) if (j === focus && Math.hypot(x - cx, y - cy) < cr) return true;
@@ -2380,6 +2505,11 @@ function openDetail(){
   if (touring) setTour(false);
   vel = 0; targetT = t;
   det.j = j; det.target = 1;
+  det.z = det.zt = 1; det.px = det.py = det.pxt = det.pyt = 0;
+  const touchUI = matchMedia('(pointer: coarse)').matches;
+  $('detHint').textContent = o.rot ? (touchUI ? 'Wischen dreht · zwei Finger zoomen' : 'Ziehen dreht · Scrollen zoomt')
+                                   : (touchUI ? 'Wischen verschiebt · zwei Finger zoomen' : 'Ziehen verschiebt · Scrollen zoomt');
+  $('detCtl').classList.remove('used');
   $('detIdx').textContent = String(j + 1).padStart(2, '0') + ' / ' + N;
   $('detCat').textContent = o.cat; $('detName').textContent = o.n;
   $('detSize').textContent = fmtLen(o.d); $('detSize2').textContent = fmt2(o.d);
@@ -2423,6 +2553,7 @@ function openDetail(){
 function closeDetail(){
   if (!det.target) return;
   det.target = 0;
+  detReset(); dptr.pts.clear(); dptr.mode = null;
   const d = $('detail'); d.classList.remove('on'); d.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('detail-on');
   try { $('detOpen').focus({preventScroll: true}); } catch (e) {}
@@ -2437,6 +2568,10 @@ function frame(now){
   ema = ema*.94 + Math.min(dtms, 100)*.06; qT += dt;
   det.k += (det.target - det.k)*(reduce ? 1 : 1 - Math.exp(-dt*4.2));
   if (!det.target && det.k < .002) { det.k = 0; det.j = -1; }
+  { const k = reduce ? 1 : 1 - Math.exp(-dt*11);
+    det.z = Math.exp(Math.log(det.z) + (Math.log(det.zt) - Math.log(det.z))*k);
+    det.px += (det.pxt - det.px)*k; det.py += (det.pyt - det.py)*k; }
+  spinStep(dt);
   if (introActive) astroDrop = H*1.4;
   else if (introT0) {
     const e = now - introT0;
