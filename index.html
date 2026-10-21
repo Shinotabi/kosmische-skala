@@ -1561,12 +1561,17 @@ const SITE = {
   email:  'keytok.headpiece472@passmail.net',
   paypal: 'https://paypal.me/sebastianfeurle'
 };
+/* Eigene Verlaufseinträge für Detailansicht und Impressum: „Zurück“ schließt sie, statt die Seite zu verlassen */
+const HIST = {det: false, imp: false};
+function histPush(k){ if (HIST[k]) return; try { history.pushState({ks: k}, ''); HIST[k] = true; } catch (e) {} }
+function histPop(k){ if (!HIST[k]) return; HIST[k] = false; try { history.back(); } catch (e) {} }
 (function setupMeta(){
   const addr = $('impAddr'); [SITE.name, SITE.street, SITE.city].forEach((l, i) => { if (i) addr.appendChild(document.createElement('br')); addr.appendChild(document.createTextNode(l)); });
   const m = $('impMail'), a = document.createElement('a'); a.href = 'mailto:' + SITE.email; a.textContent = SITE.email; m.appendChild(a);
   $('coffee').href = SITE.paypal; $('coffee').title = 'Über PayPal einen Kaffee spendieren';
   const dlg = $('imp');
-  $('impBtn').addEventListener('click', () => { if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', ''); });
+  $('impBtn').addEventListener('click', () => { if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', ''); histPush('imp'); });
+  dlg.addEventListener('close', () => histPop('imp'));
   $('impClose').addEventListener('click', () => { if (dlg.close) dlg.close(); else dlg.removeAttribute('open'); });
   dlg.addEventListener('click', e => { if (e.target === dlg && dlg.close) dlg.close(); });
 })();
@@ -2539,6 +2544,7 @@ function openDetail(){
   if (touring) setTour(false);
   vel = 0; targetT = t;
   det.j = j; det.target = 1;
+  histPush('det');
   track('detail', {objekt: o.n});
   det.z = det.zt = 1; det.px = det.py = det.pxt = det.pyt = 0;
   const touchUI = matchMedia('(pointer: coarse)').matches;
@@ -2588,12 +2594,18 @@ function openDetail(){
 function closeDetail(){
   if (!det.target) return;
   det.target = 0;
+  histPop('det');
   detReset(); dptr.pts.clear(); dptr.mode = null;
   const d = $('detail'); d.classList.remove('on'); d.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('detail-on');
   try { $('detOpen').focus({preventScroll: true}); } catch (e) {}
 }
 $('detOpen').addEventListener('click', openDetail);
+addEventListener('popstate', () => {
+  /* Der eigene Eintrag ist schon weg: Zustand nur noch schließen, ohne erneut zurückzugehen */
+  if (HIST.imp) { HIST.imp = false; const dlg = $('imp'); if (dlg.open) { if (dlg.close) dlg.close(); else dlg.removeAttribute('open'); } }
+  else if (HIST.det) { HIST.det = false; closeDetail(); }
+});
 $('detBack').addEventListener('click', closeDetail);
 
 /* Bildrate halten: Auflösung passt sich an */
