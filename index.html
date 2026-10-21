@@ -673,7 +673,8 @@ uniform vec2 uRot;
 uniform int uMode;
 uniform vec3 uA, uB, uC, uD, uDot;
 uniform vec4 uQ;
-float PX;
+/* PX: Objektmaß pro Pixel; LK: Stauchungsfaktor für richtungsabhängig gestreckte Muster */
+float PX, LK = 1.0;
 const float PI = 3.14159265, TAU = 6.28318531;
 const vec3 LD = vec3(-0.62, 0.48, 0.62);
 
@@ -706,8 +707,8 @@ float hash12(vec2 p){ vec3 p3=fract(vec3(p.xyx)*0.1031); p3+=dot(p3,p3.yzx+33.33
 vec3 hash32(vec2 p){ vec3 p3=fract(vec3(p.xyx)*vec3(0.1031,0.1030,0.0973)); p3+=dot(p3,p3.yxz+33.33); return fract((p3.xxy+p3.yzz)*p3.zyx); }
 vec3 hash33(vec3 p3){ p3=fract(p3*vec3(0.1031,0.1030,0.0973)); p3+=dot(p3,p3.yxz+33.33); return fract((p3.xxy+p3.yxx)*p3.zyx); }
 
-/* Detailstufe: Oktaven verblassen, sobald sie kleiner als ~2 Pixel werden */
-float lodw(float f){ return clamp((1.0/(f*PX)-1.5)/2.0, 0.0, 1.0); }
+/* Detailstufe: Oktaven verblassen, bevor ihre Periode unter ~3 Pixel fällt (sonst Flimmern) */
+float lodw(float f){ return clamp((1.0/(f*PX*LK)-3.0)/3.0, 0.0, 1.0); }
 float fbm(vec3 p, float f, int oct){
   float s=0.0, a=0.5;
   for(int i=0;i<12;i++){ if(i>=oct) break; float w=lodw(f); if(w<=0.0) break;
@@ -737,7 +738,8 @@ vec3 bumpN(vec3 n, vec3 pos, float h, float k){
   vec3 dpdx=dFdx(pos), dpdy=dFdy(pos); float dhx=dFdx(h)*k, dhy=dFdy(h)*k;
   vec3 r1=cross(dpdy,n), r2=cross(n,dpdx); float det=dot(dpdx,r1);
   if(abs(det)<1e-12) return n;
-  vec3 g=sign(det)*(dhx*r1+dhy*r2); return normalize(abs(det)*n-g);
+  vec3 g=sign(det)*(dhx*r1+dhy*r2); float gl=length(g), gm=abs(det)*1.2; if(gl>gm) g*=gm/gl;
+  return normalize(abs(det)*n-g);
 }
 float smin(float a,float b,float k){ float h=clamp(0.5+0.5*(b-a)/k,0.0,1.0); return mix(b,a,h)-k*h*(1.0-h); }
 float smax(float a,float b,float k){ return -smin(-a,-b,k); }
@@ -751,7 +753,7 @@ float sdSeg(vec2 p, vec2 a, vec2 b){ vec2 pa=p-a, ba=b-a; float h=clamp(dot(pa,b
 float craters(vec3 p, float f0, float dens, float str){
   float h=0.0, f=f0;
   for(int k=0;k<7;k++){
-    float cw=clamp((0.4-f*PX)/0.2,0.0,1.0); if(cw<=0.0) break;
+    float cw=clamp((0.15-f*PX)/0.07,0.0,1.0); if(cw<=0.0) break;
     vec3 q=p*f+vec3(float(k)*13.7+uSeed); vec3 i=floor(q), fr=fract(q);
     for(int z=-1;z<=1;z++) for(int y=-1;y<=1;y++) for(int x=-1;x<=1;x++){
       vec3 g=vec3(float(x),float(y),float(z)); vec3 c=hash33(i+g);
@@ -807,22 +809,23 @@ float ringDens(float rr){
       + (0.6+0.35*smoothstep(1.53,1.8,rr))*smoothstep(1.515,1.535,rr)*(1.0-smoothstep(1.935,1.955,rr))
       + 0.05*smoothstep(1.95,1.96,rr)*(1.0-smoothstep(2.02,2.03,rr))
       + 0.62*smoothstep(2.02,2.035,rr)*(1.0-smoothstep(2.255,2.27,rr));
-    d *= 1.0-0.9*exp(-pow((rr-2.214)/0.005,2.0));
+    float we = max(0.005,PX*1.2); d *= 1.0-0.9*(0.005/we)*exp(-pow((rr-2.214)/we,2.0));
   } else {
-    d = exp(-pow((rr-1.64)/0.006,2.0))*0.45 + exp(-pow((rr-1.72)/0.005,2.0))*0.3 + exp(-pow((rr-1.98)/0.018,2.0))*0.85;
+    float w1 = max(0.006,PX*1.2), w2 = max(0.005,PX*1.2), w3 = max(0.018,PX*1.2);
+    d = exp(-pow((rr-1.64)/w1,2.0))*0.45*0.006/w1 + exp(-pow((rr-1.72)/w2,2.0))*0.3*0.005/w2 + exp(-pow((rr-1.98)/w3,2.0))*0.85*0.018/w3;
   }
   d *= 1.0 + 0.3*lodw(60.0)*snoise(vec3(rr*60.0,0.5,uSeed)) + 0.18*lodw(300.0)*snoise(vec3(rr*300.0,1.5,uSeed)) + 0.1*lodw(1500.0)*snoise(vec3(rr*1500.0,2.5,uSeed));
   return clamp(d,0.0,1.0)*uRing.z;
 }
 vec4 shade(vec2 p){
-  vec3 L = LD;
+  vec3 L = LD; float PX0 = PX;
   mat3 M = rotX(uRot.y)*rotZ(uAxis.x)*rotX(uAxis.y);
   vec3 nr = M*vec3(0.0,1.0,0.0);
   float r2 = dot(p,p), rl = sqrt(r2);
   vec4 res = vec4(0.0);
   float zs = -9.0;
   if(rl < 1.0){
-    float z = sqrt(1.0-r2); zs = z;
+    float z = sqrt(1.0-r2); zs = z; PX = PX0/max(z,0.18);
     vec3 nv = vec3(p,z);
     vec3 s = rotY(uT*uAxis.z + uRot.x)*(transpose(M)*nv);
     vec3 alb = uA; float h = 0.0, wet = 0.0, cloud = 0.0; vec3 emis = vec3(0.0);
@@ -856,7 +859,7 @@ vec4 shade(vec2 p){
     } else if(uMode==1 && uHasTex>0.5){
       float lon = atan(s.x, s.z), lat = asin(clamp(s.y,-1.0,1.0));
       vec2 uv = vec2(lon/TAU + 0.5, 0.5 - lat/PI);
-      vec3 tx = textureLod(uTex, uv, max(log2(PX*2048.0/TAU), 0.0)).rgb;
+      vec3 tx = textureLod(uTex, uv, max(log2(PX*2048.0/TAU/sqrt(max(sqrt(1.0-s.y*s.y),0.05))), 0.0)).rgb;
       float ocean = smoothstep(0.08,0.16, tx.b - max(tx.r,tx.g))*smoothstep(0.22,0.1, max(tx.r,tx.g));
       vec3 sea = vec3(0.012,0.06,0.17)*(0.85+0.3*(0.5+0.5*fbm(s+2.0,3.0,6)));
       alb = mix(pow(tx, vec3(1.08))*1.04, sea, ocean);
@@ -892,14 +895,14 @@ vec4 shade(vec2 p){
       if(e>0.0 && ice<0.5) emis = vec3(1.0,0.72,0.4)*0.35*smoothstep(0.5,0.8,0.5+0.5*fbm(s+40.0,22.0,6))*(1.0-cloud);
     } else if(uMode==2){
       vec3 q = s + 0.3*vec3(fbm(s,1.3,5), fbm(s+4.0,1.3,5), fbm(s+8.0,1.3,5));
-      float b = fbm(vec3(q.x*1.3,q.y*6.0,q.z*1.3)+uSeed,1.0,10);
+      LK = 6.0; float b = fbm(vec3(q.x*1.3,q.y*6.0,q.z*1.3)+uSeed,1.0,10); LK = 1.0;
       alb = mix(uB,uA,clamp(0.5+0.6*b,0.0,1.0));
       alb = mix(alb,uC,smoothstep(0.1,0.6,fbm(q+2.0,3.0,8))*0.35);
     } else if(uMode==3){
       float lat = s.y;
-      vec3 q = rotY(uT*0.012*sin(lat*19.0+uSeed))*s;
-      vec2 wv = vec2(fbm(q*vec3(1.0,5.0,1.0)+3.1,2.2,7), fbm(q*vec3(1.0,5.0,1.0)+8.7,2.2,7));
-      float t1 = fbm(vec3(q.x*3.0+wv.x,q.y*22.0,q.z*3.0+wv.y),1.0,12);
+      vec3 q = rotY(0.35*sin(lat*19.0+uSeed)*sin(uT*0.015))*s;
+      LK = 5.0; vec2 wv = vec2(fbm(q*vec3(1.0,5.0,1.0)+3.1,2.2,7), fbm(q*vec3(1.0,5.0,1.0)+8.7,2.2,7));
+      LK = 22.0; float t1 = fbm(vec3(q.x*3.0+wv.x,q.y*22.0,q.z*3.0+wv.y),1.0,12); LK = 1.0;
       float y = lat + uQ.w*(0.028*wv.x + 0.008*t1);
       float band = sin(y*uQ.x + 1.3*sin(y*uQ.x*0.31+uSeed));
       float sel = snoise(vec3(y*uQ.x*0.4,uSeed,0.3));
@@ -919,10 +922,10 @@ vec4 shade(vec2 p){
       }
     } else {
       float lat = s.y;
-      float b = fbm(vec3(s.x*1.5,s.y*9.0,s.z*1.5)+uSeed,1.0,10);
+      LK = 9.0; float b = fbm(vec3(s.x*1.5,s.y*9.0,s.z*1.5)+uSeed,1.0,10); LK = 1.0;
       alb = mix(uA,uB,clamp(0.5+0.5*sin(lat*uQ.x+b*1.6)*uQ.y,0.0,1.0));
       alb *= 0.94+0.12*b;
-      float cl = smoothstep(0.45,0.75,fbm(vec3(s.x*3.0,s.y*24.0,s.z*3.0)+5.0,1.0,12));
+      LK = 24.0; float cl = smoothstep(0.45,0.75,fbm(vec3(s.x*3.0,s.y*24.0,s.z*3.0)+5.0,1.0,12)); LK = 1.0;
       alb = mix(alb,uC,cl*uQ.w);
       if(uQ.z>0.5){
         vec3 gc = normalize(vec3(-0.25,-0.32,0.9)); vec3 dl = s-gc; vec3 ex = normalize(cross(vec3(0.0,1.0,0.0),gc));
@@ -941,6 +944,7 @@ vec4 shade(vec2 p){
     col += emis*smoothstep(0.05,-0.2,ndl0);
     if(uRing.z>0.0){ float dn = dot(L,nr); if(abs(dn)>1e-3){ float tq = -dot(nv,nr)/dn; if(tq>0.0){ col *= 1.0-0.75*ringDens(length(nv+L*tq)); } } }
     if(uHaze>0.0){ float lim = pow(1.0-z,2.2); col = mix(col, uAtmo*smoothstep(-0.3,0.7,ndl0)*1.05, lim*uHaze); }
+    PX = PX0;
     float aa = smoothstep(1.0,1.0-1.5*PX,rl);
     res = vec4(col*aa,aa);
   }
@@ -952,7 +956,7 @@ vec4 shade(vec2 p){
   if(uRing.z>0.0 && abs(nr.z)>1e-3){
     float zr = -(p.x*nr.x+p.y*nr.y)/nr.z;
     vec3 Rp = vec3(p,zr); float rr = length(Rp);
-    float d = ringDens(rr);
+    PX = PX0/max(abs(nr.z),0.06); float d = ringDens(rr); PX = PX0;
     if(d>0.0 && (rl>=1.0 || zr>zs)){
       float b = dot(Rp,L), c = dot(Rp,Rp)-1.0, disc = b*b-c;
       float lit = 1.0-(b<0.0 ? smoothstep(-0.004,0.004,disc) : 0.0);
@@ -986,6 +990,7 @@ vec4 shade(vec2 p){
   vec3 q = ro+rd*(hit?t:tm);
   vec2 e = vec2(1.0,-1.0)*max(0.0015,PX*0.5);
   vec3 n = normalize(e.xyy*sdf(q+e.xyy)+e.yyx*sdf(q+e.yyx)+e.yxy*sdf(q+e.yxy)+e.xxx*sdf(q+e.xxx));
+  PX = PX/max(abs(dot(n,rd)),0.25);
   float h = craters(q,2.2,0.5,uQ.x) + 0.006*fbm(q+5.0,9.0,12);
   if(uQ.y>0.0){
     vec3 w1 = worley(q*16.0+uSeed), w2 = worley(q*40.0+uSeed+3.0);
@@ -1258,6 +1263,7 @@ vec4 shade(vec2 p){
   float warm = smoothstep(1.0, 0.85, c.b);
   if(r<1.0){
     float z = sqrt(1.0-r*r); vec3 s = rotY(uT*0.008 + uRot.x)*(rotX(-uRot.y)*vec3(p,z));
+    float PX0 = PX; PX = PX0/max(z,0.2);
     float mu = z; float limb = 1.0-0.6*(1.0-mu)-0.15*(1.0-mu)*(1.0-mu);
     float g;
     if(uQ.x>0.5){
@@ -1278,13 +1284,13 @@ vec4 shade(vec2 p){
       g = mix(0.5,gran,w0) + (smoothstep(0.0,0.45,w2.y-w2.x)-0.5)*0.3*w1;
       g += 0.25*fbm(s+uSeed,3.0,12);
       if(uQ.w>0.5){
-        float spn = smoothstep(0.62,0.7,fbm(s*vec3(1.0,3.0,1.0)+uSeed,2.2,6))*smoothstep(0.5,0.15,abs(abs(s.y)-0.25));
+        LK = 3.0; float spn = smoothstep(0.62,0.7,fbm(s*vec3(1.0,3.0,1.0)+uSeed,2.2,6)); LK = 1.0; spn = spn*smoothstep(0.5,0.15,abs(abs(s.y)-0.25));
         g -= spn*1.3;
       }
     }
     /* Plasma: verwirbelte, langsam fließende Strömung über der Granulation */
     vec3 q = s*2.2 + uSeed;
-    vec3 wv = vec3(fbm(q + vec3(0.0, uT*0.035, 0.0), 1.0, 6), fbm(q + vec3(5.2, -uT*0.03, 1.3), 1.0, 6), fbm(q + vec3(2.7, 0.0, uT*0.028), 1.0, 6));
+    vec3 wv = vec3(fbm(q + vec3(0.0, uT*0.035, 0.0), 1.0, 4), fbm(q + vec3(5.2, -uT*0.03, 1.3), 1.0, 4), fbm(q + vec3(2.7, 0.0, uT*0.028), 1.0, 4));
     float plasma = fbm(s*3.0 + wv*1.6 + uSeed, 1.0, 10);
     float fil = pow(rfbm(s*5.0 + wv*2.2 + uSeed + 7.0, 1.0, 8), 2.0);
     g += 0.55*plasma + 0.35*fil - 0.15;
@@ -1295,11 +1301,12 @@ vec4 shade(vec2 p){
     vec3 deep = cs*vec3(1.0, 0.55, 0.22);
     vec3 tint = mix(deep, hot, clamp(0.35 + 0.65*(I - 0.4), 0.0, 1.0));
     tint = mix(tint*vec3(1.0, 0.7, 0.4), tint, mu);
+    PX = PX0;
     col = max(tint,0.0)*I*1.25*smoothstep(1.0,1.0-1.5*PX,r);
   }
   float rr = max(r,1.0);
   float ang = atan(p.y,p.x);
-  float str = 0.75+0.5*fbm(vec3(cos(ang)*2.0,sin(ang)*2.0,uT*0.02+uSeed),1.0,6);
+  float str = 0.75+0.5*fbm(vec3(cos(ang)*2.0,sin(ang)*2.0,uT*0.02+uSeed),1.0,3);
   float glow = exp(-(rr-1.0)*7.0)*0.5*str + 0.07/(rr*rr*rr)*uQ.y + 0.02/rr;
   glow *= smoothstep(2.6,1.4,r);
   vec3 cg = max(mix(vec3(dot(c,vec3(0.3,0.5,0.2))), c, 2.0),0.0);
@@ -1521,7 +1528,7 @@ void main(){
   vec2 fc = gl_FragCoord.xy; vec2 c = uRes*0.5; float m = max(uRes.x,uRes.y)*0.62;
   vec2 u = (fc-c)/m; PX = 1.0/m;
   vec3 col = vec3(0.010,0.012,0.022);
-  col += vec3(0.06,0.05,0.12)*0.3*smoothstep(0.0,0.8,fbm(vec3(u*1.2,uZ*0.05),1.0,5));
+  col += vec3(0.06,0.05,0.12)*0.3*smoothstep(0.0,0.8,fbm(vec3(u*1.2,uZ*0.05),1.0,3));
   for(int l=0;l<3;l++){
     float ph = fract(uZ*0.2+float(l)/3.0);
     float sc = pow(2.3,1.0-ph), fd = pow(sin(PI*ph),1.4);
@@ -1634,7 +1641,7 @@ let W = 0, H = 0, dpr = 1, OX = 0, OY = 0, VM = 0, MAXD = 0, GW = 0, GH = 0, KG 
 let quality = innerWidth < 760 ? .8 : 1;
 let avoid = [];
 function sizeGL(){
-  const s = Math.min(dpr, 2)*quality;
+  const s = Math.min(dpr, 1.5)*quality;
   GW = Math.max(1, Math.round(W*s)); GH = Math.max(1, Math.round(H*s));
   if (glc.width !== GW || glc.height !== GH) { glc.width = GW; glc.height = GH; }
   KG = GW / W;
@@ -1745,7 +1752,7 @@ function t3Init(){
 
   /* Licht: Sonne mit Schatten, bläulicher Schein von der Erde, schwaches Gegenlicht */
   const sun = new THREE.DirectionalLight(0xfff4e6, 3.4);
-  sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
+  sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
   scene.add(sun, sun.target);
   scene.add(new THREE.HemisphereLight(0x0b0d16, 0x35609a, 0.9));
   const rim = new THREE.DirectionalLight(0x8fb3ff, 0.6); scene.add(rim, rim.target);
@@ -1891,7 +1898,7 @@ function t3Use(o, X, Y, R, a){
 function t3Render(time){
   if (T3.state !== 'ready') return;
   const {R3, scene, cam, sun, rim} = T3;
-  const pr = Math.min(dpr, 2)*quality;
+  const pr = Math.min(dpr, 1.5)*quality;
   if (T3.pr !== pr || T3.w !== W || T3.h !== H) { R3.setPixelRatio(pr); R3.setSize(W, H, false); T3.pr = pr; T3.w = W; T3.h = H; }
   for (const k in T3.models) T3.models[k].holder.visible = false;
   if (!T3.draws.length) { if (T3.drawn) { R3.clear(); T3.drawn = false; } return; }
