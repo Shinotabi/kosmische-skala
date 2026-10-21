@@ -1834,7 +1834,13 @@ ${kind === 'truss' ? `
     const o = m.material, n = o.name || '', tris = m.geometry.index ? m.geometry.index.count/3 : 0, hsl = {};
     o.color.getHSL(hsl);
     if (/justbody_blinn3SG/.test(n)) m.material = visor;
-    else if (o.map) m.material = new THREE.MeshStandardMaterial({map: o.map, roughness: 0.75});
+    /* Flaggen-Textur (über die Rucksackseite gestreckt) durch weißes Anzugmaterial ersetzen */
+    else if (o.map && (/FLAG/i.test(o.map.name || '') || /jetpack2SG/.test(n))) m.material = fabric;
+    else if (o.map) {
+      let map = o.map;
+      if (/box4/i.test(map.name || '') && map.image) { map = map.clone(); map.image = chestFix(o.map.image); map.needsUpdate = true; }
+      m.material = new THREE.MeshStandardMaterial({map, roughness: 0.75});
+    }
     else if (/lambert4SG/.test(n) && !/emusuit5/.test(n)) m.material = red;
     else if (/blinn2SG/.test(n)) m.material = greyMetal;
     else if (hsl.s > 0.4 && tris < 5000) { const s = fabric.clone(); s.color.copy(o.color); m.material = s; }
@@ -1850,6 +1856,23 @@ ${kind === 'truss' ? `
   px.fillStyle = pg; px.fillRect(0, 0, 64, 64);
   T3.puffTex = new THREE.CanvasTexture(pc);
   Object.assign(T3, {state: 'ready', R3, scene, cam, sun, rim});
+}
+/* Brust-Anzeige: Die Vorlage ist in Spiegelschrift (wie am echten Anzug, für den Handgelenkspiegel).
+   Ziffern der Skala und beide Schildzeilen werden einzeln an Ort und Stelle zurückgespiegelt. */
+function chestFix(im){
+  const w = im.width, h = im.height, c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d'); g.drawImage(im, 0, 0);
+  const sx = w/1000, sy = h/1032;
+  const boxes = [[516,428,85,25],[547,466,135,24],
+    [765,304,6,17],[778,302,12,17],[796,303,13,17],[743,312,11,17],[721,328,12,17],[703,349,13,17],[686,372,12,17],
+    [683,402,13,17],[692,436,11,17],[710,456,11,17],[730,478,13,17],[753,489,21,17],[781,491,11,17]];
+  for (const [x, y, bw, bh] of boxes) {
+    const X = Math.round(x*sx), Y = Math.round(y*sy), BW = Math.round(bw*sx), BH = Math.round(bh*sy);
+    const t = document.createElement('canvas'); t.width = BW; t.height = BH;
+    t.getContext('2d').drawImage(c, X, Y, BW, BH, 0, 0, BW, BH);
+    g.save(); g.translate(2*X + BW, 0); g.scale(-1, 1); g.drawImage(t, X, Y); g.restore();
+  }
+  return c;
 }
 /* Steuerdüsen: gelegentliche kurze Stöße, eine weiche Feder holt den Astronauten zurück */
 const RCS = {x: 0, y: 0, vx: 0, vy: 0, rz: 0, vr: 0, next: 4, lt: 0, puffs: [], kick: null};
