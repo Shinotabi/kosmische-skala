@@ -80,6 +80,38 @@ body{margin:0;background:var(--void);color:var(--ink);font-family:var(--body);ov
 .comp-rows .nm{font-size:13px;color:#aab1c6;min-width:0}
 .comp-rows .pc{font:500 13px var(--mono);font-variant-numeric:tabular-nums;color:var(--ink);text-align:right}
 .comp-rows .sw{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:8px;vertical-align:1px}
+.det-open{pointer-events:auto;appearance:none;background:none;border:0;padding:2px 0;margin-top:14px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font:500 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink)}
+.det-open svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .25s}
+.det-open:hover{color:var(--sun)}
+.det-open:hover svg{transform:translateX(3px)}
+.det-open:focus-visible,.det-back:focus-visible,.det-src a:focus-visible{outline:2px solid var(--sun);outline-offset:3px;border-radius:2px}
+.detail{position:fixed;top:0;right:0;bottom:0;width:min(480px,100%);z-index:15;background:linear-gradient(90deg,rgba(5,6,12,0) 0,rgba(5,6,12,.88) 22%,rgba(5,6,12,.94) 100%);opacity:0;transform:translateX(36px);pointer-events:none;transition:opacity .6s ease,transform .8s cubic-bezier(.2,.7,.2,1)}
+.detail.on{opacity:1;transform:none;pointer-events:auto}
+.det-scroll{height:100%;overflow-y:auto;overscroll-behavior:contain;padding:calc(env(safe-area-inset-top,0px) + 28px) 32px calc(env(safe-area-inset-bottom,0px) + 40px) 72px;scrollbar-width:thin;scrollbar-color:rgba(150,165,210,.3) transparent}
+.det-back{appearance:none;background:none;border:1px solid var(--faint);border-radius:20px;height:38px;padding:0 16px 0 12px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;color:var(--ink);font:500 13px var(--body);margin-bottom:34px;transition:border-color .2s}
+.det-back:hover{border-color:var(--sun)}
+.det-back svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.det-eye{display:flex;gap:12px;align-items:center;font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:0}
+.detail h2{font-family:var(--display);font-weight:300;font-variation-settings:"opsz" 144;font-size:clamp(40px,4.4vw,60px);line-height:1;letter-spacing:-.025em;margin:14px 0 12px;text-wrap:balance}
+.det-size{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;font-family:var(--mono);font-variant-numeric:tabular-nums}
+#detSize{font-size:17px;color:var(--sun)}
+#detSize2{font-size:12px;color:var(--dim)}
+.det-lead{font-size:16px;line-height:1.6;color:#d3d8e6;margin:18px 0 0}
+.det-more{font-size:15px;line-height:1.65;color:#aab1c6;margin:12px 0 0}
+.detail h3{font:500 11px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--sun);margin:30px 0 12px}
+.det-facts{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin:0;background:rgba(150,165,210,.12);border:1px solid rgba(150,165,210,.12);border-radius:10px;overflow:hidden}
+.det-facts div{background:rgba(8,10,20,.92);padding:12px 14px;min-width:0}
+.det-facts dt{font:400 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.det-facts dd{margin:6px 0 0;font-size:15px;line-height:1.35;color:var(--ink);font-variant-numeric:tabular-nums}
+.det-layer{margin-bottom:18px}
+.det-layer h4{font:500 12px var(--body);color:var(--ink);margin:0 0 2px}
+.det-src{list-style:none;margin:0;padding:0}
+.det-src li{border-bottom:1px solid rgba(150,165,210,.12)}
+.det-src a{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:11px 0;color:var(--ink);text-decoration:none;font-size:14px}
+.det-src a:hover{color:var(--sun)}
+.det-src small{font:400 11px var(--mono);color:var(--dim);white-space:nowrap}
+body.detail-on .panel,body.detail-on .dock,body.detail-on .scalebar,body.detail-on .hint,body.detail-on .readout{opacity:0!important;pointer-events:none!important;transition:opacity .35s ease 0s!important}
+.readout{transition:opacity .6s ease}
 .more{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:16px}
 .more a{pointer-events:auto;font:500 12px var(--mono);letter-spacing:.04em;color:var(--ink);text-decoration:none;padding-bottom:3px;border-bottom:1px solid rgba(242,194,124,.45);transition:color .2s,border-color .2s}
 .more a:hover{color:var(--sun);border-color:var(--sun)}
@@ -167,6 +199,10 @@ html.ui .scalebar,html.ui #ov{transition-delay:1.6s}
   .panel{left:16px;right:16px;width:auto;bottom:132px}
   .panel h1{font-size:34px;margin:10px 0}
   .more{margin-top:10px}
+  .detail{top:auto;height:62%;width:100%;background:linear-gradient(180deg,rgba(5,6,12,0) 0,rgba(5,6,12,.9) 9%,rgba(5,6,12,.96) 100%);transform:translateY(36px)}
+  .det-scroll{padding:44px 16px calc(env(safe-area-inset-bottom,0px) + 32px)}
+  .det-back{margin-bottom:22px}
+  .detail h2{font-size:36px}
   .panel.comp-open p{display:none}
   .comp-rows .fm{font-size:22px}
   .comp-rows li{padding:4px 0}
@@ -215,8 +251,25 @@ html.ui .scalebar,html.ui #ov{transition-delay:1.6s}
       <ol class="comp-rows" id="compRows"></ol>
     </div>
   </div>
+  <button type="button" class="det-open anim" id="detOpen">Details ansehen <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
   <div class="more anim" id="more"></div>
 </section>
+
+<aside class="detail" id="detail" role="dialog" aria-modal="false" aria-labelledby="detName" aria-hidden="true">
+  <div class="det-scroll" id="detScroll">
+    <button type="button" class="det-back" id="detBack"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Zurück zur Skala</button>
+    <p class="det-eye"><span id="detIdx"></span><span class="chip" id="detCat"></span></p>
+    <h2 id="detName"></h2>
+    <div class="det-size"><span id="detSize"></span><span id="detSize2"></span></div>
+    <p class="det-lead" id="detText"></p>
+    <p class="det-more" id="detMore"></p>
+    <h3>Steckbrief</h3>
+    <dl class="det-facts" id="detFacts"></dl>
+    <div id="detCompWrap"><h3>Zusammensetzung</h3><div id="detComp"></div></div>
+    <h3>Quellen und mehr</h3>
+    <ul class="det-src" id="detSrc"></ul>
+  </div>
+</aside>
 
 <div class="scalebar" aria-hidden="true"><span id="barlbl"></span><div class="bar" id="bar"></div></div>
 
@@ -396,6 +449,124 @@ const WIKI = {'Astronaut':'Raumanzug', 'Komet 67P':'67P/Tschurjumow-Gerassimenko
   'Merkur':'Merkur (Planet)', 'Mars':'Mars (Planet)', 'Venus':'Venus (Planet)', 'Neptun':'Neptun (Planet)', 'Uranus':'Uranus (Planet)', 'Saturn':'Saturn (Planet)', 'Jupiter':'Jupiter (Planet)',
   'Nächster Stern':'Proxima Centauri', 'Andromeda':'Andromedagalaxie', 'Sirius A':'Sirius'};
 const NASA = {'Internationale Raumstation':'https://www.nasa.gov/international-space-station/', 'Mond':'https://science.nasa.gov/moon/', 'Merkur':'https://science.nasa.gov/mercury/', 'Mars':'https://science.nasa.gov/mars/', 'Venus':'https://science.nasa.gov/venus/', 'Erde':'https://science.nasa.gov/earth/', 'Neptun':'https://science.nasa.gov/neptune/', 'Uranus':'https://science.nasa.gov/uranus/', 'Saturn':'https://science.nasa.gov/saturn/', 'Jupiter':'https://science.nasa.gov/jupiter/', 'Sonne':'https://science.nasa.gov/sun/', 'Pluto':'https://science.nasa.gov/dwarf-planets/pluto/'};
+/* Detailansicht: ausführlicher Text, Steckbrief und Quellen je Objekt */
+const NSSDC = n => ['NASA Planetary Fact Sheet', 'https://nssdc.gsfc.nasa.gov/planetary/factsheet/' + n + 'fact.html'];
+const MISSION = (label, slug) => ['NASA-Mission ' + label, 'https://science.nasa.gov/mission/' + slug + '/'];
+const DETAIL = {
+  'Astronaut': {more: 'Der amerikanische Raumanzug EMU wird seit 1981 für Außeneinsätze genutzt. Unter der weißen Außenhülle liegen mehr als ein Dutzend Schichten, die vor Mikrometeoriten, Strahlung und extremen Temperaturen schützen. Ein Wasserkühlsystem in der Unterwäsche führt die Körperwärme ab.',
+    facts: [['Masse des Anzugs', 'rund 130 kg'], ['Einsatzdauer', 'bis zu 8,5 Stunden'], ['Innendruck', '0,3 bar'], ['Außentemperatur', '−157 bis +121 °C'], ['Im Einsatz seit', '1981'], ['Erster Außeneinsatz', '18. März 1965, Alexei Leonow']],
+    src: [['3D-Modell: NASA 3D Resources', 'https://science.nasa.gov/3d-resources/']]},
+  'Internationale Raumstation': {more: 'Die ISS ist das größte Bauwerk, das Menschen je ins All gebracht haben. Sie wurde ab 1998 aus über 40 Einzelflügen zusammengesetzt und wird von den Raumfahrtagenturen der USA, Russlands, Europas, Japans und Kanadas betrieben.',
+    facts: [['Masse', 'rund 420 Tonnen'], ['Bahnhöhe', 'rund 400–420 km'], ['Geschwindigkeit', '7,66 km/s (27.600 km/h)'], ['Ein Umlauf', 'rund 92 Minuten'], ['Bewohnt seit', '2. November 2000'], ['Druckvolumen', '916 m³']],
+    src: [['ESA: Internationale Raumstation', 'https://www.esa.int/Science_Exploration/Human_and_Robotic_Exploration/International_Space_Station'], ['3D-Modell: NASA 3D Resources', 'https://science.nasa.gov/3d-resources/']]},
+  'Bennu': {more: 'Bennu ist ein lockerer Geröllhaufen, der sich nur durch seine schwache Schwerkraft zusammenhält. Als die Sonde OSIRIS-REx Proben nahm, sank ihr Greifarm ein, als würde er in ein Bällebad tauchen. Die Proben enthalten Aminosäuren und andere Bausteine des Lebens.',
+    facts: [['Durchmesser', '490 m'], ['Masse', '7,3 × 10¹⁰ kg'], ['Rotation', '4,3 Stunden'], ['Entdeckt', '1999'], ['Zur Erde gebracht', '121,6 g Gestein (2023)']],
+    src: [MISSION('OSIRIS-REx', 'osiris-rex')]},
+  'Ryugu': {more: 'Ryugu gehört zu den kohlenstoffreichen Asteroiden, die als nahezu unveränderte Überreste aus der Entstehungszeit des Sonnensystems gelten. Hayabusa2 schoss einen kleinen Krater in die Oberfläche, um auch Material aus der Tiefe einzusammeln.',
+    facts: [['Durchmesser', 'rund 900 m'], ['Rotation', '7,6 Stunden'], ['Entdeckt', '1999'], ['Zur Erde gebracht', '5,4 g Gestein (2020)']],
+    src: [['JAXA: Hayabusa2', 'https://www.hayabusa2.jaxa.jp/en/']]},
+  'Komet 67P': {more: 'Die ESA-Sonde Rosetta begleitete den Kometen zwei Jahre lang auf seinem Weg um die Sonne und beobachtete, wie sein Eis verdampfte und Staubfontänen ausbrachen. 2016 setzte sie zum Abschluss kontrolliert auf seiner Oberfläche auf.',
+    facts: [['Größe', '4,1 × 3,3 km (großer Teil)'], ['Umlaufzeit', '6,4 Jahre'], ['Rotation', '12,4 Stunden'], ['Entdeckt', '1969'], ['Besucht', 'Rosetta 2014–2016']],
+    src: [['ESA: Rosetta', 'https://www.esa.int/Science_Exploration/Space_Science/Rosetta']]},
+  'Deimos': {more: 'Deimos ist vermutlich ein eingefangener Asteroid oder ein Trümmerstück aus einem großen Einschlag auf dem Mars. Seine Oberfläche ist von feinem Staub bedeckt, der viele Krater glättet.',
+    facts: [['Durchmesser', 'rund 12 km'], ['Abstand zum Mars', '23.460 km'], ['Umlauf', '30,3 Stunden'], ['Entdeckt', '1877, Asaph Hall']],
+    src: [['NASA: Deimos', 'https://science.nasa.gov/mars/moons/deimos/']]},
+  'Phobos': {more: 'Phobos umkreist den Mars schneller, als dieser sich dreht, und geht deshalb vom Mars aus gesehen im Westen auf. Die Gezeitenkräfte ziehen ihn langsam nach innen, bis er in ferner Zukunft zerreißt oder auf den Mars stürzt.',
+    facts: [['Durchmesser', 'rund 22 km'], ['Abstand zum Mars', '9.376 km'], ['Umlauf', '7,7 Stunden'], ['Größter Krater', 'Stickney, 9 km'], ['Entdeckt', '1877, Asaph Hall']],
+    src: [['NASA: Phobos', 'https://science.nasa.gov/mars/moons/phobos/']]},
+  'Vesta': {more: 'Vesta ist ein Protoplanet mit einem Eisenkern, also ein Planetenembryo, der nie fertig wurde. Viele Meteoriten auf der Erde stammen von Vesta; sie wurden beim großen Einschlag am Südpol herausgeschlagen.',
+    facts: [['Durchmesser', '525 km'], ['Masse', '2,6 × 10²⁰ kg'], ['Rotation', '5,3 Stunden'], ['Entdeckt', '1807, Heinrich Olbers'], ['Besucht', 'Dawn 2011–2012']],
+    src: [MISSION('Dawn', 'dawn')]},
+  'Ceres': {more: 'Ceres war das erste Objekt, das im Asteroidengürtel entdeckt wurde, und galt zeitweise als Planet. Unter der Oberfläche vermuten Forschende Reste einer salzigen Wasserschicht.',
+    facts: [['Durchmesser', '939 km'], ['Masse', '9,4 × 10²⁰ kg'], ['Rotation', '9,1 Stunden'], ['Umlaufzeit', '4,6 Jahre'], ['Entdeckt', '1. Januar 1801, Giuseppe Piazzi'], ['Besucht', 'Dawn 2015–2018']],
+    src: [MISSION('Dawn', 'dawn')]},
+  'Pluto': {more: 'Als New Horizons 2015 an Pluto vorbeiflog, zeigte sich eine überraschend aktive Welt mit Bergen aus Wassereis, Gletschern aus Stickstoff und einer dünnen, blau schimmernden Atmosphäre.',
+    facts: [['Durchmesser', '2.377 km'], ['Masse', '1,3 × 10²² kg'], ['Umlaufzeit', '248 Jahre'], ['Tag', '6,4 Erdtage'], ['Temperatur', 'rund −230 °C'], ['Monde', '5'], ['Entdeckt', '1930, Clyde Tombaugh']],
+    src: [NSSDC('pluto'), MISSION('New Horizons', 'new-horizons')]},
+  'Mond': {more: 'Der Mond entstand vermutlich, als vor rund 4,5 Milliarden Jahren ein marsgroßer Körper mit der jungen Erde zusammenstieß. Er zeigt uns immer dieselbe Seite und entfernt sich jedes Jahr um knapp vier Zentimeter.',
+    facts: [['Durchmesser', '3.474 km'], ['Masse', '7,35 × 10²² kg'], ['Entfernung', '384.400 km'], ['Umlauf', '27,3 Tage'], ['Schwerkraft', '1,62 m/s² (16 % der Erde)'], ['Temperatur', '−173 bis +127 °C'], ['Erste Landung', '20. Juli 1969']],
+    src: [NSSDC('moon')]},
+  'Merkur': {more: 'Merkur hat fast keine Atmosphäre, die Wärme speichern könnte. Ein Merkurtag von Sonnenaufgang zu Sonnenaufgang dauert länger als sein Jahr.',
+    facts: [['Durchmesser', '4.879 km'], ['Masse', '3,3 × 10²³ kg'], ['Abstand zur Sonne', '57,9 Mio. km'], ['Jahr', '88 Tage'], ['Rotation', '58,6 Tage'], ['Temperatur', '−180 bis +430 °C'], ['Monde', '0']],
+    src: [NSSDC('mercury')]},
+  'Mars': {more: 'Mars hatte einst Flüsse und Seen, wie ausgetrocknete Täler und Ablagerungen zeigen. Heute erkunden mehrere Rover seine Oberfläche, darunter Curiosity und Perseverance.',
+    facts: [['Durchmesser', '6.779 km'], ['Masse', '6,4 × 10²³ kg'], ['Abstand zur Sonne', '227,9 Mio. km'], ['Jahr', '687 Tage'], ['Tag', '24 h 37 min'], ['Mittlere Temperatur', '−65 °C'], ['Monde', '2']],
+    src: [NSSDC('mars')]},
+  'Venus': {more: 'Venus dreht sich rückwärts und so langsam, dass ein Venustag länger dauert als ihr Jahr. Ihre Wolken aus Schwefelsäure reflektieren so viel Licht, dass sie nach dem Mond das hellste Objekt am Nachthimmel ist.',
+    facts: [['Durchmesser', '12.104 km'], ['Masse', '4,9 × 10²⁴ kg'], ['Abstand zur Sonne', '108,2 Mio. km'], ['Jahr', '225 Tage'], ['Rotation', '243 Tage, rückläufig'], ['Temperatur', '464 °C'], ['Luftdruck', '92 bar']],
+    src: [NSSDC('venus')]},
+  'Erde': {more: 'Die Erde ist der einzige bekannte Ort mit Leben. Ein Magnetfeld schützt sie vor dem Sonnenwind, und rund 71 Prozent ihrer Oberfläche sind von Wasser bedeckt.',
+    facts: [['Durchmesser', '12.742 km'], ['Masse', '5,97 × 10²⁴ kg'], ['Abstand zur Sonne', '149,6 Mio. km'], ['Jahr', '365,25 Tage'], ['Rotation', '23 h 56 min'], ['Mittlere Temperatur', '15 °C'], ['Alter', '4,54 Mrd. Jahre']],
+    src: [NSSDC('earth'), ['NASA Visible Earth: Blue Marble', 'https://visibleearth.nasa.gov/collection/1484/blue-marble']]},
+  'Neptun': {more: 'Neptun wurde nicht zufällig entdeckt, sondern mathematisch vorhergesagt, weil Uranus von seiner berechneten Bahn abwich. Bisher hat ihn nur eine einzige Sonde besucht.',
+    facts: [['Durchmesser', '49.244 km'], ['Masse', '1,0 × 10²⁶ kg'], ['Abstand zur Sonne', '4,5 Mrd. km'], ['Jahr', '165 Jahre'], ['Tag', '16 h 6 min'], ['Entdeckt', '1846, Johann Galle'], ['Besucht', 'Voyager 2, 1989']],
+    src: [NSSDC('neptune'), MISSION('Voyager', 'voyager')]},
+  'Uranus': {more: 'Uranus war der erste Planet, der mit einem Teleskop entdeckt wurde. Wegen seiner gekippten Achse hat jeder Pol rund 42 Jahre Tag und danach 42 Jahre Nacht.',
+    facts: [['Durchmesser', '50.724 km'], ['Masse', '8,7 × 10²⁵ kg'], ['Abstand zur Sonne', '2,9 Mrd. km'], ['Jahr', '84 Jahre'], ['Tag', '17 h 14 min, rückläufig'], ['Entdeckt', '1781, William Herschel'], ['Besucht', 'Voyager 2, 1986']],
+    src: [NSSDC('uranus'), MISSION('Voyager', 'voyager')]},
+  'Saturn': {more: 'Saturn hat eine geringere Dichte als Wasser. Seine Ringe bestehen überwiegend aus Eisbrocken von Staubkorn- bis Hausgröße. Die Sonde Cassini erkundete ihn 13 Jahre lang.',
+    facts: [['Durchmesser', '116.460 km'], ['Masse', '5,7 × 10²⁶ kg'], ['Abstand zur Sonne', '1,43 Mrd. km'], ['Jahr', '29,4 Jahre'], ['Tag', '10 h 33 min'], ['Dichte', '0,69 g/cm³'], ['Besucht', 'Cassini 2004–2017']],
+    src: [NSSDC('saturn'), MISSION('Cassini', 'cassini')]},
+  'Jupiter': {more: 'Jupiter hat mehr als doppelt so viel Masse wie alle anderen Planeten zusammen. Seine Schwerkraft lenkt viele Kometen ab, und unter seinen Monden könnten Europa und Ganymed Ozeane unter dem Eis verbergen.',
+    facts: [['Durchmesser', '139.820 km'], ['Masse', '1,9 × 10²⁷ kg'], ['Abstand zur Sonne', '778,5 Mio. km'], ['Jahr', '11,9 Jahre'], ['Tag', '9 h 56 min'], ['Monde', 'über 90'], ['Besucht', 'Juno seit 2016']],
+    src: [NSSDC('jupiter'), MISSION('Juno', 'juno')]},
+  'Sonne': {more: 'In ihrem Kern verschmilzt die Sonne jede Sekunde rund 600 Millionen Tonnen Wasserstoff zu Helium. Die dabei frei werdende Energie braucht Zehntausende Jahre, um vom Kern an die Oberfläche zu gelangen.',
+    facts: [['Durchmesser', '1,39 Mio. km'], ['Masse', '1,99 × 10³⁰ kg'], ['Oberfläche', '5.500 °C'], ['Kern', '15 Mio. °C'], ['Alter', '4,6 Mrd. Jahre'], ['Licht bis zur Erde', '8 min 20 s'], ['Spektraltyp', 'G2V']],
+    src: [NSSDC('sun'), ['ESA/NASA: Solar Orbiter', 'https://www.esa.int/Science_Exploration/Space_Science/Solar_Orbiter']]},
+  'Sirius A': {more: 'Sirius ist ein Doppelstern. Um den hellen Hauptstern kreist ein Weißer Zwerg, Sirius B, der etwa so groß ist wie die Erde, aber fast so viel Masse hat wie die Sonne.',
+    facts: [['Radius', '1,7 Sonnenradien'], ['Masse', '2,1 Sonnenmassen'], ['Temperatur', '9.940 K'], ['Entfernung', '8,6 Lichtjahre'], ['Spektraltyp', 'A1V']], src: []},
+  'Arktur': {more: 'Arktur ist der hellste Stern am nördlichen Himmel. Er hat seinen Wasserstoffvorrat im Kern verbraucht und sich deshalb aufgebläht.',
+    facts: [['Radius', '25 Sonnenradien'], ['Masse', 'rund 1,1 Sonnenmassen'], ['Temperatur', '4.290 K'], ['Entfernung', '36,7 Lichtjahre'], ['Spektraltyp', 'K1.5 III']], src: []},
+  'Aldebaran': {more: 'Aldebaran scheint im Sternhaufen der Hyaden zu stehen, ist aber nur halb so weit entfernt und gehört nicht dazu.',
+    facts: [['Radius', '44 Sonnenradien'], ['Masse', 'rund 1,2 Sonnenmassen'], ['Temperatur', '3.900 K'], ['Entfernung', '65 Lichtjahre'], ['Spektraltyp', 'K5 III']], src: []},
+  'Rigel': {more: 'Rigel ist ein junger, massereicher Stern, der nur wenige Millionen Jahre alt ist. Er wird sein Leben vermutlich in einer Supernova beenden.',
+    facts: [['Radius', '79 Sonnenradien'], ['Masse', 'rund 21 Sonnenmassen'], ['Temperatur', '12.100 K'], ['Entfernung', 'rund 860 Lichtjahre'], ['Spektraltyp', 'B8 Ia']], src: []},
+  'Erdbahn': {more: 'Die Erdbahn ist fast ein Kreis. Anfang Januar ist die Erde der Sonne am nächsten, Anfang Juli am fernsten; die Jahreszeiten entstehen aber durch die Neigung der Erdachse.',
+    facts: [['Mittlerer Radius', '149.597.871 km (1 AE)'], ['Umfang', 'rund 940 Mio. km'], ['Bahngeschwindigkeit', '29,8 km/s'], ['Exzentrizität', '0,0167']],
+    src: [NSSDC('earth')]},
+  'Beteigeuze': {more: 'Ende 2019 wurde Beteigeuze plötzlich deutlich dunkler. Ursache war eine Staubwolke, die der Stern zuvor ausgestoßen hatte. Wann er explodiert, ist offen; es kann morgen oder in 100.000 Jahren sein.',
+    facts: [['Radius', 'rund 760 Sonnenradien'], ['Masse', 'rund 18 Sonnenmassen'], ['Temperatur', 'rund 3.600 K'], ['Entfernung', 'rund 550–700 Lichtjahre'], ['Spektraltyp', 'M1–2 Ia']], src: []},
+  'Stephenson 2-18': {more: 'Der Stern liegt im Sternhaufen Stephenson 2 im Sternbild Schild. Weil Staub viel Licht schluckt und die Entfernung unsicher ist, schwanken die Größenangaben stark.',
+    facts: [['Radius', 'rund 2.150 Sonnenradien (unsicher)'], ['Temperatur', 'rund 3.200 K'], ['Entfernung', 'rund 19.000 Lichtjahre'], ['Sternbild', 'Schild (Scutum)']], src: []},
+  'Sonnensystem': {more: 'Das Sonnensystem entstand vor rund 4,6 Milliarden Jahren aus einer kollabierenden Gas- und Staubwolke. Außer den acht Planeten gehören Zwergplaneten, Monde, Asteroiden und Kometen dazu.',
+    facts: [['Alter', '4,57 Mrd. Jahre'], ['Planeten', '8'], ['Zwergplaneten', '5 anerkannte'], ['Radius der Neptunbahn', '30,1 AE'], ['Masse in der Sonne', '99,86 %']],
+    src: [['NASA: Sonnensystem', 'https://science.nasa.gov/solar-system/']]},
+  'Heliosphäre': {more: 'Der Sonnenwind strömt mit rund 400 km/s nach außen, bis er auf das Gas zwischen den Sternen trifft. Die Voyager-Sonden sind die einzigen Objekte, die diese Grenze bisher durchquert haben.',
+    facts: [['Terminationsschock', 'rund 84–94 AE'], ['Heliopause (Voyager 1)', '121,6 AE, 2012'], ['Heliopause (Voyager 2)', '119 AE, 2018'], ['Sonnenwind', 'rund 400 km/s']],
+    src: [MISSION('Voyager', 'voyager')]},
+  'Oortsche Wolke': {more: 'Die Oortsche Wolke wurde nie direkt beobachtet. Der Astronom Jan Oort schloss 1950 aus den Bahnen langperiodischer Kometen auf ihre Existenz.',
+    facts: [['Innerer Rand', 'rund 2.000 AE'], ['Äußerer Rand', 'rund 100.000 AE'], ['Objekte', 'vermutlich Billionen'], ['Benannt nach', 'Jan Oort, 1950']],
+    src: [['NASA: Oort Cloud', 'https://science.nasa.gov/solar-system/oort-cloud/']]},
+  'Nächster Stern': {more: 'Proxima Centauri ist ein kleiner Roter Zwerg, zu schwach, um ihn mit bloßem Auge zu sehen. Um ihn kreist mindestens ein erdgroßer Planet, Proxima b, in der Zone, in der flüssiges Wasser möglich wäre.',
+    facts: [['Entfernung', '4,24 Lichtjahre'], ['Typ', 'Roter Zwerg (M5.5)'], ['Planet', 'Proxima b, entdeckt 2016'], ['Alpha Centauri A und B', '4,37 Lichtjahre']],
+    src: [['ESO: Proxima b', 'https://www.eso.org/public/news/eso1629/']]},
+  'Orionnebel': {more: 'Im Orionnebel entstehen gerade Tausende neuer Sterne. Die vier hellen Sterne des Trapezes in seinem Zentrum bringen das umgebende Gas zum Leuchten.',
+    facts: [['Entfernung', 'rund 1.340 Lichtjahre'], ['Durchmesser', 'rund 24 Lichtjahre'], ['Masse', 'rund 2.000 Sonnenmassen'], ['Katalog', 'Messier 42']],
+    src: [['ESA/Hubble: Orionnebel', 'https://esahubble.org/images/heic0601a/']]},
+  'Omega Centauri': {more: '2024 fanden Forschende im Zentrum von Omega Centauri schnelle Sterne, die auf ein mittelschweres Schwarzes Loch hinweisen. Das stützt die Idee, dass der Haufen der Kern einer verschluckten Zwerggalaxie ist.',
+    facts: [['Entfernung', 'rund 17.000 Lichtjahre'], ['Sterne', 'rund 10 Millionen'], ['Alter', 'rund 12 Mrd. Jahre'], ['Katalog', 'NGC 5139']],
+    src: [['Nature 2024: Schwarzes Loch in Omega Centauri', 'https://doi.org/10.1038/s41586-024-07511-z']]},
+  'Milchstraße': {more: 'Im Zentrum der Milchstraße sitzt das Schwarze Loch Sagittarius A* mit rund vier Millionen Sonnenmassen. Die ESA-Sonde Gaia hat die Positionen und Bewegungen von fast zwei Milliarden Sternen vermessen.',
+    facts: [['Durchmesser', 'rund 100.000 Lichtjahre'], ['Sterne', '100–400 Milliarden'], ['Masse', 'rund 1,5 Billionen Sonnenmassen'], ['Zentrum', 'Sagittarius A*, 4,3 Mio. Sonnenmassen'], ['Alter', 'rund 13,6 Mrd. Jahre']],
+    src: [['ESA: Gaia', 'https://www.esa.int/Science_Exploration/Space_Science/Gaia']]},
+  'Andromeda': {more: 'Andromeda ist mit bloßem Auge als schwacher Nebelfleck sichtbar und damit das fernste Objekt, das man ohne Teleskop sehen kann. Sie nähert sich uns mit rund 110 km/s.',
+    facts: [['Entfernung', '2,5 Mio. Lichtjahre'], ['Durchmesser', 'rund 220.000 Lichtjahre'], ['Sterne', 'rund 1 Billion'], ['Annäherung', 'rund 110 km/s'], ['Katalog', 'Messier 31']],
+    src: [['NASA: Andromeda', 'https://science.nasa.gov/mission/hubble/science/explore-the-night-sky/hubble-messier-catalog/messier-31/']]},
+  'Lokale Gruppe': {more: 'Die meisten Mitglieder der Lokalen Gruppe sind kleine Zwerggalaxien, die um Milchstraße und Andromeda kreisen. Die beiden großen Galaxien bewegen sich aufeinander zu.',
+    facts: [['Durchmesser', 'rund 10 Mio. Lichtjahre'], ['Galaxien', 'über 80'], ['Masse', 'rund 2 × 10¹² Sonnenmassen'], ['Größte Mitglieder', 'Andromeda, Milchstraße, Dreiecksgalaxie']], src: []},
+  'Virgo-Superhaufen': {more: 'Im Zentrum liegt der Virgohaufen mit über 1.000 Galaxien. Seine Schwerkraft bremst die Ausdehnung des Raums in unserer Umgebung messbar ab.',
+    facts: [['Durchmesser', 'rund 110 Mio. Lichtjahre'], ['Gruppen und Haufen', 'rund 100'], ['Entfernung Virgohaufen', 'rund 54 Mio. Lichtjahre'], ['Masse', 'rund 10¹⁵ Sonnenmassen']], src: []},
+  'Laniakea': {more: 'Laniakea wurde nicht über die Lage, sondern über die Bewegung von rund 8.000 Galaxien abgegrenzt. Alle Galaxien innerhalb seiner Grenze strömen langfristig auf den Großen Attraktor zu.',
+    facts: [['Durchmesser', 'rund 520 Mio. Lichtjahre'], ['Galaxien', 'rund 100.000'], ['Masse', 'rund 10¹⁷ Sonnenmassen'], ['Abgegrenzt', '2014, R. Brent Tully und Team']],
+    src: [['Nature 2014: The Laniakea supercluster of galaxies', 'https://doi.org/10.1038/nature13674']]},
+  'Herkules-Corona-Borealis-Mauer': {more: 'Die Struktur wurde 2013 entdeckt, weil sich Gammablitze in einer Himmelsregion häuften. Ob es sich um eine einzige zusammenhängende Struktur handelt, wird noch diskutiert.',
+    facts: [['Ausdehnung', 'bis zu 10 Mrd. Lichtjahre (umstritten)'], ['Entfernung', 'rund 10 Mrd. Lichtjahre'], ['Entdeckt', '2013, István Horváth und Team']],
+    src: [['arXiv 2013: Horváth, Hakkila, Bagoly', 'https://arxiv.org/abs/1311.1104']]},
+  'Beobachtbares Universum': {more: 'Das beobachtbare Universum ist nur der Teil, aus dem uns Licht erreichen konnte. Wie groß das gesamte Universum ist, und ob es überhaupt einen Rand hat, ist unbekannt.',
+    facts: [['Durchmesser', 'rund 93 Mrd. Lichtjahre'], ['Alter', '13,8 Mrd. Jahre'], ['Galaxien', 'Hunderte Milliarden bis 2 Billionen'], ['Hintergrundstrahlung', '2,725 K']],
+    src: [['ESA: Planck', 'https://www.esa.int/Science_Exploration/Space_Science/Planck']]}
+};
+
 const wikiURL = o => 'https://de.wikipedia.org/wiki/Spezial:Suche?go=Artikel&search=' + encodeURIComponent(WIKI[o.n] || o.n);
 
 const EXT = {craft:1.3, rock:1.12, planet:1.1, star:2.6, orbits:1.12, helio:1.75, oort:1.1, proxima:1.12, nebula:1.2, cluster:1.3, galaxy:1.15, web:1.12};
@@ -1712,7 +1883,18 @@ function render(time){
   const i = Math.min(N-2, Math.floor(t)), f = t - i;
   const w = Math.exp(Math.log(WV[i])*(1-f) + Math.log(WV[i+1])*f);
   const cam = C[i] + (C[i+1] - C[i]) * ((w - WV[i]) / (WV[i+1] - WV[i]));
-  const s = VM / w;
+  let s = VM / w, camX = cam, oxx = OX, oyy = OY;
+  const dk = det.j >= 0 ? det.k*det.k*(3 - 2*det.k) : 0;
+  if (dk > 0) {
+    /* Detailansicht: Kamera rahmt das gewählte Objekt groß, links neben der Seitenleiste */
+    const o = OBJ[det.j], narrow = W < 760;
+    const vmD = narrow ? Math.min(W*.9, H*.36) : Math.min(W*.52, H*.8);
+    const fr = o.k === 'star' ? 1.55 : o.k === 'helio' ? 1.9 : o.k === 'cluster' ? 1.4 : o.k === 'craft' ? 1.08 : 1.18;
+    s = Math.exp(Math.log(s)*(1 - dk) + Math.log(vmD/(o.d*(o.lx || 1)*fr))*dk);
+    camX = cam + (C[det.j] - cam)*dk;
+    oxx = OX + ((narrow ? W/2 : (W - Math.min(480, W))/2 + 20) - OX)*dk;
+    oyy = OY + ((narrow ? H*.2 : H*.5) - OY)*dk;
+  }
   const T = reduce ? 0 : time;
   const labels = [], marks = [], discs = [];
 
@@ -1731,8 +1913,9 @@ function render(time){
   }
 
   for (let j = 0; j < N; j++) {
-    const o = OBJ[j], R = o.d/2*s, X = (C[j] - cam)*s + OX, Y = OY - (j === 0 ? astroDrop : 0), E = R*o.ext;
+    const o = OBJ[j], R = o.d/2*s, X = (C[j] - camX)*s + oxx, Y = oyy - (j === 0 ? astroDrop : 0), E = R*o.ext;
     if (j > 0 && (introActive || introT0)) continue;
+    if (dk > .15 && j !== det.j) continue;
     if (R < .03 || X + E < -40 || X - E > W + 40) continue;
     let a = 1;
     if (!o.solid && E/MAXD > 2.5) a = clamp(1 - (E/MAXD - 2.5)/5, 0, 1);
@@ -1742,7 +1925,7 @@ function render(time){
 
     const dpx = 2*R;
     if (R > 4) discs.push([X, Y, R*(o.k === 'star' ? 1.05 : o.lx ? o.lx*.9 : 1), j]);
-    let la = smooth(5, 30, dpx) * clamp((VM*.9 - dpx)/(VM*.3), 0, 1) * a * (1 - smooth(1.15, 1.75, Math.abs(j - t)));
+    let la = smooth(5, 30, dpx) * clamp((VM*.9 - dpx)/(VM*.3), 0, 1) * a * (1 - smooth(1.15, 1.75, Math.abs(j - t))) * (1 - dk);
     if (X < 0 || X > W) la = 0;
     if (la > .02) {
       const off = Math.max(R*(o.k === 'star' ? 1.08 : o.k === 'craft' ? .98 : 1), 3);
@@ -1752,7 +1935,7 @@ function render(time){
       labels.push([lx, ly, o, la, 1 - smooth(.3, .5, Math.abs(j - t)), j]);
     }
     if (o.marks || o.orbits) {
-      const ma = smooth(150, 330, dpx) * a * clamp((3*MAXD - dpx)/MAXD, 0, 1);
+      const ma = smooth(150, 330, dpx) * a * clamp((3*MAXD - dpx)/MAXD, 0, 1) * (j === det.j ? 1 : 1 - dk);
       if (ma > .02) {
         const list = o.marks || [{x:0,y:0,l:'Sonne'}].concat(o.orbits.filter(q => q.l).map(q => ({x:q.r*Math.cos(q.cur), y:q.r*Math.sin(q.cur), l:q.l})));
         for (const m of list) marks.push([X + m.x*R, Y - m.y*R, m.l, ma]);
@@ -1761,6 +1944,7 @@ function render(time){
   }
 
   t3Render(T);
+  lastDiscs = discs;
   const od = ov.width / W;
   octx.setTransform(od, 0, 0, od, 0, 0);
   octx.clearRect(0, 0, W, H);
@@ -1914,6 +2098,8 @@ function setTour(on){
 const step = d => { userMove(); targetT = clamp(d > 0 ? Math.floor(targetT + .001) + 1 : Math.ceil(targetT - .001) - 1, 0, N-1); };
 
 addEventListener('wheel', e => {
+  if (e.target.closest && e.target.closest('.detail')) return;
+  if (det.target) { e.preventDefault(); return; }
   if (dialogOpen() || introActive || introT0) { if (introActive || introT0) e.preventDefault(); return; }
   if (e.target.closest && e.target.closest('.dock') && !e.target.closest('.rail')) return;
   e.preventDefault(); userMove();
@@ -1922,20 +2108,24 @@ addEventListener('wheel', e => {
 }, {passive: false});
 
 let drag = null;
-ov.addEventListener('pointerdown', e => { drag = {x: e.clientX, y: e.clientY, tm: performance.now(), v: 0}; ov.setPointerCapture(e.pointerId); vel = 0; userMove(); });
+ov.addEventListener('pointerdown', e => { if (det.target) return; drag = {x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t0: performance.now(), tm: performance.now(), v: 0}; ov.setPointerCapture(e.pointerId); vel = 0; userMove(); });
 ov.addEventListener('pointermove', e => {
-  if (!drag) return;
+  if (!drag) { if (e.pointerType === 'mouse' && !det.target) ov.style.cursor = onFocusObject(e.clientX, e.clientY) ? 'zoom-in' : ''; return; }
   const d = (drag.y - e.clientY) + (drag.x - e.clientX), now = performance.now(), dt = Math.max(1, now - drag.tm);
   const dT = d * (e.pointerType === 'touch' ? .009 : .006);
   targetT = clamp(targetT + dT, 0, N-1);
   drag.v = drag.v*.6 + (dT/dt*1000)*.4; drag.x = e.clientX; drag.y = e.clientY; drag.tm = now;
 });
-const endDrag = () => { if (drag && performance.now() - drag.tm < 80) vel = clamp(drag.v, -6, 6); drag = null; };
+const endDrag = e => {
+  if (drag && e && e.type === 'pointerup' && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 6 && performance.now() - drag.t0 < 450 && onFocusObject(e.clientX, e.clientY)) { drag = null; vel = 0; openDetail(); return; }
+  if (drag && performance.now() - drag.tm < 80) vel = clamp(drag.v, -6, 6); drag = null;
+};
 ov.addEventListener('pointerup', endDrag); ov.addEventListener('pointercancel', endDrag);
 
 addEventListener('keydown', e => {
   if (introActive) { if (e.key === 'Enter') { e.preventDefault(); introGo(true); } else if (e.key === 'Escape') introGo(false); return; }
   if (introT0) return;
+  if (det.target) { if (e.key === 'Escape') { e.preventDefault(); closeDetail(); } return; }
   if (dialogOpen()) return;
   const k = e.key;
   if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown' || (k === ' ' && e.target === document.body)) { e.preventDefault(); step(1); }
@@ -2148,11 +2338,79 @@ function introGo(sound){
   setTimeout(() => { const el = $('intro'); if (el) el.remove(); }, INTRO_MS + 300);
 }
 
+/* ======================================================================
+   Detailansicht
+   ====================================================================== */
+const det = {j: -1, k: 0, target: 0};
+let lastDiscs = [];
+function onFocusObject(x, y){
+  for (const [cx, cy, cr, j] of lastDiscs) if (j === focus && Math.hypot(x - cx, y - cy) < cr) return true;
+  return false;
+}
+function el(tag, cls, txt){ const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+function openDetail(){
+  if (introActive || introT0 || det.target) return;
+  const j = focus, o = OBJ[j], D = DETAIL[o.n] || {facts: [], src: []};
+  if (touring) setTour(false);
+  vel = 0; targetT = t;
+  det.j = j; det.target = 1;
+  $('detIdx').textContent = String(j + 1).padStart(2, '0') + ' / ' + N;
+  $('detCat').textContent = o.cat; $('detName').textContent = o.n;
+  $('detSize').textContent = fmtLen(o.d); $('detSize2').textContent = fmt2(o.d);
+  $('detText').textContent = o.t; $('detMore').textContent = D.more || '';
+  const facts = $('detFacts'); facts.textContent = '';
+  for (const [k, v] of D.facts) { const d = el('div'); d.append(el('dt', '', k), el('dd', '', v)); facts.appendChild(d); }
+  const comp = COMP[o.n], cw = $('detComp'); cw.textContent = '';
+  $('detCompWrap').hidden = !comp;
+  if (comp) comp.forEach(layer => {
+    const box = el('div', 'det-layer');
+    box.append(el('h4', '', layer.t), el('div', 'comp-unit', layer.u));
+    const bar = el('div', 'comp-bar'), list = el('ol', 'comp-rows');
+    const rows = layer.r.slice(), sum = rows.reduce((a, r) => a + r[2], 0);
+    if (sum < 99.5) rows.push(['…', 'Weitere', +(100 - sum).toFixed(2)]);
+    rows.forEach((r, i) => {
+      const col = r[0] === '…' ? '#3a4058' : COMP_COL[i % COMP_COL.length];
+      const seg = el('i'); seg.style.background = col; bar.appendChild(seg);
+      requestAnimationFrame(() => requestAnimationFrame(() => { seg.style.width = Math.max(r[2], .6) + '%'; }));
+      const li = el('li', 'in'), fm = el('span', 'fm'); formula(fm, r[0]);
+      const nm = el('span', 'nm'), sw = el('span', 'sw'); sw.style.background = col; nm.append(sw, r[1]);
+      li.append(fm, nm, el('span', 'pc', nfc2.format(r[2]) + ' %')); list.appendChild(li);
+    });
+    box.append(bar, list); cw.appendChild(box);
+  });
+  const src = $('detSrc'); src.textContent = '';
+  const links = [['Wikipedia: ' + (WIKI[o.n] || o.n), wikiURL(o)]];
+  if (NASA[o.n]) links.push(['NASA: ' + o.n, NASA[o.n]]);
+  for (const l of D.src) links.push(l);
+  for (const [label, url] of links) {
+    const a = el('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener';
+    a.append(el('span', '', label), el('small', '', new URL(url).hostname.replace(/^www\./, '') + ' ↗'));
+    const li = el('li'); li.appendChild(a); src.appendChild(li);
+  }
+  $('detScroll').scrollTop = 0;
+  const d = $('detail'); d.classList.add('on'); d.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('detail-on');
+  ov.style.cursor = '';
+  sfx(j);
+  setTimeout(() => { try { $('detBack').focus({preventScroll: true}); } catch (e) {} }, 300);
+}
+function closeDetail(){
+  if (!det.target) return;
+  det.target = 0;
+  const d = $('detail'); d.classList.remove('on'); d.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('detail-on');
+  try { $('detOpen').focus({preventScroll: true}); } catch (e) {}
+}
+$('detOpen').addEventListener('click', openDetail);
+$('detBack').addEventListener('click', closeDetail);
+
 /* Bildrate halten: Auflösung passt sich an */
 let ema = 16, qT = 0;
 function frame(now){
   const dtms = last ? now - last : 16, dt = Math.min(.05, dtms/1000); last = now;
   ema = ema*.94 + Math.min(dtms, 100)*.06; qT += dt;
+  det.k += (det.target - det.k)*(reduce ? 1 : 1 - Math.exp(-dt*4.2));
+  if (!det.target && det.k < .002) { det.k = 0; det.j = -1; }
   if (introActive) astroDrop = H*1.4;
   else if (introT0) {
     const e = now - introT0;
