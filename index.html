@@ -322,7 +322,8 @@ body.detail-on .det-ctl{opacity:1;transform:translate(-50%,0);pointer-events:aut
     <h3>Darstellungen</h3>
     <p>Alle Himmelskörper werden live im Browser berechnet. Sie sind maßstabsgetreu in der Größe, Oberflächen und Farben sind aber künstlerische Annäherungen und keine Fotos. Die Erdoberfläche ist das Bild „Blue Marble“ der NASA (Visible Earth). Die 3D-Modelle des Raumanzugs (EMU) und der ISS stammen aus den <a href="https://science.nasa.gov/3d-resources/" target="_blank" rel="noopener">NASA 3D Resources</a>; Materialien und Texturen der ISS wurden ergänzt.</p>
     <h3>Datenschutz</h3>
-    <p>Diese Seite setzt keine Cookies und verwendet kein Tracking. Beim Aufruf verarbeitet der Webhoster technisch notwendige Daten wie IP-Adresse, Zeitpunkt und Browserkennung in Server-Logfiles, um die Seite auszuliefern und abzusichern (Art. 6 Abs. 1 lit. f DSGVO). Klänge werden live im Browser erzeugt, es werden keine Audiodateien geladen. Die Schriften werden über <span id="fontHost">Bunny Fonts (BunnyWay d.o.o., Slowenien)</span> geladen, die 3D-Bibliothek three.js über das Content-Delivery-Netzwerk jsDelivr; dabei wird deine IP-Adresse an diese Dienste übermittelt. Links zu Wikipedia, NASA und PayPal führen zu externen Anbietern, deren Datenschutzbestimmungen ab dem Aufruf gelten.</p>
+    <p>Diese Seite setzt keine Cookies. Beim Aufruf verarbeitet der Webhoster technisch notwendige Daten wie IP-Adresse, Zeitpunkt und Browserkennung in Server-Logfiles, um die Seite auszuliefern und abzusichern (Art. 6 Abs. 1 lit. f DSGVO). Klänge werden live im Browser erzeugt, es werden keine Audiodateien geladen. Die Schriften werden über <span id="fontHost">Bunny Fonts (BunnyWay d.o.o., Slowenien)</span> geladen, die 3D-Bibliothek three.js über das Content-Delivery-Netzwerk jsDelivr; dabei wird deine IP-Adresse an diese Dienste übermittelt. Links zu Wikipedia, NASA und PayPal führen zu externen Anbietern, deren Datenschutzbestimmungen ab dem Aufruf gelten.</p>
+    <p id="statsNote" hidden>Für eine anonyme Reichweitenmessung nutzt diese Seite Umami Cloud (Umami Software, Inc.). Erfasst werden ohne Cookies und ohne Profilbildung: aufgerufene Seite, Herkunftsseite, Browser, Betriebssystem, Gerätetyp, Bildschirmgröße, Land sowie Ereignisse wie gestartete Reise, erreichte Objekte, geöffnete Detailansichten und angeklickte externe Links. Die IP-Adresse wird nicht gespeichert; Besuche werden nur über einen täglich wechselnden, nicht rückrechenbaren Hashwert zusammengefasst. Ist in deinem Browser „Do Not Track“ aktiviert, findet keine Messung statt. Rechtsgrundlage ist unser berechtigtes Interesse, das Angebot zu verbessern (Art. 6 Abs. 1 lit. f DSGVO).</p>
     <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung sowie ein Beschwerderecht bei einer Datenschutz-Aufsichtsbehörde. Verantwortlich ist die oben genannte Person.</p>
   </div>
 </dialog>
@@ -2133,6 +2134,7 @@ $('compBtn').addEventListener('click', () => { compOpen = !compOpen; compRender(
 let focus = -1, lastFov = '', lastBar = '';
 function setFocus(j){
   if (j === focus) return;
+  if (!introActive) statsFocus(j);
   if (focus >= 0) { OBJ[focus].dotEl.classList.remove('on'); sfx(j); }
   focus = j; const o = OBJ[j]; o.dotEl.classList.add('on');
   $('idx').textContent = String(j + 1).padStart(2, '0') + ' / ' + N;
@@ -2167,6 +2169,7 @@ let t = 0, targetT = 0, vel = 0, touring = false, last = 0, interacted = false;
 function touch(){ if (!interacted) { interacted = true; $('hint').classList.add('gone'); } }
 function userMove(){ touch(); if (touring) setTour(false); }
 function setTour(on){
+  if (on) trackOnce('tour', 'tour');
   touring = on; $('tour').setAttribute('aria-pressed', on);
   $('tourLbl').textContent = on ? 'Pause' : 'Tour';
   $('tourIcon').innerHTML = on ? '<path d="M8 5v14M16 5v14"/>' : '<path d="M8 5l11 7-11 7z"/>';
@@ -2388,7 +2391,7 @@ function sfxPuff(){
   const g = C.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.03, t + .03); g.gain.exponentialRampToValueAtTime(.0001, t + .45);
   src.connect(hp); hp.connect(g); g.connect(SND.dry); g.connect(SND.verb); src.start(t, Math.random()*3); src.stop(t + .5);
 }
-$('sndBtn').addEventListener('click', () => audioOn(!SND.on));
+$('sndBtn').addEventListener('click', () => { if (!SND.on) trackOnce('ton', 'ton-an'); audioOn(!SND.on); });
 
 /* ======================================================================
    Intro
@@ -2477,6 +2480,7 @@ function orreryStop(){ cancelAnimationFrame(ORR.raf); ORR.raf = 0; }
 function introGo(sound){
   if (!introActive) return;
   introActive = false;
+  track('start', {ton: sound ? 'mit' : 'ohne'});
   if (sound) audioOn(true);
   $('intro').classList.add('out');
   if (reduce) { document.documentElement.classList.add('ui'); orreryStop(); }
@@ -2515,7 +2519,7 @@ function detReset(){
   det.zt = 1; det.pxt = det.pyt = 0;
   const r = det.j >= 0 && OBJ[det.j].rot; if (r) { r.vy = r.vp = 0; r.ret = true; }
 }
-function detUsed(){ $('detCtl').classList.add('used'); }
+function detUsed(){ $('detCtl').classList.add('used'); if (det.j >= 0) trackOnce('i' + det.j, 'detail-bewegt', {objekt: OBJ[det.j].n}); }
 function spinStep(dt){
   for (const o of OBJ) { const r = o.rot; if (!r || (dptr.mode === 'rot' && det.j >= 0 && OBJ[det.j] === o)) continue;
     if (r.ret) { const k = 1 - Math.exp(-dt*5); r.yaw += (Math.round(r.yaw/TAU)*TAU - r.yaw)*k; r.pitch -= r.pitch*k;
@@ -2535,6 +2539,7 @@ function openDetail(){
   if (touring) setTour(false);
   vel = 0; targetT = t;
   det.j = j; det.target = 1;
+  track('detail', {objekt: o.n});
   det.z = det.zt = 1; det.px = det.py = det.pxt = det.pyt = 0;
   const touchUI = matchMedia('(pointer: coarse)').matches;
   $('detHint').textContent = o.rot ? (touchUI ? 'Wischen dreht · zwei Finger zoomen' : 'Ziehen dreht · Scrollen zoomt')
@@ -2624,6 +2629,39 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 
+/* ======================================================================
+   Reichweitenmessung mit Umami Cloud: keine Cookies, keine personenbezogenen Profile.
+   Läuft nur auf der eigenen Domain, nicht in Vorschauen oder lokal.
+   ====================================================================== */
+const UMAMI_ID = '';   /* Website-ID aus Umami Cloud eintragen */
+const STATS = {sent: new Set(), max: -1, vis: 0};
+function track(name, data){ try { if (window.umami && umami.track) umami.track(name, data); } catch (e) {} }
+function trackOnce(key, name, data){ if (STATS.sent.has(key)) return; STATS.sent.add(key); track(name, data); }
+(function statsSetup(){
+  if (!UMAMI_ID || location.hostname !== 'kosmische-skala.de') return;
+  const sc = document.createElement('script'); sc.defer = true; sc.src = 'https://cloud.umami.is/script.js';
+  sc.dataset.websiteId = UMAMI_ID; sc.dataset.doNotTrack = 'true';
+  document.head.appendChild(sc);
+  $('statsNote').hidden = false;
+  /* Verweildauer: nur Zeit, in der die Seite sichtbar ist */
+  const marks = [[30, '30 s'], [120, '2 min'], [300, '5 min'], [600, '10 min']];
+  setInterval(() => { if (document.hidden) return; STATS.vis += 5;
+    for (const [sec, l] of marks) if (STATS.vis >= sec) trackOnce('v' + sec, 'verweilt', {dauer: l}); }, 5000);
+  /* Externe Links: Quellen, Wikipedia, NASA, Kaffee */
+  document.addEventListener('click', e => {
+    const a = e.target.closest && e.target.closest('a[href^="http"]'); if (!a) return;
+    if (a.id === 'coffee') { track('kaffee'); return; }
+    let host = ''; try { host = new URL(a.href).hostname.replace(/^www\./, ''); } catch (er) {}
+    track('link', {ziel: host, objekt: det.target ? OBJ[det.j].n : OBJ[focus].n, ort: a.closest('.detail') ? 'detail' : 'skala'});
+  }, true);
+})();
+/* Meilensteine der Reise: wie weit kommen die Besucher? */
+const MILESTONES = ['Internationale Raumstation', 'Mond', 'Erde', 'Jupiter', 'Sonne', 'Beteigeuze', 'Sonnensystem', 'Nächster Stern', 'Milchstraße', 'Laniakea', 'Beobachtbares Universum'];
+function statsFocus(j){
+  if (j <= STATS.max) return;
+  for (let k = STATS.max + 1; k <= j; k++) if (MILESTONES.includes(OBJ[k].n)) trackOnce('m' + k, 'erreicht', {objekt: OBJ[k].n, nr: k + 1});
+  STATS.max = j;
+}
 const start = data => {
   if (data && typeof data.t === 'number') t = targetT = clamp(data.t, 0, N-1);
   setFocus(clamp(Math.round(t), 0, N-1));
