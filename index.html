@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Kosmische Skala</title>
-<meta name="description" content="Maßstabsgetreuer Zoom durchs All: vom Astronauten bis zum Rand des beobachtbaren Universums, 40 Objekte über 27 Größenordnungen.">
+<meta name="description" content="Maßstabsgetreuer Zoom von der Planck-Länge über den Menschen bis zum Rand des beobachtbaren Universums: 51 Objekte über 62 Größenordnungen.">
 <meta name="theme-color" content="#04050a">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Kosmische Skala">
-<meta property="og:description" content="Maßstabsgetreuer Zoom durchs All: vom Astronauten bis zum Rand des beobachtbaren Universums, 40 Objekte über 27 Größenordnungen.">
+<meta property="og:description" content="Maßstabsgetreuer Zoom von der Planck-Länge über den Menschen bis zum Rand des beobachtbaren Universums: 51 Objekte über 62 Größenordnungen.">
 <meta property="og:url" content="https://kosmische-skala.de/">
 <meta property="og:site_name" content="Kosmische Skala">
 <meta property="og:locale" content="de_DE">
@@ -16,10 +16,10 @@
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Kosmische Skala: Titel über einem Planetarium des Sonnensystems">
+<meta property="og:image:alt" content="Kosmische Skala: Titel über einem Planetarium des Sonnensystems, 62 Größenordnungen">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Kosmische Skala">
-<meta name="twitter:description" content="Maßstabsgetreuer Zoom durchs All: vom Astronauten bis zum Rand des beobachtbaren Universums, 40 Objekte über 27 Größenordnungen.">
+<meta name="twitter:description" content="Maßstabsgetreuer Zoom von der Planck-Länge über den Menschen bis zum Rand des beobachtbaren Universums: 51 Objekte über 62 Größenordnungen.">
 <meta name="twitter:image" content="https://kosmische-skala.de/og.png">
 <link rel="canonical" href="https://kosmische-skala.de/">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -246,6 +246,9 @@ body.detail-on .det-ctl{opacity:1;transform:translate(-50%,0);pointer-events:aut
 .det-btns svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 @media (max-width:759px){.det-ctl,body.detail-on .det-ctl{left:auto;right:12px;bottom:calc(62% + 10px);transform:none;flex-direction:row;gap:8px}.det-hint{font-size:10px}.det-btns button{width:34px;height:34px}}
 @media (prefers-reduced-motion:reduce){.det-ctl,.det-hint{transition:none}}
+
+.symb{display:block;margin-top:6px;font:500 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:#f2c27c}
+.symb[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -254,7 +257,7 @@ body.detail-on .det-ctl{opacity:1;transform:translate(-50%,0);pointer-events:aut
 <canvas id="gl" aria-hidden="true"></canvas>
 <canvas id="tc" aria-hidden="true"></canvas>
 <div class="veil"></div>
-<canvas id="ov" role="img" aria-label="Maßstabsgetreue Darstellung von Objekten im All, vom Astronauten bis zum beobachtbaren Universum"></canvas>
+<canvas id="ov" role="img" aria-label="Maßstabsgetreue Darstellung von der Planck-Länge über den Astronauten bis zum beobachtbaren Universum"></canvas>
 
 <header class="top">
   <div class="brandwrap">
@@ -263,7 +266,7 @@ body.detail-on .det-ctl{opacity:1;transform:translate(-50%,0);pointer-events:aut
       <button type="button" id="impBtn">Impressum</button><span aria-hidden="true">·</span><a id="coffee" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM16 10h1.5a2.5 2.5 0 0 1 0 5H16M8 3.5c0 1.2 1 1.2 1 2.4M12 3.5c0 1.2 1 1.2 1 2.4"/></svg>Kaffee spendieren</a><span aria-hidden="true">·</span><button type="button" id="sndBtn" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" id="sndIcon"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l4 6M21 9l-4 6"/></svg><span id="sndLbl">Ton an</span></button>
     </nav>
   </div>
-  <div class="readout"><span class="lbl">Bildbreite</span><span id="fov">–</span><span id="pow"></span></div>
+  <div class="readout"><span class="lbl">Bildbreite</span><span id="fov">–</span><span id="pow"></span><span id="symb" class="symb" hidden>Farben symbolisch</span></div>
 </header>
 
 <section class="panel" id="panel" aria-live="polite">
@@ -331,9 +334,9 @@ body.detail-on .det-ctl{opacity:1;transform:translate(-50%,0);pointer-events:aut
 <div class="intro" id="intro" role="dialog" aria-modal="true" aria-labelledby="introTitle">
   <canvas id="introCv" aria-hidden="true"></canvas>
   <div class="intro-in">
-    <p class="intro-eye">27 Größenordnungen · 40 Objekte</p>
+    <p class="intro-eye">62 Größenordnungen · 51 Objekte</p>
     <h2 class="intro-title" id="introTitle" aria-label="Kosmische Skala">Kosmische Skala</h2>
-    <p class="intro-sub">Eine Reise vom Menschen bis an den Rand des beobachtbaren Universums.</p>
+    <p class="intro-sub">Vom Menschen bis an den Rand des Universums – und hinab bis zur kleinsten denkbaren Länge.</p>
     <div class="intro-act">
       <button type="button" class="intro-go" id="introSound">Mit Ton eintauchen</button>
       <button type="button" class="intro-quiet" id="introQuiet">Ohne Ton</button>
@@ -342,7 +345,7 @@ body.detail-on .det-ctl{opacity:1;transform:translate(-50%,0);pointer-events:aut
   </div>
 </div>
 
-<div class="hint" id="hint">Scrollen, wischen oder <kbd>←</kbd> <kbd>→</kbd> zum Herauszoomen</div>
+<div class="hint" id="hint">Scrollen oder wischen: <kbd>←</kbd> ins Kleine, <kbd>→</kbd> ins Große</div>
 
 <footer class="dock" id="dock">
   <div class="controls">
@@ -363,6 +366,28 @@ const TAU = Math.PI * 2, LY = 9.4607e15, AU = 1.495978707e11, RSUN = 6.957e8;
    Objekte, aufsteigend nach Größe. g = Parameter für den jeweiligen Shader.
    ====================================================================== */
 const OBJ = [
+  {n:'Planck-Länge', d:1.616e-35, k:'micro', cat:'Grenze der Physik', dot:'#b9a8ff', ext:1.5, at:[0,0], g:{mode:10, edge:1.5},
+   t:'Die kleinste Länge, mit der unsere Physik noch etwas anfangen kann. Darunter verlieren Raum und Zeit vermutlich ihre Bedeutung und werden zu brodelndem Quantenschaum.'},
+  {n:'Strings', d:1e-34, k:'micro', cat:'Hypothese', dot:'#a9c4ff', ext:1.3, at:[0,0], g:{mode:9, edge:1.3},
+   t:'Nach der Stringtheorie bestehen alle Teilchen aus winzigen schwingenden Fäden. Ob es sie gibt, ist völlig offen: Kein Experiment kommt auch nur in die Nähe dieser Größe.'},
+  {n:'Quark', d:8.6e-19, k:'micro', cat:'Elementarteilchen', dot:'#ff8a70', ext:1.25, at:[0,.38], g:{mode:8, edge:1.25},
+   t:'Nach allem, was wir wissen, haben Quarks gar keine Ausdehnung. Gemessen ist nur eine Obergrenze, gestrichelt: kleiner als ein Tausendstel des Protons.'},
+  {n:'Proton', d:1.68e-15, k:'micro', cat:'Atomkern', dot:'#ffb070', ext:1.3, at:[0,0], g:{mode:7, edge:1.3},
+   t:'Der Kern des Wasserstoffatoms: drei Quarks, zusammengehalten von Gluonen. Fast seine ganze Masse steckt in der Energie dieses Feldes, nicht in den Quarks selbst.'},
+  {n:'Wasserstoffatom', d:1.06e-10, k:'micro', cat:'Atom', dot:'#8fb0ff', ext:2.6, ly:1.3, at:[.545,-.3], g:{mode:6, edge:2.6},
+   t:'Ein Elektron als Wolke um ein Proton – dazwischen fast nur Leere. Wäre das Atom so groß wie ein Stadion, wäre sein Kern ein Pfefferkorn am Anstoßpunkt.'},
+  {n:'Wassermolekül', d:2.8e-10, k:'micro', cat:'Molekül', dot:'#ff8f80', ext:1.3, at:[.6,1.15], g:{mode:5, rot:1},
+   t:'Zwei Wasserstoffatome am Sauerstoff, im Winkel von 104,5 Grad. Der Mensch besteht zu rund 60 Prozent aus Wasser.'},
+  {n:'DNA', d:2e-9, lx:3.4, k:'micro', cat:'Molekül', dot:'#9fd0ff', ext:3.6, ly:1.2, at:[1.1,.35], g:{mode:4, rot:1},
+   t:'Die Doppelhelix ist nur 2 Nanometer dick. Ihre vier Basen schreiben den Bauplan jedes Lebewesens, auch den des Astronauten.'},
+  {n:'Ribosom', d:2e-8, k:'micro', cat:'Zellbestandteil', dot:'#f5b878', ext:1.25, at:[.15,.05], g:{mode:3, rot:1},
+   t:'Kleiner als die Wellenlänge des Lichts gibt es keine Farben mehr – ab hier sind sie symbolisch. Ribosomen bauen in jeder Zelle Proteine nach Bauplan.'},
+  {n:'Bakterium', d:3e-6, k:'micro', cat:'Lebewesen', dot:'#9fdcef', ext:1.15, ly:.45, at:[.25,.14], g:{mode:2, rot:1},
+   t:'Auf der Milbe sitzen Bakterien, hundertmal kleiner. Ein Mensch trägt etwa so viele Bakterien in und auf sich, wie er Körperzellen hat.'},
+  {n:'Haarbalgmilbe', d:3e-4, k:'micro', cat:'Lebewesen', dot:'#f0d8b0', ext:1.15, ly:.32, at:[.36,-.33], g:{mode:1, rot:1},
+   t:'Am Wimpernrand lebt fast jeder Mensch mit winzigen Mitbewohnern: Haarbalgmilben, ein Drittel Millimeter lang. Hier im Dunkelfeld, wie unter dem Mikroskop.'},
+  {n:'Auge', d:.024, k:'micro', cat:'Mensch', dot:'#7fa6c8', ext:1.9, ly:.72, at:[-.04,.74], g:{mode:0, edge:1.9},
+   t:'Durch das Visier hindurch: das Auge des Astronauten, rund 2,4 Zentimeter groß. Das Muster der Iris ist so einzigartig wie ein Fingerabdruck.'},
   {n:'Astronaut', d:1.9, fr:1.5, k:'craft', cat:'Raumfahrt', dot:'#f2f2f2', g:{mode:0},
    t:'Ein Mensch im Raumanzug für Außeneinsätze. Der Anzug wiegt rund 130 kg und ist ein kleines Raumschiff mit eigener Luft, Kühlung und Funk.'},
   {n:'Internationale Raumstation', d:109, fr:1.85, k:'craft', cat:'Raumfahrt', dot:'#cdd3dc', g:{mode:1},
@@ -466,6 +491,8 @@ const OBJ = [
    t:'Alles, dessen Licht uns seit dem Urknall vor 13,8 Milliarden Jahren erreichen konnte. Weil sich der Raum ausdehnt, liegt sein Rand heute rund 46 Milliarden Lichtjahre entfernt.'}
 ];
 const N = OBJ.length;
+/* Der Astronaut ist der Ausgangspunkt: links davon geht es ins Kleine, rechts ins Große */
+const A0 = OBJ.findIndex(o => o.n === 'Astronaut');
 /* Zusammensetzung: Formel, Name, Anteil in Prozent. Quellen: NASA Planetary Fact Sheets, Sonnen- und Krustenhäufigkeiten, Planck 2018 */
 const COMP = {
   'Sonne': [{t:'Sonne', u:'Massenanteile der Oberfläche', r:[['H','Wasserstoff',73.46],['He','Helium',24.85],['O','Sauerstoff',0.77],['C','Kohlenstoff',0.29],['Fe','Eisen',0.16]]}],
@@ -481,9 +508,13 @@ const COMP = {
   'Neptun': [{t:'Atmosphäre', u:'Volumenanteile', r:[['H2','Wasserstoff',80],['He','Helium',19],['CH4','Methan',1.5]]}],
   'Pluto': [{t:'Atmosphäre', u:'Volumenanteile, Schätzung', r:[['N2','Stickstoff',99],['CH4','Methan',0.5],['CO','Kohlenmonoxid',0.05]]}],
   'Orionnebel': [{t:'Gas', u:'Massenanteile, typisch für Sternentstehungsgebiete', r:[['H','Wasserstoff',70],['He','Helium',28],['Z','Schwerere Elemente',2]]}],
+  'Bakterium': [{t:'Trockenmasse', u:'Massenanteile, Darmbakterium E. coli als Beispiel', r:[['Prot','Proteine',55],['RNA','Ribonukleinsäure',20.5],['Lip','Lipide',9.1],['LPS','Lipopolysaccharide',3.4],['DNA','Erbgut',3.1],['Mur','Zellwand (Murein)',2.5],['Gly','Glykogen',2.5]]}],
+  'Wassermolekül': [{t:'Wasser', u:'Massenanteile', r:[['O','Sauerstoff',88.81],['H','Wasserstoff',11.19]]}],
+  'Wasserstoffatom': [{t:'Atom', u:'Massenanteile', r:[['p','Proton',99.946],['e','Elektron',0.054]]}],
+  'Proton': [{t:'Masse', u:'Anteile an der Protonmasse', r:[['g','Energie von Gluonfeld und Quarkbewegung',99.04],['d','Ruhemasse des Down-Quarks',0.5],['u','Ruhemasse der Up-Quarks',0.46]]}],
   'Beobachtbares Universum': [{t:'Energiebudget', u:'Anteile an der Gesamtenergiedichte', r:[['Λ','Dunkle Energie',68.5],['DM','Dunkle Materie',26.4],['b','Gewöhnliche Materie',4.9]]}]
 };
-const WIKI = {'Astronaut':'Raumanzug', 'Komet 67P':'67P/Tschurjumow-Gerassimenko', 'Deimos':'Deimos (Mond)', 'Phobos':'Phobos (Mond)', 'Vesta':'(4) Vesta', 'Ceres':'(1) Ceres', 'Bennu':'(101955) Bennu', 'Ryugu':'(162173) Ryugu',
+const WIKI = {'Bakterium':'Bakterien', 'DNA':'Desoxyribonukleinsäure', 'Wassermolekül':'Wasser', 'Quark':'Quark (Physik)', 'Strings':'Stringtheorie', 'Haarbalgmilbe':'Haarbalgmilben', 'Astronaut':'Raumanzug', 'Komet 67P':'67P/Tschurjumow-Gerassimenko', 'Deimos':'Deimos (Mond)', 'Phobos':'Phobos (Mond)', 'Vesta':'(4) Vesta', 'Ceres':'(1) Ceres', 'Bennu':'(101955) Bennu', 'Ryugu':'(162173) Ryugu',
   'Merkur':'Merkur (Planet)', 'Mars':'Mars (Planet)', 'Venus':'Venus (Planet)', 'Neptun':'Neptun (Planet)', 'Uranus':'Uranus (Planet)', 'Saturn':'Saturn (Planet)', 'Jupiter':'Jupiter (Planet)',
   'Nächster Stern':'Proxima Centauri', 'Andromeda':'Andromedagalaxie', 'Sirius A':'Sirius'};
 const NASA = {'Internationale Raumstation':'https://www.nasa.gov/international-space-station/', 'Mond':'https://science.nasa.gov/moon/', 'Merkur':'https://science.nasa.gov/mercury/', 'Mars':'https://science.nasa.gov/mars/', 'Venus':'https://science.nasa.gov/venus/', 'Erde':'https://science.nasa.gov/earth/', 'Neptun':'https://science.nasa.gov/neptune/', 'Uranus':'https://science.nasa.gov/uranus/', 'Saturn':'https://science.nasa.gov/saturn/', 'Jupiter':'https://science.nasa.gov/jupiter/', 'Sonne':'https://science.nasa.gov/sun/', 'Pluto':'https://science.nasa.gov/dwarf-planets/pluto/'};
@@ -491,6 +522,39 @@ const NASA = {'Internationale Raumstation':'https://www.nasa.gov/international-s
 const NSSDC = n => ['NASA Planetary Fact Sheet', 'https://nssdc.gsfc.nasa.gov/planetary/factsheet/' + n + 'fact.html'];
 const MISSION = (label, slug) => ['NASA-Mission ' + label, 'https://science.nasa.gov/mission/' + slug + '/'];
 const DETAIL = {
+  'Planck-Länge': {more: 'Die Planck-Länge ergibt sich allein aus Naturkonstanten: Lichtgeschwindigkeit, Gravitationskonstante und Plancksches Wirkungsquantum. Unterhalb davon sagen Quantenmechanik und Relativitätstheorie gemeinsam nichts Sinnvolles mehr voraus. John Wheeler vermutete, dass Raum und Zeit hier zu einem brodelnden Quantenschaum werden. Vom Proton bis hierher ist es weiter als vom Proton bis zum Menschen.',
+    facts: [['Wert', '1,616 × 10⁻³⁵ m'], ['Formel', '√(ħG/c³)'], ['Verhältnis zum Proton', 'rund 1 : 10²⁰'], ['Eingeführt', '1899, Max Planck']],
+    src: [['NIST/CODATA: Planck-Länge', 'https://physics.nist.gov/cgi-bin/cuu/Value?plkl']]},
+  'Strings': {more: 'Zwischen Quark und Planck-Länge liegen 16 Größenordnungen, über die wir nichts wissen – Physiker sprechen von der großen Wüste. Die Stringtheorie vermutet hier schwingende Fäden, deren Schwingungsmuster die verschiedenen Teilchen ergeben. Sie ist mathematisch reich, aber bislang durch kein Experiment bestätigt. Deshalb sind die Fäden hier nur angedeutet.',
+    facts: [['Status', 'Hypothese, unbestätigt'], ['Größe', 'vermutlich nahe der Planck-Länge'], ['Benötigt', 'zusätzliche Raumdimensionen'], ['Entwickelt', 'seit Ende der 1960er-Jahre']],
+    src: []},
+  'Quark': {more: 'Quarks sind Elementarteilchen: Nach heutigem Wissen bestehen sie aus nichts Kleinerem und haben keine Ausdehnung. Streuexperimente am Teilchenbeschleuniger HERA zeigen nur, dass ihr Radius kleiner ist als 0,43 × 10⁻¹⁸ m – die gestrichelte Linie. Einzeln kommen Quarks nie vor, sie sind immer in Teilchen wie dem Proton eingeschlossen. Ringsum blitzen kurzlebige Teilchenpaare aus dem Vakuum auf.',
+    facts: [['Größe', 'punktförmig, Radius < 4,3 × 10⁻¹⁹ m'], ['Arten', '6: up, down, strange, charm, bottom, top'], ['Ladung', '+2/3 oder −1/3 e'], ['Masse (up)', 'rund 2,2 MeV/c²'], ['Vorgeschlagen', '1964, Gell-Mann und Zweig']],
+    src: [['Particle Data Group (PDG)', 'https://pdg.lbl.gov/'], ['ZEUS: Grenze für den Quarkradius (arXiv)', 'https://arxiv.org/abs/1604.01280']]},
+  'Proton': {more: 'Das Proton besteht aus zwei Up- und einem Down-Quark, die von Gluonen zusammengehalten werden. Dazwischen entstehen und vergehen ständig Quark-Antiquark-Paare. Die Ruhemasse der drei Quarks macht nur rund 1 % der Protonmasse aus, der Rest ist Energie des Feldes (E = mc²). Das klumpige Feld ist Bildern aus Gittersimulationen der Quantenchromodynamik nachempfunden; die Farben der Quarks stehen symbolisch für ihre Farbladung.',
+    facts: [['Ladungsradius', '0,841 fm (CODATA 2022)'], ['Masse', '1,673 × 10⁻²⁷ kg'], ['Aufbau', '2 Up-Quarks, 1 Down-Quark'], ['Lebensdauer', 'kein Zerfall beobachtet (> 10³⁴ Jahre)'], ['Entdeckt', '1917–1919, Ernest Rutherford']],
+    src: [['NIST/CODATA: Protonradius', 'https://physics.nist.gov/cgi-bin/cuu/Value?rp'], ['Leinweber u. a.: Visualisierung des QCD-Vakuums (arXiv)', 'https://arxiv.org/abs/hep-lat/0004025']]},
+  'Wasserstoffatom': {more: 'Das einfachste Atom: ein Proton und ein Elektron. Das Elektron kreist nicht auf einer Bahn, sondern bildet eine Wolke aus Aufenthaltswahrscheinlichkeit – hier exakt nach der Quantenmechanik berechnet. Die aufblitzenden Punkte zeigen, wo eine Messung es jeweils finden würde. Am häufigsten liegt es beim Bohr-Radius von 0,053 nm, gestrichelt eingezeichnet. Der Kern in der Mitte ist 60.000-mal kleiner als das Atom.',
+    facts: [['Bohr-Radius', '52,9 pm'], ['Kern', '1 Proton'], ['Ionisierungsenergie', '13,6 eV'], ['Anteil im All', 'rund 74 % der normalen Materie']],
+    src: [['NIST/CODATA: Bohr-Radius', 'https://physics.nist.gov/cgi-bin/cuu/Value?bohrrada0']]},
+  'Wassermolekül': {more: 'Zwei Wasserstoffatome hängen im Winkel von 104,5 Grad am Sauerstoff. Weil der Sauerstoff die Elektronen stärker anzieht, ist das Molekül an einem Ende leicht negativ und am anderen leicht positiv geladen. Diese Polarität macht Wasser zum Lösungsmittel des Lebens. Der blaue Schleier deutet die Elektronendichte an.',
+    facts: [['Größe', 'rund 0,28 nm'], ['Bindungswinkel', '104,5°'], ['O–H-Abstand', '0,096 nm'], ['Molekülmasse', '18 u'], ['In einem Glas Wasser', 'rund 8 × 10²⁴ Moleküle']],
+    src: [['NIST Chemistry WebBook: Wasser', 'https://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185']]},
+  'DNA': {more: 'Die Doppelhelix speichert den Bauplan des Lebens in vier Buchstaben: den Basen Adenin, Thymin, Guanin und Cytosin. Eine Windung ist 3,4 nm lang und enthält zehn Basenpaare. Ausgestreckt wäre die DNA einer einzigen menschlichen Zelle rund zwei Meter lang. Die Farben der Basenpaare sind symbolisch.',
+    facts: [['Durchmesser', '2 nm'], ['Eine Windung', '3,4 nm, 10 Basenpaare'], ['Basen', 'A, T, G, C'], ['Menschliches Genom', 'rund 3,1 Mrd. Basenpaare'], ['Struktur entschlüsselt', '1953']],
+    src: [['RCSB PDB-101: DNA', 'https://pdb101.rcsb.org/motm/23'], ['Watson und Crick, Nature 1953', 'https://www.nature.com/articles/171737a0']]},
+  'Ribosom': {more: 'Ribosomen sind die Proteinfabriken jeder Zelle. Sie lesen die Bauanleitung von der Boten-RNA ab und verketten Aminosäuren zu Proteinen, rund 15 bis 20 pro Sekunde. Sie bestehen zu etwa zwei Dritteln aus RNA. Die Darstellung folgt dem Stil der Molekülbilder von David Goodsell.',
+    facts: [['Durchmesser', 'rund 20 nm (Bakterium)'], ['Untereinheiten', '2 (50S und 30S)'], ['Tempo', 'rund 15–20 Aminosäuren pro Sekunde'], ['Aufbau', 'rund ⅔ RNA, ⅓ Protein'], ['Nobelpreis', 'Chemie 2009 für die Struktur']],
+    src: [['RCSB PDB-101: Ribosom', 'https://pdb101.rcsb.org/motm/10'], ['Nobelpreis für Chemie 2009', 'https://www.nobelprize.org/prizes/chemistry/2009/summary/'], ['David Goodsell: Molekülbilder', 'https://pdb101.rcsb.org/sci-art/goodsell-gallery']]},
+  'Bakterium': {more: 'Auf Haarbalgmilben wurde das Stäbchenbakterium Bacillus oleronius gefunden. Bakterien sind einzellig und haben keinen Zellkern: Ihr Erbgut liegt als ringförmige DNA frei in der Zelle, zusammen mit Zehntausenden Ribosomen. Die Darstellung zeigt es wie im Dunkelfeldmikroskop.',
+    facts: [['Länge', 'rund 3 µm'], ['Zellkern', 'keiner'], ['Ribosomen', 'bis zu rund 70.000 pro Zelle'], ['Verdopplung', 'ab rund 20 Minuten (E. coli)']],
+    src: [['Bacillus oleronius (englische Wikipedia)', 'https://en.wikipedia.org/wiki/Bacillus_oleronius']]},
+  'Haarbalgmilbe': {more: 'Demodex folliculorum lebt in den Haarfollikeln fast aller Erwachsenen, besonders an den Wimpern und im Gesicht. Die Milben fressen Talg, sind nachts aktiv und bleiben meist völlig unbemerkt. Der wurmförmige Körper mit acht Stummelbeinen passt genau in einen Haarbalg.',
+    facts: [['Länge', '0,3–0,4 mm'], ['Beine', '8 Stummelbeine'], ['Lebensdauer', 'rund 2 Wochen'], ['Verbreitung', 'bei fast allen Erwachsenen']],
+    src: [['Demodex folliculorum (englische Wikipedia)', 'https://en.wikipedia.org/wiki/Demodex_folliculorum']]},
+  'Auge': {more: 'Das menschliche Auge ist rund 24 mm groß. Die Iris regelt wie eine Blende, wie viel Licht ins Auge fällt. Im All verändert sich das Auge: Auf Langzeitmissionen entwickeln viele Astronauten eine leichte Weitsichtigkeit, weil Körperflüssigkeit in den Kopf wandert und den Augapfel verformt.',
+    facts: [['Augapfel', 'rund 24 mm'], ['Iris', 'rund 12 mm'], ['Pupille', '2–8 mm'], ['Sinneszellen', 'rund 120 Mio. Stäbchen, 6 Mio. Zapfen'], ['Lidschläge', 'rund 15 pro Minute']],
+    src: [['Augenveränderungen im All, SANS (englische Wikipedia)', 'https://en.wikipedia.org/wiki/Spaceflight-associated_neuro-ocular_syndrome']]},
   'Astronaut': {more: 'Der amerikanische Raumanzug EMU wird seit 1981 für Außeneinsätze genutzt. Unter der weißen Außenhülle liegen mehr als ein Dutzend Schichten, die vor Mikrometeoriten, Strahlung und extremen Temperaturen schützen. Ein Wasserkühlsystem in der Unterwäsche führt die Körperwärme ab.',
     facts: [['Masse des Anzugs', 'rund 130 kg'], ['Einsatzdauer', 'bis zu 8,5 Stunden'], ['Innendruck', '0,3 bar'], ['Außentemperatur', '−157 bis +121 °C'], ['Im Einsatz seit', '1981'], ['Erster Außeneinsatz', '18. März 1965, Alexei Leonow']],
     src: [['3D-Modell: NASA 3D Resources', 'https://science.nasa.gov/3d-resources/']]},
@@ -607,7 +671,7 @@ const DETAIL = {
 
 const wikiURL = o => 'https://de.wikipedia.org/wiki/Spezial:Suche?go=Artikel&search=' + encodeURIComponent(WIKI[o.n] || o.n);
 
-const EXT = {craft:1.3, rock:1.12, planet:1.1, star:2.6, orbits:1.12, helio:1.75, oort:1.1, proxima:1.12, nebula:1.2, cluster:1.3, galaxy:1.15, web:1.12};
+const EXT = {micro:1.25, craft:1.3, rock:1.12, planet:1.1, star:2.6, orbits:1.12, helio:1.75, oort:1.1, proxima:1.12, nebula:1.2, cluster:1.3, galaxy:1.15, web:1.12};
 const SOLID = new Set(['craft','rock','planet']);
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
 function hex(h){const n=parseInt(h.slice(1),16);return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255]}
@@ -621,36 +685,50 @@ function blackbody(K){
 OBJ.forEach((o, j) => {
   o.g = o.g || {};
   const ring = o.g.ring;
-  o.ext = ring ? (ring[3] ? 2.1 : 2.35) : EXT[o.k];
+  o.ext = o.ext || (ring ? (ring[3] ? 2.1 : 2.35) : EXT[o.k]);
   o.solid = SOLID.has(o.k);
-  o.seed = (j*1.618 % 7) + .37;
+  o.seed = ((j - A0)*1.618 % 7) + .37;
   o.dotv = hex(o.dot);
   if (o.k === 'star') o.g.A = blackbody(o.T);
   if (o.orbits) { const m = o.orbits[o.orbits.length-1].au; o.orbits.forEach(q => q.r = q.au/m); }
+  o.edge = o.k === 'micro' ? (o.g.edge || 0) : (o.solid ? 0 : o.ext);
 });
 
-/* Layout im Raum: Objekte nebeneinander, Kamera gleitet logarithmisch */
-const FR = 2.4, C = [], WV = [];
+/* Layout im Raum: ab dem Astronauten liegen die Objekte nebeneinander, nach innen stecken sie ineinander.
+   Gespeichert werden nur Abstände zwischen Nachbarn (DX, DY), damit auch 10⁻³⁵ m genau bleiben. */
+const FR = 2.4, DX = [], DY = [], WV = [];
 for (let j = 0; j < N; j++) {
-  const o = OBJ[j], L = o.d/2*(o.lx || 1);
-  if (j === 0) C.push(0);
-  else { const p = OBJ[j-1]; C.push(C[j-1] + p.d/2*(p.lx || 1)*1.6 + L); }
+  const o = OBJ[j];
+  if (j < N - 1) {
+    const q = OBJ[j+1];
+    if (j < A0) { DX.push(-o.at[0]*q.d/2); DY.push(-o.at[1]*q.d/2); }
+    else { DX.push(o.d/2*(o.lx || 1)*1.6 + q.d/2*(q.lx || 1)); DY.push(0); }
+  }
   let w = Math.max(o.d*(o.fr || FR), o.d*(o.lx || 1)*1.15);
   if (j) w = Math.max(w, WV[j-1]*1.05);
   WV.push(w);
 }
+/* Lage von Objekt j relativ zu Objekt i, als Summe der Nachbarabstände */
+function relX(j, i){ let x = 0; if (j > i) for (let k = i; k < j; k++) x += DX[k]; else for (let k = j; k < i; k++) x -= DX[k]; return x; }
+function relY(j, i){ let y = 0; if (j > i) for (let k = i; k < j; k++) y += DY[k]; else for (let k = j; k < i; k++) y -= DY[k]; return y; }
+/* Zeichenreihenfolge: innen das Größere zuerst, damit das Kleinere darauf liegt; außen wie bisher */
+const DRAW = [];
+for (let j = A0; j >= 0; j--) DRAW.push(j);
+for (let j = A0 + 1; j < N; j++) DRAW.push(j);
 const FL = WV.map(w => Math.log10(w/FR));
-const LMIN = -0.2, LMAX = 27.3;
+const LMIN = -35.5, LMAX = 27.3;
 
 /* Zahlen */
 const nfc = {};
 const nf = (x, sig = 3) => (nfc[sig] ||= new Intl.NumberFormat('de-DE', {maximumSignificantDigits: sig})).format(x);
 const SUP = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
 const sup = n => String(n).split('').map(c => SUP[c]).join('');
-function big(x){ if (x >= 1e15) { const e = Math.floor(Math.log10(x)); return nf(x/10**e, 2) + ' × 10' + sup(e); }
+function big(x){ if (x > 0 && x < 1e-3) { const e = Math.floor(Math.log10(x)); return nf(x/10**e, 2) + ' × 10' + sup(e); }
+  if (x >= 1e15) { const e = Math.floor(Math.log10(x)); return nf(x/10**e, 2) + ' × 10' + sup(e); }
   if (x >= 1e12) return nf(x/1e12)+' Bio.'; if (x >= 1e9) return nf(x/1e9)+' Mrd.'; if (x >= 1e6) return nf(x/1e6)+' Mio.'; return nf(x); }
-function unit(m){ if (m < 1000) return [1,'m']; if (m < 1e11) return [1e3,'km']; if (m < .05*LY) return [AU,'AE']; return [LY,'Lichtjahre']; }
-function fmtLen(m){ if (m < 1) return nf(m*100)+' cm'; const [d,u] = unit(m); return big(m/d)+' '+u; }
+function unit(m){ if (m < 1e-15) return [1,'m']; if (m < 1e-12) return [1e-15,'fm']; if (m < 1e-9) return [1e-12,'pm']; if (m < 1e-6) return [1e-9,'nm']; if (m < 1e-3) return [1e-6,'µm']; if (m < .01) return [1e-3,'mm'];
+  if (m < 1000) return [1,'m']; if (m < 1e11) return [1e3,'km']; if (m < .05*LY) return [AU,'AE']; return [LY,'Lichtjahre']; }
+function fmtLen(m){ if (m < 1 && m >= .01) return nf(m*100)+' cm'; const [d,u] = unit(m); return big(m/d)+' '+u; }
 function fmt2(m){
   if (m < 1e5) return '';
   if (m < 1e9) return '≈ '+nf(m/12742e3, 2)+' × Erde';
@@ -1522,14 +1600,276 @@ vec4 shade(vec2 p){
   return vec4(aces(col),1.0);
 }`;
 
+/* ---------- Mikrowelt ---------- */
+SRC.micro = `
+/* Die Bildsprache wechselt mit der Größe: Makro (Auge), Dunkelfeld-Mikroskopie (Milbe, Bakterium),
+   symbolische Moleküle (Ribosom, DNA, Wasser), Wahrscheinlichkeits- und Feldbilder (Atom, Proton, Quark),
+   Hypothesen (Strings, Quantenschaum). Licht wie überall von links oben. */
+mat3 microRot(){
+  float sp = uMode==4 ? 0.12 : uMode==3 ? 0.05 : uMode==5 ? 0.09 : 0.03;
+  float tilt = uMode==4 ? 0.0 : uMode==1 ? 0.35 : 0.3;
+  return rotX(tilt + uRot.y)*rotY(uT*sp + uSeed + uRot.x);
+}
+/* Szenen als Distanzfelder: Milbe, Bakterium, Ribosom, DNA, Wassermolekül */
+float mapM(vec3 q){
+  if(uMode==1){
+    /* Haarbalgmilbe: wurmförmiger, quergestreifter Hinterleib, vier Paar Stummelbeine vorn */
+    float xc = clamp(q.x, -0.92, 0.86);
+    float rad = mix(0.03, 0.155, smoothstep(-0.95, 0.3, xc))*(1.0 - 0.6*smoothstep(0.55, 0.9, xc));
+    float d = length(vec3(q.x - xc, q.y, q.z*1.15)) - rad;
+    d += 0.005*sin(q.x*110.0)*smoothstep(0.3, 0.0, q.x)*step(-0.9, q.x);
+    for(int k=0;k<4;k++){
+      float xk = 0.66 - float(k)*0.12;
+      vec3 a = vec3(xk, -0.04, 0.0), b = vec3(xk + 0.035, -0.19, 0.0);
+      vec3 qz = vec3(q.x, q.y, abs(q.z) - 0.1);
+      d = smin(d, sdCap(qz, a, b, 0.024), 0.03);
+    }
+    return d;
+  }
+  if(uMode==2){
+    /* Stäbchenbakterium, leicht gebogen, mit körniger Zellwand */
+    vec3 r = q; r.y += 0.06*q.x*q.x;
+    float d = sdCap(r, vec3(-0.66,0.0,0.0), vec3(0.66,0.0,0.0), 0.32);
+    return d + 0.006*snoise(q*14.0 + uSeed);
+  }
+  if(uMode==3){
+    /* Ribosom: große und kleine Untereinheit aus vielen Knubbeln (RNA und Proteine) */
+    float a = length(q - vec3(0.0, 0.2, 0.0)) - 0.6;
+    float b = sdEll(q - vec3(0.05, -0.48, 0.06), vec3(0.56, 0.3, 0.44));
+    float d = smin(a, b, 0.05);
+    return d - 0.05*snoise(q*6.5 + uSeed) - 0.025*snoise(q*13.0 + 3.0);
+  }
+  if(uMode==4){
+    /* DNA-Doppelhelix (B-Form): 3,4 nm pro Windung, 10 Basenpaare, große und kleine Furche */
+    float th = TAU*q.x/3.4;
+    vec2 s1 = vec2(cos(th), sin(th))*0.8, s2 = vec2(cos(th + 2.3), sin(th + 2.3))*0.8;
+    float d = min(length(q.yz - s1), length(q.yz - s2)) - 0.19;
+    float xk = (floor(q.x/0.34) + 0.5)*0.34, tk = TAU*xk/3.4;
+    vec3 a = vec3(xk, cos(tk)*0.8, sin(tk)*0.8), b = vec3(xk, cos(tk + 2.3)*0.8, sin(tk + 2.3)*0.8);
+    d = min(d, sdCap(q, a, b, 0.1));
+    return max(d, abs(q.x) - 3.3);
+  }
+  /* Wasser: Sauerstoff und zwei Wasserstoffe, Bindungswinkel 104,5° */
+  float o = length(q - vec3(0.0, 0.12, 0.0)) - 0.58;
+  float h1 = length(q - vec3(0.545, -0.3, 0.0)) - 0.36, h2 = length(q - vec3(-0.545, -0.3, 0.0)) - 0.36;
+  return smin(o, min(h1, h2), 0.07);
+}
+vec3 microN(vec3 q, float e){
+  vec2 k = vec2(1.0,-1.0)*e;
+  return normalize(k.xyy*mapM(q+k.xyy) + k.yyx*mapM(q+k.yyx) + k.yxy*mapM(q+k.yxy) + k.xxx*mapM(q+k.xxx));
+}
+vec4 shadeMarch(vec2 p){
+  mat3 Rv = microRot(), Ri = transpose(Rv);
+  float zr = uMode==4 ? 1.3 : 1.2;
+  vec3 ro = Ri*vec3(p, zr), rd = Ri*vec3(0.0, 0.0, -1.0);
+  float t = 0.0, dm = 1e9; bool hit = false;
+  float stepK = uMode==4 ? 0.55 : 0.75;
+  for(int i=0;i<96;i++){ float d = mapM(ro + rd*t); dm = min(dm, d); if(d < 0.0015){ hit = true; break; } t += max(d*stepK, 0.002); if(t > 2.6) break; }
+  vec3 col = vec3(0.0); float a = 0.0;
+  /* Elektronendichte des Wassers als feiner Schleier um die Atome */
+  if(uMode==5){
+    float g = exp(-length(p - vec2(0.0,0.12))*2.6)*0.9 + exp(-length(p - vec2(0.545,-0.3))*3.6)*0.4 + exp(-length(p - vec2(-0.545,-0.3))*3.6)*0.4;
+    col += vec3(0.35,0.55,1.0)*g*0.22; a = max(a, g*0.18);
+  }
+  if(!hit) return vec4(col, a);
+  vec3 q = ro + rd*t, n = microN(q, max(0.0015, PX*0.6)), nw = Rv*n;
+  float fres = pow(1.0 - abs(nw.z), 2.0), dif = dot(nw, LD);
+  if(uMode==1 || uMode==2){
+    /* Dunkelfeld: Ränder leuchten, das Innere schimmert durch */
+    vec3 tint = uMode==1 ? vec3(0.95,0.84,0.66) : vec3(0.62,0.86,0.95);
+    float inner = 0.5 + 0.5*fbm(q*3.0 + uSeed, 2.0, 6);
+    col = tint*(0.03 + 0.07*inner + 1.3*fres + 0.1*max(dif, 0.0));
+    if(uMode==1) col += vec3(1.0,0.9,0.75)*0.08*smoothstep(0.2,0.6,q.x)*inner;
+    return vec4(col, 0.92);
+  }
+  if(uMode==4){
+    /* Rückgrat aus Zucker und Phosphat hell, Basenpaare symbolisch eingefärbt */
+    float th = TAU*q.x/3.4; vec2 s1 = vec2(cos(th), sin(th))*0.8, s2 = vec2(cos(th+2.3), sin(th+2.3))*0.8;
+    float bb = step(min(length(q.yz - s1), length(q.yz - s2)), 0.215);
+    float kk = floor(q.x/0.34), hb = hash12(vec2(kk, uSeed));
+    vec3 base = hb < 0.25 ? vec3(0.95,0.55,0.35) : hb < 0.5 ? vec3(0.45,0.75,0.95) : hb < 0.75 ? vec3(0.95,0.82,0.4) : vec3(0.6,0.9,0.55);
+    vec3 alb = mix(base, vec3(0.78,0.82,0.9), bb);
+    vec3 hv = normalize(LD + vec3(0.0,0.0,1.0));
+    col = alb*(0.12 + 0.95*max(dif,0.0)) + vec3(1.0)*pow(max(dot(nw,hv),0.0), 40.0)*0.35 + alb*fres*0.25;
+    return vec4(col, 1.0);
+  }
+  /* Ribosom und Wasser: weich, plakativ, mit dunkler Kontur (nach David Goodsell) */
+  vec3 alb;
+  if(uMode==3){ float sub = step(q.y, -0.2); alb = mix(vec3(0.96,0.66,0.42), vec3(0.98,0.86,0.5), sub); alb *= 0.9 + 0.2*snoise(q*6.5 + uSeed); }
+  else { float isO = step(length(q - vec3(0.0,0.12,0.0)), 0.62); alb = mix(vec3(0.92,0.94,0.98), vec3(0.93,0.36,0.32), isO); }
+  float toon = 0.5 + 0.5*smoothstep(-0.3, 0.6, dif);
+  col = alb*toon*(1.0 - 0.75*smoothstep(0.55, 0.9, fres));
+  if(uMode==5){ vec3 hv = normalize(LD + vec3(0.0,0.0,1.0)); col += vec3(1.0)*pow(max(dot(nw,hv),0.0), 60.0)*0.4; }
+  return vec4(col, 1.0);
+}
+/* Auge: Iris mit Fasern, Pupille, Lederhaut mit Äderchen, Lider und Wimpern */
+vec4 eye(vec2 q){
+  float hw = 1.32, xx = clamp(q.x/hw, -1.0, 1.0), e = 1.0 - xx*xx;
+  float up = 0.5*pow(max(e,0.0), 0.75) + 0.05 + 0.03*q.x;
+  float lo = -0.38*pow(max(e,0.0), 0.9) + 0.03 + 0.02*q.x;
+  float open = smoothstep(0.0, 1.5*PX, up - q.y)*smoothstep(0.0, 1.5*PX, q.y - lo)*step(abs(q.x), hw);
+  vec3 col;
+  /* Haut mit Lidfalte */
+  float pores = fbm(vec3(q*9.0, uSeed), 1.0, 8);
+  vec3 skin = vec3(0.6,0.43,0.36)*(0.86 + 0.18*pores);
+  float crease = exp(-pow((q.y - up - 0.28 - 0.1*e)/0.05, 2.0))*step(0.0, q.y - up);
+  float lidRim = exp(-pow((q.y - up)/0.06, 2.0)) + exp(-pow((q.y - lo)/0.05, 2.0));
+  float shSkin = 0.55 + 0.45*clamp(0.6 - 0.35*q.y + 0.25*(-q.x), 0.0, 1.0);
+  col = skin*shSkin*(1.0 - 0.35*crease) + vec3(0.75,0.5,0.45)*0.18*lidRim;
+  if(open > 0.0){
+    vec2 c = vec2(0.02, 0.07);
+    vec2 s2 = q*vec2(0.78, 0.9); float zz = sqrt(max(1.0 - dot(s2,s2), 0.0));
+    vec3 n = normalize(vec3(s2, zz));
+    float dif = 0.45 + 0.55*max(dot(n, LD), 0.0);
+    float ir = length(q - c)/0.5, ang = atan(q.y - c.y, q.x - c.x);
+    float veins = pow(1.0 - abs(snoise(vec3(q*5.0, uSeed + 3.0))), 14.0)*(0.3 + 0.8*abs(xx)) + pow(1.0 - abs(snoise(vec3(q*11.0, uSeed))), 22.0)*0.5*abs(xx);
+    vec3 eyeC = mix(vec3(0.93,0.89,0.86), vec3(0.8,0.3,0.26), clamp(veins*lodw(5.0)*0.35, 0.0, 0.45));
+    if(ir < 1.0){
+      float pup = 0.38 + 0.02*sin(uT*0.7);
+      float fib = 0.5 + 0.5*fbm(vec3(cos(ang)*7.0, sin(ang)*7.0, ir*1.6) + uSeed, 1.0, 6);
+      float fib2 = 0.5 + 0.5*fbm(vec3(cos(ang)*18.0, sin(ang)*18.0, ir*3.0) + uSeed + 5.0, 1.0, 5);
+      vec3 outer = vec3(0.3,0.43,0.55)*(0.6 + 0.7*fib)*(0.75 + 0.4*fib2);
+      vec3 coll = vec3(0.66,0.44,0.2)*(0.7 + 0.6*fib);
+      vec3 irC = mix(coll, outer, smoothstep(0.42, 0.62, ir + 0.08*fib));
+      irC *= 1.0 - 0.75*smoothstep(0.85, 1.0, ir);
+      irC = mix(irC, vec3(0.012), smoothstep(pup + 0.02, pup - 0.01, ir));
+      eyeC = mix(irC, eyeC, smoothstep(0.98, 1.0, ir));
+      dif = mix(dif, 0.85, smoothstep(1.0, 0.8, ir));
+    }
+    vec3 ec = eyeC*dif;
+    ec *= mix(0.35, 1.0, smoothstep(0.0, 0.2, up - q.y));
+    ec += vec3(1.0,0.97,0.92)*(exp(-dot(q - c - vec2(-0.16,0.16), q - c - vec2(-0.16,0.16))/0.0012)*1.4 + exp(-dot(q - c - vec2(0.1,-0.14), q - c - vec2(0.1,-0.14))/0.0004)*0.5);
+    ec += vec3(0.9,0.85,0.8)*0.35*exp(-pow((q.y - lo)/0.012, 2.0));
+    col = mix(col, ec, open);
+  }
+  /* Wimpern: oben lang und nach außen gebogen, unten kurz */
+  float du = q.y - up, dl = lo - q.y;
+  if(du > 0.0 && du < 0.34 && abs(xx) < 0.93){
+    float u = q.x + du*du*1.6*sign(q.x)*(0.4 + abs(xx));
+    float st = abs(fract(u*30.0 + 0.4*snoise(vec3(u*30.0, 1.0, uSeed))) - 0.5);
+    float len = 0.34*(0.55 + 0.45*hash12(vec2(floor(u*30.0), uSeed)))*(1.0 - 0.6*xx*xx);
+    float w = 0.16*(1.0 - du/len);
+    col = mix(col, vec3(0.05,0.035,0.03), smoothstep(w, w*0.4, st)*step(du, len)*lodw(30.0));
+  }
+  if(dl > 0.0 && dl < 0.12 && abs(xx) < 0.85){
+    float u = q.x + dl*0.8*sign(q.x);
+    float st = abs(fract(u*36.0) - 0.5), w = 0.12*(1.0 - dl/0.12);
+    col = mix(col, vec3(0.06,0.045,0.04), smoothstep(w, w*0.4, st)*lodw(36.0)*0.8);
+  }
+  return vec4(col, 1.0);
+}
+/* Wasserstoff im Grundzustand: Aufenthaltswahrscheinlichkeit |ψ|² ∝ e^(−2r/a₀), über die Blickrichtung aufsummiert.
+   Die Punkte zeigen, wo eine Messung das Elektron jeweils finden würde. */
+vec4 hatom(vec2 p){
+  float rho = length(p), dens = 0.0;
+  for(int i=0;i<12;i++){ float z = (float(i) + 0.5)*0.5; dens += exp(-2.0*sqrt(rho*rho + z*z))*0.5; }
+  dens *= 2.0;
+  vec3 col = vec3(0.42,0.58,1.0)*dens*0.5;
+  float cs = 3.0*PX*uDpr; vec2 cell = floor(p/cs);
+  float fr = floor(uT*9.0);
+  float h = hash12(cell + fr*vec2(17.3, 5.1));
+  if(h < dens*0.18){ vec2 cc = (cell + 0.5)*cs; float d = length(p - cc)/(PX*uDpr); col += vec3(0.85,0.92,1.0)*exp(-d*d*0.9)*0.9; }
+  float ring = smoothstep(1.4*PX, 0.0, abs(rho - 1.0))*step(0.5, fract(atan(p.y,p.x)*30.0/TAU))*0.35;
+  col += vec3(0.7,0.8,1.0)*ring;
+  float dn = rho/(PX*uDpr); col += vec3(1.0,0.82,0.6)*exp(-dn*dn*0.6)*1.6;
+  col = aces(col);
+  return vec4(col, clamp(max(col.r, max(col.g, col.b))*1.1, 0.0, 1.0));
+}
+/* Proton: drei Valenzquarks, verbunden durch ein klumpiges Gluonfeld (nach Gitter-QCD-Bildern), dazu kurzlebige Quark-Paare */
+vec4 proton(vec2 p){
+  vec2 q0 = vec2(0.0, 0.38), q1 = vec2(-0.33, -0.19), q2 = vec2(0.33, -0.19);
+  q0 += 0.03*vec2(sin(uT*0.9), cos(uT*1.1)); q1 += 0.03*vec2(sin(uT*1.3 + 1.0), cos(uT*0.8)); q2 += 0.03*vec2(sin(uT*0.7 + 2.0), cos(uT*1.2 + 1.0));
+  vec2 cj = 0.04*vec2(sin(uT*0.5), cos(uT*0.6));
+  float dy = min(sdSeg(p, cj, q0), min(sdSeg(p, cj, q1), sdSeg(p, cj, q2)));
+  float tube = exp(-dy*dy/0.012);
+  float env = exp(-dot(p,p)*1.7);
+  float n = fbm(vec3(p*3.2, uT*0.22) + uSeed, 1.0, 6), n2 = fbm(vec3(p*2.0, uT*0.15) + uSeed + 7.0, 1.0, 4);
+  float blob = smoothstep(0.05, 0.75, n*0.9 + 0.55*tube + 0.25);
+  vec3 col = mix(vec3(1.0,0.55,0.22), vec3(0.85,0.28,0.55), smoothstep(-0.3, 0.4, n2))*blob*env*0.75;
+  col += vec3(1.0,0.75,0.4)*tube*env*0.35;
+  vec3 c0 = vec3(1.0,0.4,0.35), c1 = vec3(0.4,1.0,0.5), c2 = vec3(0.45,0.6,1.0);
+  col += c0*(exp(-dot(p-q0,p-q0)/0.0025)*2.4 + exp(-dot(p-q0,p-q0)/0.03)*0.35) + c1*(exp(-dot(p-q1,p-q1)/0.0025)*2.4 + exp(-dot(p-q1,p-q1)/0.03)*0.35) + c2*(exp(-dot(p-q2,p-q2)/0.0025)*2.4 + exp(-dot(p-q2,p-q2)/0.03)*0.35);
+  float cs = 0.12; vec2 cell = floor(p/cs); float slot = floor(uT*1.6 + hash12(cell)*5.0);
+  float h = hash12(cell + slot*vec2(3.1, 7.7));
+  if(h < 0.05*env){ float f = fract(uT*1.6 + hash12(cell)*5.0); vec2 cc = (cell + 0.5)*cs; vec2 dd = vec2(cos(h*80.0), sin(h*80.0))*0.025*(0.5 + f);
+    float a = exp(-dot(p-cc-dd,p-cc-dd)/0.0006) + exp(-dot(p-cc+dd,p-cc+dd)/0.0006); col += vec3(0.95,0.9,1.0)*a*sin(PI*f)*0.45; }
+  col = aces(col);
+  return vec4(col, clamp(max(col.r, max(col.g, col.b))*1.15, 0.0, 1.0));
+}
+/* Quark: nach heutigem Wissen punktförmig. Der gestrichelte Kreis ist die Messgrenze, nicht seine Oberfläche. */
+vec4 quark(vec2 p){
+  float r = length(p), dn = r/(PX*uDpr);
+  vec3 col = vec3(1.0,0.45,0.35)*(exp(-dn*dn*0.5)*2.2 + exp(-dn/5.0)*0.25);
+  col += vec3(1.0,0.5,0.35)*0.1*exp(-r*1.4)*(0.6 + 0.6*fbm(vec3(p*2.5, uT*0.4), 1.0, 5));
+  col += vec3(0.8,0.85,1.0)*0.45*smoothstep(1.4*PX, 0.0, abs(r - 1.0))*step(0.5, fract(atan(p.y,p.x)*40.0/TAU));
+  float cs = 0.18; vec2 cell = floor(p/cs); float ph = hash12(cell + 9.0)*6.0, slot = floor(uT*1.2 + ph), f = fract(uT*1.2 + ph);
+  float h = hash12(cell + slot*vec2(5.3, 2.9));
+  if(h < 0.08*exp(-r*0.8)){ vec2 cc = (cell + 0.5)*cs; vec2 dd = vec2(cos(h*70.0), sin(h*70.0))*0.03;
+    col += vec3(0.95,0.85,1.0)*(exp(-dot(p-cc-dd,p-cc-dd)/0.0005) + exp(-dot(p-cc+dd,p-cc+dd)/0.0005))*sin(PI*f)*0.5; }
+  col = aces(col);
+  return vec4(col, clamp(max(col.r, max(col.g, col.b))*1.1, 0.0, 1.0));
+}
+/* Strings (hypothetisch): diffuse, schwingende Schleifen und offene Fäden */
+vec4 strings(vec2 p){
+  vec3 col = vec3(0.0);
+  for(int k=0;k<5;k++){
+    vec3 h = hash33(vec3(float(k), uSeed, 2.0));
+    vec2 c = (h.xy - 0.5)*0.9; float rk = 0.12 + 0.2*h.z; float nk = floor(2.0 + h.x*4.0);
+    vec2 d = p - c; float th = atan(d.y, d.x);
+    float rr = rk*(1.0 + 0.22*sin(nk*th + uT*(0.8 + h.y))*sin(uT*(1.3 + h.z)));
+    float l = abs(length(d) - rr);
+    col += mix(vec3(0.55,0.75,1.0), vec3(0.85,0.6,1.0), h.y)*exp(-l*l/0.0012)*0.3;
+  }
+  for(int k=0;k<2;k++){
+    vec2 a = vec2(-0.55 + 0.3*float(k), 0.4 - 0.9*float(k)), b = a + vec2(0.55, 0.2);
+    vec2 ab = b - a; float hh = clamp(dot(p - a, ab)/dot(ab, ab), 0.0, 1.0);
+    vec2 nrm = normalize(vec2(-ab.y, ab.x));
+    float off = 0.05*sin(hh*PI*3.0 + uT*1.7 + float(k))*sin(hh*PI);
+    float l = length(p - (a + ab*hh + nrm*off));
+    col += vec3(0.7,0.8,1.0)*exp(-l*l/0.0012)*0.25;
+  }
+  col *= 0.75 + 0.5*fbm(vec3(p*2.0, uT*0.2), 1.0, 4);
+  col += vec3(0.4,0.45,0.8)*0.05*exp(-dot(p,p)*1.5);
+  return vec4(col, clamp(max(col.r, max(col.g, col.b)), 0.0, 1.0));
+}
+/* Quantenschaum an der Planck-Länge: Raum und Zeit brodeln */
+vec4 foam(vec2 p){
+  vec3 w0 = vec3(fbm(vec3(p*1.6, uT*0.3), 1.0, 4), fbm(vec3(p*1.6 + 5.0, uT*0.3), 1.0, 4), 0.0);
+  vec2 q = p*3.0 + w0.xy*0.9;
+  vec3 w = worley(vec3(q, uT*0.35 + uSeed));
+  float wall = smoothstep(0.12, 0.0, w.y - w.x);
+  float inner = smoothstep(0.0, 0.9, w.x);
+  vec3 col = vec3(0.65,0.6,1.0)*wall*0.7 + vec3(0.25,0.2,0.5)*(1.0 - inner)*0.25;
+  col += vec3(1.0,0.9,1.0)*pow(wall, 6.0)*0.4*(0.5 + 0.5*sin(uT*3.0 + w.z*20.0));
+  col *= smoothstep(1.45, 0.55, length(p));
+  col = aces(col);
+  return vec4(col, clamp(max(col.r, max(col.g, col.b))*1.2, 0.0, 1.0));
+}
+vec4 shade(vec2 p){
+  if(uMode==0) return eye(p);
+  if(uMode>=1 && uMode<=5) return shadeMarch(p);
+  if(uMode==6) return hatom(p);
+  if(uMode==7) return proton(p);
+  if(uMode==8) return quark(p);
+  if(uMode==9) return strings(p);
+  return foam(p);
+}
+`;
+
 /* ---------- Hintergrund: Sternfeld in drei Ebenen, die beim Zoomen nach innen wandern ---------- */
 const BG = PRE + `
 uniform vec2 uRes; uniform float uZ;
 void main(){
   vec2 fc = gl_FragCoord.xy; vec2 c = uRes*0.5; float m = max(uRes.x,uRes.y)*0.62;
   vec2 u = (fc-c)/m; PX = 1.0/m;
+  /* Welten: All, Schwebeteilchen (Mikro), Wärmezittern (Nano), Vakuumfluktuationen, Quantenschaum */
+  float wAll = smoothstep(-2.6,-0.8,uZ);
+  float wMik = smoothstep(-1.4,-2.8,uZ)*smoothstep(-8.6,-7.2,uZ);
+  float wNan = smoothstep(-7.2,-8.6,uZ)*smoothstep(-11.2,-10.0,uZ);
+  float wVak = smoothstep(-10.0,-11.2,uZ)*smoothstep(-33.5,-32.0,uZ);
+  float wSch = smoothstep(-31.5,-33.5,uZ);
   vec3 col = vec3(0.010,0.012,0.022);
-  col += vec3(0.06,0.05,0.12)*0.3*smoothstep(0.0,0.8,fbm(vec3(u*1.2,uZ*0.05),1.0,3));
+  if(wAll>0.001) col += vec3(0.06,0.05,0.12)*0.3*smoothstep(0.0,0.8,fbm(vec3(u*1.2,uZ*0.05),1.0,3))*wAll;
   for(int l=0;l<3;l++){
     float ph = fract(uZ*0.2+float(l)/3.0);
     float sc = pow(2.3,1.0-ph), fd = pow(sin(PI*ph),1.4);
@@ -1540,9 +1880,39 @@ void main(){
       vec2 cc = 0.2+0.6*h.xy; float d = length(f-cc)*m*sc/G/uDpr;
       float b = exp(-d*d*0.7)*fd*(0.25+0.75*pow(h.x*h.y,1.5));
       float tw = 0.75+0.25*sin(uT*(0.6+h.y)+h.x*20.0);
-      col += mix(vec3(1.0,0.85,0.7),vec3(0.75,0.85,1.0),h.y)*b*tw*0.9;
+      col += mix(vec3(1.0,0.85,0.7),vec3(0.75,0.85,1.0),h.y)*b*tw*0.9*wAll;
     }
   }
+  /* Schwebeteilchen wie Staub im Dunkelfeld: unscharfe, langsam treibende Scheibchen */
+  if(wMik>0.001) for(int l=0;l<2;l++){
+    float ph = fract(uZ*0.3+float(l)*0.5), sc = pow(2.0,1.0-ph), fd = sin(PI*ph);
+    float G = 6.0; vec2 q = u/sc*G + float(l)*13.0; vec2 g = floor(q), f = fract(q);
+    vec3 h = hash32(g+float(l)*71.0+300.0);
+    if(h.z<0.3){ vec2 cc = 0.5+0.26*vec2(sin(uT*0.07*(0.5+h.x)+h.y*20.0), cos(uT*0.06*(0.5+h.y)+h.x*20.0));
+      float rr = 0.06+0.14*h.x, d = length(f-cc);
+      col += vec3(0.95,0.85,0.7)*(smoothstep(rr,rr*0.5,d)*0.03 + exp(-pow((d-rr*0.8)/(rr*0.2),2.0))*0.045)*fd*wMik; }
+  }
+  /* Wärmezittern: Moleküle stehen nie still */
+  if(wNan>0.001) for(int l=0;l<2;l++){
+    float ph = fract(uZ*0.3+float(l)*0.5), sc = pow(2.0,1.0-ph), fd = sin(PI*ph);
+    float G = 34.0; vec2 q = u/sc*G + float(l)*7.0; vec2 g = floor(q), f = fract(q);
+    vec3 h = hash32(g+float(l)*53.0+500.0);
+    if(h.z<0.45){ vec2 cc = 0.5+0.16*vec2(sin(uT*9.0+h.x*40.0)+0.6*sin(uT*23.0+h.y*9.0), cos(uT*8.0+h.y*40.0)+0.6*cos(uT*19.0+h.x*7.0));
+      float d = length(f-cc)*m*sc/G/uDpr; col += vec3(0.6,0.75,1.0)*exp(-d*d*0.7)*0.16*fd*wNan; }
+  }
+  /* Vakuumfluktuationen: Teilchenpaare entstehen und vergehen */
+  if(wVak>0.001) for(int l=0;l<2;l++){
+    float ph = fract(uZ*0.3+float(l)*0.5), sc = pow(2.0,1.0-ph), fd = sin(PI*ph);
+    float G = 14.0; vec2 q = u/sc*G + float(l)*29.0; vec2 g = floor(q), f = fract(q);
+    vec3 h = hash32(g+float(l)*91.0+700.0);
+    float tt = uT*0.7 + h.x*9.0, sl = floor(tt), fr = fract(tt);
+    float hh = hash12(g + sl*vec2(3.7,1.9) + float(l)*5.0);
+    if(hh<0.07){ vec2 cc = 0.3+0.4*h.xy, dd = vec2(cos(hh*90.0),sin(hh*90.0))*0.05*(0.3+fr);
+      float d1 = length(f-cc-dd)*m*sc/G/uDpr, d2 = length(f-cc+dd)*m*sc/G/uDpr;
+      col += mix(vec3(1.0,0.8,0.5),vec3(0.7,0.6,1.0),fract(hh*14.0))*(exp(-d1*d1*0.6)+exp(-d2*d2*0.6))*0.5*sin(PI*fr)*fd*wVak; }
+  }
+  /* Quantenschaum */
+  if(wSch>0.001){ vec3 wv = worley(vec3(u*6.0, uT*0.25)); col += vec3(0.5,0.45,0.9)*smoothstep(0.1,0.0,wv.y-wv.x)*0.07*wSch; }
   fragColor = vec4(col,1.0);
 }`;
 
@@ -1634,7 +2004,7 @@ function prog(name){
 }
 function U(e, n){ if (!(n in e.u)) e.u[n] = gl.getUniformLocation(e.p, n); return e.u[n]; }
 /* Shader vorkompilieren: zuerst die nahen, dann der Rest im Leerlauf */
-const KINDS = ['craft0','bg','craft1','rock','planet','star','orbits','helio','oort','proxima','nebula','cluster','galaxy','web'];
+const KINDS = ['craft0','bg','craft1','micro','rock','planet','star','orbits','helio','oort','proxima','nebula','cluster','galaxy','web'];
 if (gl) {
   if (PEXT) KINDS.forEach(k => PROGS[k] || makeProg(k));
   else { ['craft0','bg'].forEach(k => prog(k)); let i = 0; const idle = () => { while (i < KINDS.length && PROGS[KINDS[i]]) i++; if (i < KINDS.length) { prog(KINDS[i]); (window.requestIdleCallback || setTimeout)(idle, 60); } }; setTimeout(idle, 300); }
@@ -1680,7 +2050,7 @@ function drawObj(o, X, Y, R, a, time, extra){
   gl.uniform2f(U(e,'uRes'), GW, GH); gl.uniform2f(U(e,'uCenter'), X, Y);
   gl.uniform1f(U(e,'uHalf'), half); gl.uniform1f(U(e,'uExt'), half/R);
   gl.uniform1f(U(e,'uR'), R); gl.uniform1f(U(e,'uT'), time); gl.uniform1f(U(e,'uSeed'), o.seed);
-  gl.uniform1f(U(e,'uAlpha'), a); gl.uniform1f(U(e,'uDpr'), KG); gl.uniform1f(U(e,'uEdge'), o.solid ? 0 : o.ext);
+  gl.uniform1f(U(e,'uAlpha'), a); gl.uniform1f(U(e,'uDpr'), KG); gl.uniform1f(U(e,'uEdge'), o.edge);
   gl.uniform3fv(U(e,'uDot'), o.dotv);
   gl.uniform2f(U(e,'uRot'), o.rot ? o.rot.yaw : 0, o.rot ? o.rot.pitch : 0);
   const g = o.g;
@@ -1939,10 +2309,11 @@ function t3Render(time){
   for (const d of T3.draws) {
     const {md, X, Y, R, mode} = d, uy = d.rot ? d.rot.yaw : 0, up = d.rot ? d.rot.pitch : 0;
     if (mode === 0) rcsStep(time, md);
-    const ox = mode === 0 ? RCS.x*R : 0, oy = mode === 0 ? RCS.y*R : 0;
+    const still = mode === 0 ? 1 - clamp(A0 - t, 0, 1) : 1;
+    const ox = mode === 0 ? RCS.x*R*still : 0, oy = mode === 0 ? RCS.y*R*still : 0;
     md.holder.position.set(X - W/2 + ox, H/2 - Y + oy, 0);
     md.holder.scale.setScalar(R);
-    if (mode === 0) md.spin.rotation.set(0.07 + 0.03*Math.sin(time*0.21) + up, Math.PI + 0.38 + 0.14*Math.sin(time*0.13) + uy, 0.035*Math.sin(time*0.17) + RCS.rz);
+    if (mode === 0) md.spin.rotation.set(0.07 + 0.03*Math.sin(time*0.21)*still + up, Math.PI + 0.38 + 0.14*Math.sin(time*0.13)*still + uy, (0.035*Math.sin(time*0.17) + RCS.rz)*still);
     else md.spin.rotation.set(0.32 + up, Math.PI/2 + 0.06*Math.sin(time*0.04) + uy, 0.02);
   }
   for (const d of T3.draws) {
@@ -1966,14 +2337,15 @@ function render(time){
   const kk = clamp((time - (lastR || time))*10, 0, 1); lastR = time;
   const i = Math.min(N-2, Math.floor(t)), f = t - i;
   const w = Math.exp(Math.log(WV[i])*(1-f) + Math.log(WV[i+1])*f);
-  const cam = C[i] + (C[i+1] - C[i]) * ((w - WV[i]) / (WV[i+1] - WV[i]));
-  let s = VM / w, camX = cam, oxx = OX, oyy = OY;
+  /* Kamera relativ zu Objekt i, damit auch winzige Abstände genau bleiben */
+  const fc = (w - WV[i]) / (WV[i+1] - WV[i]);
+  let s = VM / w, camX = DX[i]*fc, camY = DY[i]*fc, oxx = OX, oyy = OY;
   const dk = det.j >= 0 ? det.k*det.k*(3 - 2*det.k) : 0;
   if (dk > 0) {
     /* Detailansicht: Kamera rahmt das gewählte Objekt groß, links neben der Seitenleiste */
     const o = OBJ[det.j], b = detBase();
     s = Math.exp(Math.log(s)*(1 - dk) + (Math.log(b.vmD/(o.d*(o.lx || 1)*b.fr)) + Math.log(det.z))*dk);
-    camX = cam + (C[det.j] - cam)*dk;
+    camX += (relX(det.j, i) - camX)*dk; camY += (relY(det.j, i) - camY)*dk;
     oxx = OX + (b.ox + det.px - OX)*dk;
     oyy = OY + (b.oy + det.py - OY)*dk;
   }
@@ -1994,15 +2366,19 @@ function render(time){
     gl.enable(gl.BLEND);
   }
 
-  for (let j = 0; j < N; j++) {
-    const o = OBJ[j], R = o.d/2*s, X = (C[j] - camX)*s + oxx, Y = oyy - (j === 0 ? astroDrop : 0), E = R*o.ext;
-    if (j > 0 && (introActive || introT0)) continue;
+  let tcA = 1;
+  for (const j of DRAW) {
+    const o = OBJ[j], R = o.d/2*s, X = (relX(j, i) - camX)*s + oxx, Y = oyy - (relY(j, i) - camY)*s - (j === A0 ? astroDrop : 0), E = R*o.ext;
+    if (j !== A0 && (introActive || introT0)) continue;
     if (dk > .15 && j !== det.j) continue;
     if (R < .03 || X + E < -40 || X - E > W + 40) continue;
     let a = 1;
     /* Systeme blenden aus, wenn sie viel größer als das Bild sind; im Detailzoom gilt die Zoomstufe nicht */
     const zd = j === det.j ? Math.pow(Math.max(1, det.z), dk) : 1;
-    if (!o.solid && E/MAXD/zd > 2.5) a = clamp(1 - (E/MAXD/zd - 2.5)/5, 0, 1);
+    if ((!o.solid || j === A0) && E/MAXD/zd > 2.5) a = clamp(1 - (E/MAXD/zd - 2.5)/5, 0, 1);
+    /* Innen: das umgebende Objekt verschwindet, sobald die Kamera beim kleineren ankommt */
+    if (j <= A0 && j > 0 && j !== det.j) { const fo = clamp((t - j + .85)/.5, 0, 1); a *= fo*fo*(3 - 2*fo); }
+    if (j === A0) tcA = a;
     if (a <= 0) continue;
     if (o.orbits) for (const q of o.orbits) q.cur = q.a + T*.12/Math.pow(q.au, 1.5);
     if (gl && !t3Use(o, X, Y, R, a)) drawObj(o, X*KG, Y*KG, R*KG, a, T + j*3.1);
@@ -2012,7 +2388,7 @@ function render(time){
     let la = smooth(5, 30, dpx) * clamp((VM*.9 - dpx)/(VM*.3), 0, 1) * a * (1 - smooth(1.15, 1.75, Math.abs(j - t))) * (1 - dk);
     if (X < 0 || X > W) la = 0;
     if (la > .02) {
-      const off = Math.max(R*(o.k === 'star' ? 1.08 : o.k === 'craft' ? .98 : 1), 3);
+      const off = Math.max(R*(o.k === 'star' ? 1.08 : o.k === 'craft' ? .98 : 1)*(o.ly || 1), 3);
       const tw = Math.max(textW(o.n, FONT_LAB), textW(fmtLen(o.d), FONT_MONO));
       const lx = clamp(X, 10 + tw/2, W - 10 - tw/2);
       const ly = Y + off + 20;
@@ -2027,6 +2403,7 @@ function render(time){
     }
   }
 
+  if (tcA !== render.tcA) { render.tcA = tcA; $('tc').style.opacity = tcA < 1 ? tcA.toFixed(3) : ''; }
   t3Render(T);
   lastDiscs = discs;
   const od = ov.width / W;
@@ -2036,7 +2413,7 @@ function render(time){
   const placed = [];
   const free = (x0, y0, x1, y1) => !placed.some(r => x0 < r[2] && x1 > r[0] && y0 < r[3] && y1 > r[1]);
   octx.textAlign = 'center';
-  const onDisc = (b, own) => discs.some(([cx, cy, cr, k]) => { if (k === own) return false; const nx = clamp(cx, b[0], b[2]), ny = clamp(cy, b[1], b[3]); return (nx-cx)**2 + (ny-cy)**2 < cr*cr; });
+  const onDisc = (b, own) => discs.some(([cx, cy, cr, k]) => { if (k === own || (own < A0 && k > own && k <= A0)) return false; const nx = clamp(cx, b[0], b[2]), ny = clamp(cy, b[1], b[3]); return (nx-cx)**2 + (ny-cy)**2 < cr*cr; });
   for (const [x, y, o, la, act, j] of labels) {
     const tw = Math.max(textW(o.n, FONT_LAB), textW(fmtLen(o.d), FONT_MONO));
     const box = [x - tw/2 - 4, y - 14, x + tw/2 + 4, y + 24];
@@ -2073,10 +2450,10 @@ const panel = $('panel'), rail = $('rail'), cursor = $('cursor'), tip = $('tip')
 const pos = L => (L - LMIN)/(LMAX - LMIN);
 (function buildRail(){
   const ticks = $('ticks'), dots = $('dots');
-  for (let p = 0; p <= 27; p++) {
-    const el = document.createElement('div'); el.className = 'tick' + (p % 3 === 0 ? ' maj' : '') + (p % 9 === 0 ? ' lab' : '');
+  for (let p = -35; p <= 27; p++) {
+    const el = document.createElement('div'); el.className = 'tick' + (p % 3 === 0 ? ' maj' : '') + (p % 18 === 0 ? ' lab' : '');
     el.style.left = pos(p)*100 + '%';
-    if (p % 3 === 0) { const sp = document.createElement('span'); sp.textContent = '10' + sup(p) + ' m'; el.appendChild(sp); }
+    if (p % 6 === 0) { const sp = document.createElement('span'); sp.textContent = '10' + sup(p) + ' m'; el.appendChild(sp); }
     ticks.appendChild(el);
   }
   OBJ.forEach((o, j) => { const d = document.createElement('div'); d.className = 'odot'; d.style.left = pos(FL[j])*100 + '%'; dots.appendChild(d); o.dotEl = d; });
@@ -2155,6 +2532,7 @@ function setFocus(j){
   measureAvoid();
 }
 function hud(s, w){
+  const sym = w/FR < 4e-7; if (sym !== hud.sym) { hud.sym = sym; $('symb').hidden = !sym; }
   setFocus(clamp(Math.round(t), 0, N-1));
   const vis = W / s, fv = fmtLen(vis);
   if (fv !== lastFov) { lastFov = fv; $('fov').textContent = fv; $('pow').textContent = '≈ 10' + sup(Math.round(Math.log10(vis))) + ' m'; }
@@ -2170,7 +2548,7 @@ function hud(s, w){
    Steuerung
    ====================================================================== */
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-let t = 0, targetT = 0, vel = 0, touring = false, last = 0, interacted = false;
+let t = A0, targetT = A0, vel = 0, touring = false, tourDir = 1, last = 0, interacted = false;
 function touch(){ if (!interacted) { interacted = true; $('hint').classList.add('gone'); } }
 function userMove(){ touch(); if (touring) setTour(false); }
 function setTour(on){
@@ -2178,7 +2556,8 @@ function setTour(on){
   touring = on; $('tour').setAttribute('aria-pressed', on);
   $('tourLbl').textContent = on ? 'Pause' : 'Tour';
   $('tourIcon').innerHTML = on ? '<path d="M8 5v14M16 5v14"/>' : '<path d="M8 5l11 7-11 7z"/>';
-  if (on && targetT >= N - 1.01) { targetT = 0; t = 0; }
+  /* Vom Astronauten aus geht die Tour ins Große, von links davon ins Kleine */
+  if (on) { tourDir = targetT < A0 - .01 ? -1 : 1; if ((tourDir > 0 && targetT >= N - 1.01) || (tourDir < 0 && targetT <= .01)) { targetT = t = A0; tourDir = 1; } }
   touch();
 }
 const step = d => { userMove(); targetT = clamp(d > 0 ? Math.floor(targetT + .001) + 1 : Math.ceil(targetT - .001) - 1, 0, N-1); };
@@ -2357,7 +2736,7 @@ function audioOn(on){
 function audioScale(L){
   if (!SND.on || Math.abs(L - SND.lastL) < .05) return;
   SND.lastL = L;
-  SND.lp.frequency.setTargetAtTime(380 + (27 - clamp(L, 0, 27))*20, SND.C.currentTime, 1.2);
+  SND.lp.frequency.setTargetAtTime(380 + (27 - clamp(L, -36, 27))*20, SND.C.currentTime, 1.2);
 }
 const PENTA = [0, 2, 4, 7, 9];
 let sfxLast = 0;
@@ -2389,7 +2768,7 @@ function sfxDive(){
   o.connect(og); og.connect(SND.verb); og.connect(SND.dry); o.start(t + d - .4); o.stop(t + d + 3.1);
 }
 function sfxPuff(){
-  if (!SND.on || !SND.C || focus !== 0) return;
+  if (!SND.on || !SND.C || focus !== A0) return;
   const C = SND.C, t = C.currentTime;
   const src = C.createBufferSource(); src.buffer = SND.noise;
   const hp = C.createBiquadFilter(); hp.type = 'bandpass'; hp.frequency.value = 3200; hp.Q.value = .6;
@@ -2499,7 +2878,7 @@ function introGo(sound){
 const det = {j: -1, k: 0, target: 0, z: 1, zt: 1, px: 0, py: 0, pxt: 0, pyt: 0};
 /* Drehbar sind Körper mit Oberfläche; Systeme (Galaxien, Nebel, Haufen, Bahnen) lassen sich verschieben */
 const ROT = new Set(['craft','rock','planet','star']);
-OBJ.forEach(o => { if (ROT.has(o.k)) o.rot = {yaw: 0, pitch: 0, vy: 0, vp: 0, ret: false}; });
+OBJ.forEach(o => { if (ROT.has(o.k) || o.g.rot) o.rot = {yaw: 0, pitch: 0, vy: 0, vp: 0, ret: false}; });
 /* Lage des Objekts in der Detailansicht bei Zoom 1 und der freie Bildbereich daneben */
 function detBase(){
   const o = OBJ[det.j], narrow = W < 760;
@@ -2631,8 +3010,9 @@ function frame(now){
     else if (ema < 13.5 && quality < 1) { quality = Math.min(1, quality*1.1); sizeGL(); } }
   if (touring) {
     const fr = targetT - Math.floor(targetT);
-    targetT += dt*.42*(.2 + .8*Math.pow(Math.sin(Math.PI*fr), 2));
+    targetT += tourDir*dt*.42*(.2 + .8*Math.pow(Math.sin(Math.PI*fr), 2));
     if (targetT >= N-1) { targetT = N-1; setTour(false); }
+    if (targetT <= 0) { targetT = 0; setTour(false); }
   }
   if (Math.abs(vel) > .002) { targetT = clamp(targetT + vel*dt, 0, N-1); vel *= Math.exp(-dt*3.5); } else vel = 0;
   t += (targetT - t) * (reduce ? 1 : 1 - Math.exp(-dt*6.5));
@@ -2646,7 +3026,7 @@ function frame(now){
    Läuft nur auf der eigenen Domain, nicht in Vorschauen oder lokal.
    ====================================================================== */
 const UMAMI_ID = 'b879d6be-3d8d-49e5-b4ba-878de1994c63';   /* Website-ID aus Umami Cloud eintragen */
-const STATS = {sent: new Set(), max: -1, vis: 0};
+const STATS = {sent: new Set(), lo: A0, hi: A0, vis: 0};
 function track(name, data){ try { if (window.umami && umami.track) umami.track(name, data); } catch (e) {} }
 function trackOnce(key, name, data){ if (STATS.sent.has(key)) return; STATS.sent.add(key); track(name, data); }
 (function statsSetup(){
@@ -2668,11 +3048,11 @@ function trackOnce(key, name, data){ if (STATS.sent.has(key)) return; STATS.sent
   }, true);
 })();
 /* Meilensteine der Reise: wie weit kommen die Besucher? */
-const MILESTONES = ['Internationale Raumstation', 'Mond', 'Erde', 'Jupiter', 'Sonne', 'Beteigeuze', 'Sonnensystem', 'Nächster Stern', 'Milchstraße', 'Laniakea', 'Beobachtbares Universum'];
+const MILESTONES = ['Auge', 'Haarbalgmilbe', 'Bakterium', 'DNA', 'Wasserstoffatom', 'Proton', 'Quark', 'Planck-Länge', 'Internationale Raumstation', 'Mond', 'Erde', 'Jupiter', 'Sonne', 'Beteigeuze', 'Sonnensystem', 'Nächster Stern', 'Milchstraße', 'Laniakea', 'Beobachtbares Universum'];
 function statsFocus(j){
-  if (j <= STATS.max) return;
-  for (let k = STATS.max + 1; k <= j; k++) if (MILESTONES.includes(OBJ[k].n)) trackOnce('m' + k, 'erreicht', {objekt: OBJ[k].n, nr: k + 1});
-  STATS.max = j;
+  const hit = k => { if (MILESTONES.includes(OBJ[k].n)) trackOnce('m' + k, 'erreicht', {objekt: OBJ[k].n, nr: k - A0}); };
+  if (j > STATS.hi) { for (let k = STATS.hi + 1; k <= j; k++) hit(k); STATS.hi = j; }
+  if (j < STATS.lo) { for (let k = STATS.lo - 1; k >= j; k--) hit(k); STATS.lo = j; }
 }
 const start = data => {
   if (data && typeof data.t === 'number') t = targetT = clamp(data.t, 0, N-1);
