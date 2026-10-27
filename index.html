@@ -1628,8 +1628,12 @@ SRC.micro = `
    symbolische Moleküle (Ribosom, DNA, Wasser), Wahrscheinlichkeits- und Feldbilder (Atom, Proton, Quark),
    Hypothesen (Strings, Quantenschaum). Licht wie überall von links oben. */
 mat3 microRot(){
-  float sp = uMode==4 ? 0.12 : uMode==3 ? 0.05 : uMode==5 ? 0.09 : 0.03;
-  float tilt = uMode==4 ? 0.0 : uMode==1 ? 0.35 : 0.3;
+  /* DNA dreht sich um die eigene Längsachse; Ziehen kippt und schwenkt sie */
+  if(uMode==4) return rotX(uRot.y)*rotY(uRot.x)*rotX(uT*0.25);
+  /* Wasser steht still, damit das Wasserstoffatom genau auf seinem H liegt */
+  if(uMode==5) return rotX(uRot.y)*rotY(uRot.x);
+  float sp = uMode==3 ? 0.05 : 0.03;
+  float tilt = uMode==1 ? 0.35 : 0.3;
   return rotX(tilt + uRot.y)*rotY(uT*sp + uSeed + uRot.x);
 }
 /* Szenen als Distanzfelder: Milbe, Bakterium, Ribosom, DNA, Wassermolekül */
@@ -1682,11 +1686,15 @@ vec3 microN(vec3 q, float e){
 }
 vec4 shadeMarch(vec2 p){
   mat3 Rv = microRot(), Ri = transpose(Rv);
-  float zr = uMode==4 ? 1.3 : 1.2;
+  /* Tiefe nach der Ausdehnung: die 6,6 Einheiten lange DNA kann zur Kamera zeigen */
+  float zr = uMode==4 ? 3.6 : 1.2;
   vec3 ro = Ri*vec3(p, zr), rd = Ri*vec3(0.0, 0.0, -1.0);
   float t = 0.0, dm = 1e9; bool hit = false;
-  float stepK = uMode==4 ? 0.55 : 0.75;
-  for(int i=0;i<96;i++){ float d = mapM(ro + rd*t); dm = min(dm, d); if(d < 0.0015){ hit = true; break; } t += max(d*stepK, 0.002); if(t > 2.6) break; }
+  float stepK = uMode==4 ? 0.5 : 0.75;
+  /* nur innerhalb der Hüllkugel abtasten */
+  float bR = uMode==4 ? 3.5 : 1.2, bb = dot(ro, rd), bc = dot(ro, ro) - bR*bR, bd = bb*bb - bc;
+  if(bd > 0.0){ t = max(0.0, -bb - sqrt(bd)); float t1 = -bb + sqrt(bd);
+    for(int i=0;i<160;i++){ float d = mapM(ro + rd*t); dm = min(dm, d); if(d < 0.0015){ hit = true; break; } t += max(d*stepK, 0.002); if(t > t1) break; } }
   vec3 col = vec3(0.0); float a = 0.0;
   /* Elektronendichte des Wassers als feiner Schleier um die Atome */
   if(uMode==5){
@@ -1729,13 +1737,15 @@ vec4 shadeMarch(vec2 p){
    durchs Visier, nach außen versinkt das Gesicht im Schatten des Helms. */
 float faceH(vec2 q){
   float h = -0.34*exp(-(q.x*q.x/2.6 + q.y*q.y/1.4));
-  h += 0.45*exp(-pow((q.y - 1.6 - 0.18*exp(-pow((q.x + 0.3)/1.5, 2.0)))/0.6, 2.0))*smoothstep(-4.2, -1.6, q.x);
+  h += 0.32*exp(-pow((q.y - 1.6 - 0.18*exp(-pow((q.x + 0.3)/1.5, 2.0)))/0.75, 2.0))*smoothstep(-4.2, -1.6, q.x);
   h += 1.05*exp(-pow((q.x - 2.8)/0.8, 2.0))*(0.5 + 0.5*smoothstep(1.2, -2.0, q.y));
   h += 0.5*exp(-pow((q.x - 0.2)/2.1, 2.0) - pow((q.y + 2.4)/1.1, 2.0));
   h += 0.13*exp(-pow((q.y - 0.62)/0.32, 2.0) - q.x*q.x/2.4) + 0.06*exp(-pow((q.y + 0.5)/0.24, 2.0) - q.x*q.x/2.0);
   h -= 0.5*smoothstep(-2.4, -4.8, q.x);
   return h;
 }
+/* Deckung eines Haares: dünner als ein Pixel wird es blasser statt zu verschwinden */
+float strandCov(float d, float w){ float ww = max(w, PX); return (w/ww)*clamp((0.5*ww - d)/PX + 0.5, 0.0, 1.0); }
 vec4 eye(vec2 q){
   const vec3 LF = vec3(-0.55, 0.55, 0.63);
   float hw = 1.32, xx = clamp(q.x/hw, -1.0, 1.0), e = 1.0 - xx*xx;
@@ -1747,7 +1757,7 @@ vec4 eye(vec2 q){
   /* Haut */
   float hc = faceH(q), ee = 0.03;
   vec3 n = normalize(vec3(-(faceH(q + vec2(ee,0.0)) - faceH(q - vec2(ee,0.0)))/(2.0*ee), -(faceH(q + vec2(0.0,ee)) - faceH(q - vec2(0.0,ee)))/(2.0*ee), 1.0));
-  float pore = fbm(vec3(q*26.0, uSeed), 1.0, 5), fine = fbm(vec3(q*7.0, uSeed + 2.0), 1.0, 5);
+  float pore = fbm(vec3(q, uSeed), 26.0, 5), fine = fbm(vec3(q, uSeed + 2.0), 7.0, 5);
   n = bumpN(n, vec3(q, 0.0), 0.0015*pore + 0.005*fine, 1.0);
   vec3 alb = vec3(0.74,0.53,0.44)*(0.9 + 0.12*fine);
   alb = mix(alb, vec3(0.78,0.46,0.42), 0.35*exp(-dot(q - vec2(1.6,-0.1), q - vec2(1.6,-0.1))/0.6));
@@ -1758,29 +1768,32 @@ vec4 eye(vec2 q){
   /* Lidfalte */
   float crease = exp(-pow((q.y - up - 0.3 - 0.1*e)/0.045, 2.0))*step(0.0, q.y - up)*smoothstep(1.5, 0.6, abs(q.x));
   alb *= 1.0 - 0.3*crease;
-  /* Augenbraue: Haare schräg nach außen */
+  /* Augenbraue: Haare rund 0,1 mm stark (0,008 Augenradien) und 5–10 mm lang; innen aufrecht, außen flach nach außen.
+     Ist ein Haar kleiner als ein Pixel, zählt seine mittlere Deckung. */
   float yb = 1.72 + 0.28*exp(-pow((q.x + 0.25)/1.5, 2.0)) - 0.04*q.x, db = q.y - yb;
-  float band = smoothstep(0.3, 0.06, abs(db + 0.03*q.x))*smoothstep(-2.7, -1.6, q.x)*smoothstep(2.5, 1.4, q.x);
+  float hb = mix(0.14, 0.44, smoothstep(-2.3, 0.6, q.x))*(0.92 + 0.16*snoise(vec3(q.x*3.0, 0.0, uSeed + 3.0)));
+  float band = smoothstep(hb, hb*0.45, abs(db + 0.05*snoise(vec3(q*9.0, uSeed))))*smoothstep(-2.75, -1.8, q.x)*smoothstep(2.35, 1.5, q.x);
   if(band > 0.0){
-    /* einzelne Haare mit zufälliger Lage, Länge und Stärke; innen dichter und aufrechter */
-    float slant = mix(0.45, 1.3, smoothstep(1.2, -1.0, q.x));
-    float hair = 0.0;
-    for(int k=0;k<2;k++){
-      float u = (q.x + db*slant)*22.0 + float(k)*0.5, id = floor(u);
-      vec3 hh = hash33(vec3(id, float(k), uSeed));
-      float st = abs(fract(u) - 0.5 - (hh.x - 0.5)*0.4);
-      float lenOk = smoothstep(0.32, 0.12, abs(db + 0.03*q.x - (hh.y - 0.5)*0.22));
-      hair = max(hair, smoothstep(0.16, 0.05, st)*lenOk*step(0.25, hh.z)*(0.55 + 0.45*hh.z));
+    float slant = mix(2.6, 0.35, smoothstep(-1.6, 1.4, q.x)), nrm = 1.0/sqrt(1.0 + slant*slant);
+    float cov = 0.0, sp = 0.03;
+    for(int k=0;k<3;k++){
+      float u = (q.x + db*slant)/sp + float(k)*0.37, id = floor(u);
+      vec3 hh = hash33(vec3(id, float(k), uSeed + 11.0));
+      float fd = abs(fract(u) - 0.5 - (hh.x - 0.5)*0.5)*sp*nrm;
+      float seg = smoothstep(0.0, 0.06, hb - abs(db - (hh.y - 0.5)*hb*0.9));
+      cov = max(cov, strandCov(fd, 0.0085)*seg*step(0.18, hh.z));
     }
-    hair *= band*lodw(22.0);
-    alb = mix(alb, vec3(0.12,0.085,0.065), clamp(hair*0.85 + band*0.16, 0.0, 0.85));
+    float across = (q.x + db*slant)*nrm, along = (db - q.x*slant)*nrm;
+    LK = 12.0; float streak = 0.5 + 0.75*fbm(vec3(across*12.0, along*1.5, uSeed + 13.0), 1.0, 4); LK = 1.0;
+    float hair = mix(0.72*clamp(streak, 0.25, 1.25), cov, lodw(1.0/sp))*band;
+    alb = mix(alb, vec3(0.085,0.062,0.048), clamp(hair, 0.0, 0.93));
   }
   float ndl = dot(n, normalize(LF)), wrap = (ndl + 0.35)/1.35;
   vec3 col = alb*(max(ndl, 0.0)*1.25*spot + 0.012) + alb*vec3(0.55,0.14,0.08)*max(wrap, 0.0)*spot*0.22;
   /* schwacher goldener Widerschein des Visiers von unten rechts */
   col += alb*vec3(0.32,0.22,0.08)*0.12*max(dot(n, normalize(vec3(0.5,-0.6,0.6))), 0.0)*exp(-dot(q,q)/30.0);
   /* Lidränder fangen Licht */
-  col += vec3(0.85,0.6,0.52)*0.12*spot*(exp(-pow((q.y - up - 0.03)/0.03, 2.0)) + exp(-pow((q.y - lo + 0.025)/0.025, 2.0)))*step(abs(q.x), hw);
+  col += vec3(0.85,0.6,0.52)*0.12*spot*exp(-pow((q.y - lo + 0.025)/0.025, 2.0))*step(abs(q.x), hw);
   if(open > 0.0){
     vec2 c = vec2(0.02, 0.07);
     vec2 s2 = q*vec2(0.78, 0.9); float zz = sqrt(max(1.0 - dot(s2,s2), 0.0));
@@ -1800,9 +1813,9 @@ vec4 eye(vec2 q){
       float fib2 = 0.5 + 0.5*fbm(vec3(fq.xy*22.0, ir*3.5) + uSeed + 5.0, 1.0, 5);
       float crypt = smoothstep(0.62, 0.8, fbm(vec3(fq.xy*5.0, ir*5.0) + uSeed + 9.0, 1.0, 4))*smoothstep(0.45, 0.6, ir)*smoothstep(0.92, 0.75, ir);
       vec3 outer = vec3(0.3,0.42,0.54)*(0.55 + 0.75*fib)*(0.75 + 0.45*fib2);
-      vec3 coll = vec3(0.68,0.45,0.2)*(0.7 + 0.6*fib);
+      vec3 coll = mix(vec3(0.52,0.42,0.28), vec3(0.3,0.42,0.54), 0.25)*(0.7 + 0.6*fib);
       float cr = 0.55 + 0.035*sin(ang*13.0 + uSeed*3.0) + 0.02*sin(ang*29.0);
-      vec3 irC = mix(coll, outer, smoothstep(cr - 0.04, cr + 0.04, ir + 0.06*fib));
+      vec3 irC = mix(coll, outer, smoothstep(cr - 0.07, cr + 0.07, ir + 0.06*fib));
       irC *= 1.0 - 0.55*crypt;
       irC += vec3(0.85,0.7,0.45)*0.12*exp(-pow((ir - cr)/0.02, 2.0));
       irC *= 1.0 - 0.8*smoothstep(0.84, 1.0, ir);
@@ -1814,7 +1827,7 @@ vec4 eye(vec2 q){
     vec3 ec = eyeC*dif*mix(0.75, 1.15, spot);
     /* Schatten von Oberlid und Wimpern */
     float ls = smoothstep(0.0, 0.24, up - q.y);
-    ec *= mix(0.28, 1.0, ls)*(1.0 - 0.25*(1.0 - ls)*step(0.5, fract(q.x*30.0 + 0.3*snoise(vec3(q*30.0, 2.0)))));
+    ec *= mix(0.3, 1.0, ls)*(1.0 - 0.12*(1.0 - ls)*(0.5 + 0.5*snoise(vec3(q*12.0, 2.0))));
     /* Hornhaut: Fensterreflex, kleines Glanzlicht und die goldene Spiegelung des Visiers */
     vec2 w = q - c - vec2(-0.17, 0.17);
     float win = smoothstep(0.045, 0.012, length(max(abs(w) - vec2(0.045, 0.03), 0.0)))*(0.75 + 0.25*smoothstep(0.004, 0.012, abs(w.x)));
@@ -1825,20 +1838,39 @@ vec4 eye(vec2 q){
     ec += vec3(0.95,0.92,0.9)*0.45*exp(-pow((q.y - lo - 0.012)/0.01, 2.0));
     col = mix(col, ec, open);
   }
-  /* Wimpern: oben lang, gebogen und büschelig, unten kurz und spärlich */
+  /* Wimpern: oben rund 150 in drei Reihen, 8–12 mm lang, 0,1 mm stark, schwingen nach oben und außen –
+     von vorn gesehen verkürzt, weil sie sich zur Kamera hin biegen. Unten rund 70, 6–7 mm, feiner und spärlicher. */
   float du = q.y - up, dl = lo - q.y;
-  if(du > 0.0 && du < 0.36 && abs(xx) < 0.94){
-    float u = q.x + du*du*1.7*sign(q.x - 0.25)*(0.4 + abs(xx));
-    float id = floor(u*32.0), st = abs(fract(u*32.0 + 0.35*snoise(vec3(u*32.0, 1.0, uSeed))) - 0.5);
-    float len = 0.36*(0.5 + 0.5*hash12(vec2(id, uSeed)))*(1.0 - 0.55*xx*xx);
-    float wl = 0.17*(1.0 - du/len);
-    float lash = smoothstep(wl, wl*0.35, st)*step(du, len)*lodw(32.0);
-    col = mix(col, vec3(0.035,0.025,0.02) + vec3(0.12,0.1,0.08)*spot*smoothstep(0.1, 0.0, st), lash);
+  if(du > -0.01 && du < 0.75 && q.x > -1.9 && q.x < 1.3){
+    float th = -0.8*smoothstep(0.9, -1.4, q.x) + 0.12*smoothstep(0.3, 1.1, q.x), sn = sin(th), cs = cos(th);
+    float tt = max(du, 0.0)/cs, cov = 0.0, sp = 0.055;
+    float x0 = q.x - sn*(tt + 0.45*tt*tt);
+    float xr = x0/hw, onLid = smoothstep(-0.98, -0.82, xr)*smoothstep(0.95, 0.55, xr);
+    for(int k=0;k<3;k++){
+      float s = x0/sp + float(k)*0.33, id = floor(s);
+      vec3 hh = hash33(vec3(id, float(k), uSeed + 5.0));
+      float L = (0.42 + 0.22*hh.y)*(1.0 - 0.4*xr*xr)*onLid;
+      float fd = abs((fract(s) - 0.5)*sp + (hh.x - 0.5)*0.3*tt)*cs;
+      float w = 0.011*(1.0 - 0.75*clamp(tt/max(L, 1e-3), 0.0, 1.0));
+      cov = max(cov, strandCov(fd, w)*step(tt, L)*step(0.1, hh.z)*step(0.0, du));
+    }
+    float avg = 0.55*smoothstep(0.55, 0.0, tt)*onLid*step(0.0, du);
+    cov = mix(avg, cov, lodw(1.0/sp));
+    cov = max(cov, 0.85*smoothstep(0.045, 0.0, du)*step(-0.005, du)*onLid);
+    col = mix(col, vec3(0.03,0.022,0.018) + vec3(0.1,0.085,0.07)*spot*0.5, cov);
   }
-  if(dl > 0.0 && dl < 0.13 && abs(xx) < 0.85){
-    float u = q.x + dl*0.9*sign(q.x - 0.25);
-    float st = abs(fract(u*24.0) - 0.5), wl = 0.12*(1.0 - dl/0.13);
-    col = mix(col, vec3(0.05,0.04,0.035), smoothstep(wl, wl*0.4, st)*step(0.45, hash12(vec2(floor(u*24.0), 3.0)))*lodw(24.0)*0.85);
+  if(dl > 0.0 && dl < 0.45 && q.x > -1.6 && q.x < 1.1){
+    float th = -0.55*smoothstep(0.7, -1.2, q.x), sn = sin(th), cs = cos(th);
+    float tt = dl/cs, sp = 0.07;
+    float x0 = q.x - sn*(tt + 0.3*tt*tt);
+    float xr = x0/hw, onLid = smoothstep(-0.95, -0.75, xr)*smoothstep(0.85, 0.5, xr);
+    float s = x0/sp, id = floor(s); vec3 hh = hash33(vec3(id, 7.0, uSeed));
+    float L = (0.24 + 0.12*hh.y)*onLid;
+    float fd = abs((fract(s) - 0.5)*sp + (hh.x - 0.5)*0.25*tt)*cs;
+    float w = 0.007*(1.0 - 0.8*clamp(tt/max(L, 1e-3), 0.0, 1.0));
+    float cov = strandCov(fd, w)*step(tt, L)*step(0.35, hh.z);
+    cov = mix(0.12*smoothstep(0.3, 0.0, tt)*onLid, cov, lodw(1.0/sp));
+    col = mix(col, vec3(0.045,0.035,0.03), cov);
   }
   return vec4(col, 1.0);
 }
