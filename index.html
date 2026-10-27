@@ -249,6 +249,11 @@ body.detail-on .det-ctl{opacity:1;transform:translate(-50%,0);pointer-events:aut
 
 .symb{display:block;margin-top:6px;font:500 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:#f2c27c}
 .symb[hidden]{display:none}
+
+.readout #ltime{display:block;font-size:11px;color:var(--dim);margin-top:3px}
+.odot.void{width:5px;height:5px;margin-left:-2.5px;top:13px;background:none;border:1px solid #59617a;box-sizing:border-box}
+.odot.void.on{background:none;border-color:var(--sun)}
+.det-open[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -266,7 +271,7 @@ body.detail-on .det-ctl{opacity:1;transform:translate(-50%,0);pointer-events:aut
       <button type="button" id="impBtn">Impressum</button><span aria-hidden="true">·</span><a id="coffee" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM16 10h1.5a2.5 2.5 0 0 1 0 5H16M8 3.5c0 1.2 1 1.2 1 2.4M12 3.5c0 1.2 1 1.2 1 2.4"/></svg>Kaffee spendieren</a><span aria-hidden="true">·</span><button type="button" id="sndBtn" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" id="sndIcon"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l4 6M21 9l-4 6"/></svg><span id="sndLbl">Ton an</span></button>
     </nav>
   </div>
-  <div class="readout"><span class="lbl">Bildbreite</span><span id="fov">–</span><span id="pow"></span><span id="symb" class="symb" hidden>Farben symbolisch</span></div>
+  <div class="readout"><span class="lbl">Bildbreite</span><span id="fov">–</span><span id="pow"></span><span id="ltime"></span><span id="symb" class="symb" hidden>Farben symbolisch</span></div>
 </header>
 
 <section class="panel" id="panel" aria-live="polite">
@@ -370,24 +375,40 @@ const OBJ = [
    t:'Die kleinste Länge, mit der unsere Physik noch etwas anfangen kann. Darunter verlieren Raum und Zeit vermutlich ihre Bedeutung und werden zu brodelndem Quantenschaum.'},
   {n:'Strings', d:1e-34, k:'micro', cat:'Hypothese', dot:'#a9c4ff', ext:1.3, at:[0,0], g:{mode:9, edge:1.3},
    t:'Nach der Stringtheorie bestehen alle Teilchen aus winzigen schwingenden Fäden. Ob es sie gibt, ist völlig offen: Kein Experiment kommt auch nur in die Nähe dieser Größe.'},
-  {n:'Quark', d:8.6e-19, k:'micro', cat:'Elementarteilchen', dot:'#ff8a70', ext:1.25, at:[0,.38], g:{mode:8, edge:1.25},
+  {n:'Große Vereinheitlichung', d:2e-32, k:'void', cat:'Hypothese', dot:'#59617a', at:[0,0],
+   t:'Bei dieser Länge könnten elektromagnetische, schwache und starke Kraft zu einer einzigen Kraft verschmelzen. Beweise dafür gibt es bislang nicht.'},
+  {n:'Atom so groß wie die Milchstraße', d:1e-28, k:'void', cat:'Vergleich', dot:'#59617a', at:[0,0],
+   t:'Bläst man ein Wasserstoffatom auf die Größe der Milchstraße auf, wäre die Planck-Länge darin etwa so groß wie ein Sandkorn.'},
+  {n:'Die große Wüste', d:1e-24, k:'void', cat:'Unbekanntes', dot:'#59617a', at:[0,0],
+   t:'Zwischen Quark und Planck-Länge liegen 16 Größenordnungen, über die wir nichts wissen. Viele Physiker vermuten, dass es hier keine neuen Teilchen gibt.'},
+  {n:'Grenze der Messbarkeit', d:1e-19, k:'void', cat:'Experiment', dot:'#59617a', at:[0,0],
+   t:'So fein haben Teilchenbeschleuniger wie HERA und der LHC in die Materie geschaut. Kleineres hat noch kein Experiment aufgelöst.'},
+  {n:'Quark', d:8.6e-19, k:'micro', cat:'Elementarteilchen', dot:'#ff8a70', ext:1.25, at:[0,0], g:{mode:8, edge:1.25},
    t:'Nach allem, was wir wissen, haben Quarks gar keine Ausdehnung. Gemessen ist nur eine Obergrenze, gestrichelt: kleiner als ein Tausendstel des Protons.'},
+  {n:'Im Inneren des Protons', d:1e-16, k:'void', cat:'Atomkern', dot:'#59617a', at:[0,.38],
+   t:'Zwischen den Quarks entsteht fast die gesamte Masse der sichtbaren Welt: als Energie des Gluonfeldes, nicht als Masse der Quarks.'},
   {n:'Proton', d:1.68e-15, k:'micro', cat:'Atomkern', dot:'#ffb070', ext:1.3, at:[0,0], g:{mode:7, edge:1.3},
    t:'Der Kern des Wasserstoffatoms: drei Quarks, zusammengehalten von Gluonen. Fast seine ganze Masse steckt in der Energie dieses Feldes, nicht in den Quarks selbst.'},
+  {n:'Leere im Atom', d:1e-13, k:'void', cat:'Atom', dot:'#59617a', at:[0,0],
+   t:'Atome bestehen fast nur aus Leere. Ohne sie passte die gesamte Menschheit in einen Zuckerwürfel.'},
+  {n:'Gammastrahlung', d:1e-11, k:'void', cat:'Licht', dot:'#59617a', at:[0,0],
+   t:'So kurz sind die Wellen von Gammastrahlung. Sie entsteht, wenn sich Atomkerne umordnen oder zerfallen.'},
   {n:'Wasserstoffatom', d:1.06e-10, k:'micro', cat:'Atom', dot:'#8fb0ff', ext:2.6, ly:1.3, at:[.545,-.3], g:{mode:6, edge:2.6},
    t:'Ein Elektron als Wolke um ein Proton – dazwischen fast nur Leere. Wäre das Atom so groß wie ein Stadion, wäre sein Kern ein Pfefferkorn am Anstoßpunkt.'},
   {n:'Wassermolekül', d:2.8e-10, k:'micro', cat:'Molekül', dot:'#ff8f80', ext:1.3, at:[.6,1.15], g:{mode:5, rot:1},
    t:'Zwei Wasserstoffatome am Sauerstoff, im Winkel von 104,5 Grad. Der Mensch besteht zu rund 60 Prozent aus Wasser.'},
   {n:'DNA', d:2e-9, lx:3.4, k:'micro', cat:'Molekül', dot:'#9fd0ff', ext:3.6, ly:1.2, at:[1.1,.35], g:{mode:4, rot:1},
    t:'Die Doppelhelix ist nur 2 Nanometer dick. Ihre vier Basen schreiben den Bauplan jedes Lebewesens, auch den des Astronauten.'},
-  {n:'Ribosom', d:2e-8, k:'micro', cat:'Zellbestandteil', dot:'#f5b878', ext:1.25, at:[.15,.05], g:{mode:3, rot:1},
+  {n:'Ribosom', d:2e-8, k:'micro', cat:'Zellbestandteil', dot:'#f5b878', ext:1.25, at:[0,0], g:{mode:3, rot:1},
    t:'Kleiner als die Wellenlänge des Lichts gibt es keine Farben mehr – ab hier sind sie symbolisch. Ribosomen bauen in jeder Zelle Proteine nach Bauplan.'},
+  {n:'Wellenlänge des Lichts', d:5.5e-7, k:'void', cat:'Licht', dot:'#59617a', at:[.15,.05],
+   t:'Grünes Licht schwingt einmal auf 550 Nanometern. Kleineres kann kein Lichtmikroskop mehr scharf zeigen – ab hier gibt es keine Farben mehr.'},
   {n:'Bakterium', d:3e-6, k:'micro', cat:'Lebewesen', dot:'#9fdcef', ext:1.15, ly:.45, at:[.25,.14], g:{mode:2, rot:1},
    t:'Auf der Milbe sitzen Bakterien, hundertmal kleiner. Ein Mensch trägt etwa so viele Bakterien in und auf sich, wie er Körperzellen hat.'},
   {n:'Haarbalgmilbe', d:3e-4, k:'micro', cat:'Lebewesen', dot:'#f0d8b0', ext:1.15, ly:.32, at:[.36,-.33], g:{mode:1, rot:1},
    t:'Am Wimpernrand lebt fast jeder Mensch mit winzigen Mitbewohnern: Haarbalgmilben, ein Drittel Millimeter lang. Hier im Dunkelfeld, wie unter dem Mikroskop.'},
-  {n:'Auge', d:.024, k:'micro', cat:'Mensch', dot:'#7fa6c8', ext:1.9, ly:.72, at:[-.04,.74], g:{mode:0, edge:1.9},
-   t:'Durch das Visier hindurch: das Auge des Astronauten, rund 2,4 Zentimeter groß. Das Muster der Iris ist so einzigartig wie ein Fingerabdruck.'},
+  {n:'Auge', d:.024, fr:4.2, k:'micro', cat:'Mensch', dot:'#7fa6c8', ext:7, ly:.72, at:[-.04,.74], g:{mode:0, edge:7},
+   t:'Durch das Visier hindurch: das Auge des Astronauten, rund 2,4 Zentimeter groß, im Schatten des Helms. Das Muster der Iris ist so einzigartig wie ein Fingerabdruck.'},
   {n:'Astronaut', d:1.9, fr:1.5, k:'craft', cat:'Raumfahrt', dot:'#f2f2f2', g:{mode:0},
    t:'Ein Mensch im Raumanzug für Außeneinsätze. Der Anzug wiegt rund 130 kg und ist ein kleines Raumschiff mit eigener Luft, Kühlung und Funk.'},
   {n:'Internationale Raumstation', d:109, fr:1.85, k:'craft', cat:'Raumfahrt', dot:'#cdd3dc', g:{mode:1},
@@ -493,6 +514,7 @@ const OBJ = [
 const N = OBJ.length;
 /* Der Astronaut ist der Ausgangspunkt: links davon geht es ins Kleine, rechts ins Große */
 const A0 = OBJ.findIndex(o => o.n === 'Astronaut');
+const RI = []; let NR = 0; OBJ.forEach((o, j) => { if (o.k !== 'void') RI[j] = ++NR; });
 /* Zusammensetzung: Formel, Name, Anteil in Prozent. Quellen: NASA Planetary Fact Sheets, Sonnen- und Krustenhäufigkeiten, Planck 2018 */
 const COMP = {
   'Sonne': [{t:'Sonne', u:'Massenanteile der Oberfläche', r:[['H','Wasserstoff',73.46],['He','Helium',24.85],['O','Sauerstoff',0.77],['C','Kohlenstoff',0.29],['Fe','Eisen',0.16]]}],
@@ -514,7 +536,7 @@ const COMP = {
   'Proton': [{t:'Masse', u:'Anteile an der Protonmasse', r:[['g','Energie von Gluonfeld und Quarkbewegung',99.04],['d','Ruhemasse des Down-Quarks',0.5],['u','Ruhemasse der Up-Quarks',0.46]]}],
   'Beobachtbares Universum': [{t:'Energiebudget', u:'Anteile an der Gesamtenergiedichte', r:[['Λ','Dunkle Energie',68.5],['DM','Dunkle Materie',26.4],['b','Gewöhnliche Materie',4.9]]}]
 };
-const WIKI = {'Bakterium':'Bakterien', 'DNA':'Desoxyribonukleinsäure', 'Wassermolekül':'Wasser', 'Quark':'Quark (Physik)', 'Strings':'Stringtheorie', 'Haarbalgmilbe':'Haarbalgmilben', 'Astronaut':'Raumanzug', 'Komet 67P':'67P/Tschurjumow-Gerassimenko', 'Deimos':'Deimos (Mond)', 'Phobos':'Phobos (Mond)', 'Vesta':'(4) Vesta', 'Ceres':'(1) Ceres', 'Bennu':'(101955) Bennu', 'Ryugu':'(162173) Ryugu',
+const WIKI = {'Große Vereinheitlichung':'Große vereinheitlichte Theorie', 'Atom so groß wie die Milchstraße':'Planck-Länge', 'Die große Wüste':'Hierarchieproblem', 'Grenze der Messbarkeit':'Large Hadron Collider', 'Im Inneren des Protons':'Quantenchromodynamik', 'Leere im Atom':'Atom', 'Wellenlänge des Lichts':'Licht', 'Bakterium':'Bakterien', 'DNA':'Desoxyribonukleinsäure', 'Wassermolekül':'Wasser', 'Quark':'Quark (Physik)', 'Strings':'Stringtheorie', 'Haarbalgmilbe':'Haarbalgmilben', 'Astronaut':'Raumanzug', 'Komet 67P':'67P/Tschurjumow-Gerassimenko', 'Deimos':'Deimos (Mond)', 'Phobos':'Phobos (Mond)', 'Vesta':'(4) Vesta', 'Ceres':'(1) Ceres', 'Bennu':'(101955) Bennu', 'Ryugu':'(162173) Ryugu',
   'Merkur':'Merkur (Planet)', 'Mars':'Mars (Planet)', 'Venus':'Venus (Planet)', 'Neptun':'Neptun (Planet)', 'Uranus':'Uranus (Planet)', 'Saturn':'Saturn (Planet)', 'Jupiter':'Jupiter (Planet)',
   'Nächster Stern':'Proxima Centauri', 'Andromeda':'Andromedagalaxie', 'Sirius A':'Sirius'};
 const NASA = {'Internationale Raumstation':'https://www.nasa.gov/international-space-station/', 'Mond':'https://science.nasa.gov/moon/', 'Merkur':'https://science.nasa.gov/mercury/', 'Mars':'https://science.nasa.gov/mars/', 'Venus':'https://science.nasa.gov/venus/', 'Erde':'https://science.nasa.gov/earth/', 'Neptun':'https://science.nasa.gov/neptune/', 'Uranus':'https://science.nasa.gov/uranus/', 'Saturn':'https://science.nasa.gov/saturn/', 'Jupiter':'https://science.nasa.gov/jupiter/', 'Sonne':'https://science.nasa.gov/sun/', 'Pluto':'https://science.nasa.gov/dwarf-planets/pluto/'};
@@ -671,7 +693,7 @@ const DETAIL = {
 
 const wikiURL = o => 'https://de.wikipedia.org/wiki/Spezial:Suche?go=Artikel&search=' + encodeURIComponent(WIKI[o.n] || o.n);
 
-const EXT = {micro:1.25, craft:1.3, rock:1.12, planet:1.1, star:2.6, orbits:1.12, helio:1.75, oort:1.1, proxima:1.12, nebula:1.2, cluster:1.3, galaxy:1.15, web:1.12};
+const EXT = {void:1, micro:1.25, craft:1.3, rock:1.12, planet:1.1, star:2.6, orbits:1.12, helio:1.75, oort:1.1, proxima:1.12, nebula:1.2, cluster:1.3, galaxy:1.15, web:1.12};
 const SOLID = new Set(['craft','rock','planet']);
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
 function hex(h){const n=parseInt(h.slice(1),16);return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255]}
@@ -1702,59 +1724,121 @@ vec4 shadeMarch(vec2 p){
   if(uMode==5){ vec3 hv = normalize(LD + vec3(0.0,0.0,1.0)); col += vec3(1.0)*pow(max(dot(nw,hv),0.0), 60.0)*0.4; }
   return vec4(col, 1.0);
 }
-/* Auge: Iris mit Fasern, Pupille, Lederhaut mit Äderchen, Lider und Wimpern */
+/* Auge im Gesicht. Maßeinheit: Augapfelradius (12 mm). Rechtes Auge des Astronauten, Nase rechts im Bild.
+   Das Gesicht ist ein Höhenfeld aus Augenhöhle, Brauenbogen, Nasenrücken und Wange; Licht fällt von links oben
+   durchs Visier, nach außen versinkt das Gesicht im Schatten des Helms. */
+float faceH(vec2 q){
+  float h = -0.34*exp(-(q.x*q.x/2.6 + q.y*q.y/1.4));
+  h += 0.45*exp(-pow((q.y - 1.6 - 0.18*exp(-pow((q.x + 0.3)/1.5, 2.0)))/0.6, 2.0))*smoothstep(-4.2, -1.6, q.x);
+  h += 1.05*exp(-pow((q.x - 2.8)/0.8, 2.0))*(0.5 + 0.5*smoothstep(1.2, -2.0, q.y));
+  h += 0.5*exp(-pow((q.x - 0.2)/2.1, 2.0) - pow((q.y + 2.4)/1.1, 2.0));
+  h += 0.13*exp(-pow((q.y - 0.62)/0.32, 2.0) - q.x*q.x/2.4) + 0.06*exp(-pow((q.y + 0.5)/0.24, 2.0) - q.x*q.x/2.0);
+  h -= 0.5*smoothstep(-2.4, -4.8, q.x);
+  return h;
+}
 vec4 eye(vec2 q){
+  const vec3 LF = vec3(-0.55, 0.55, 0.63);
   float hw = 1.32, xx = clamp(q.x/hw, -1.0, 1.0), e = 1.0 - xx*xx;
   float up = 0.5*pow(max(e,0.0), 0.75) + 0.05 + 0.03*q.x;
   float lo = -0.38*pow(max(e,0.0), 0.9) + 0.03 + 0.02*q.x;
   float open = smoothstep(0.0, 1.5*PX, up - q.y)*smoothstep(0.0, 1.5*PX, q.y - lo)*step(abs(q.x), hw);
-  vec3 col;
-  /* Haut mit Lidfalte */
-  float pores = fbm(vec3(q*9.0, uSeed), 1.0, 8);
-  vec3 skin = vec3(0.6,0.43,0.36)*(0.86 + 0.18*pores);
-  float crease = exp(-pow((q.y - up - 0.28 - 0.1*e)/0.05, 2.0))*step(0.0, q.y - up);
-  float lidRim = exp(-pow((q.y - up)/0.06, 2.0)) + exp(-pow((q.y - lo)/0.05, 2.0));
-  float shSkin = 0.55 + 0.45*clamp(0.6 - 0.35*q.y + 0.25*(-q.x), 0.0, 1.0);
-  col = skin*shSkin*(1.0 - 0.35*crease) + vec3(0.75,0.5,0.45)*0.18*lidRim;
+  /* Licht durchs Visier: weicher, unregelmäßiger Lichtfleck statt Kreisrand */
+  float spot = exp(-dot(q - vec2(-0.4, 0.5), q - vec2(-0.4, 0.5))/9.0)*(0.8 + 0.4*fbm(vec3(q*0.35, uSeed + 4.0), 1.0, 3));
+  /* Haut */
+  float hc = faceH(q), ee = 0.03;
+  vec3 n = normalize(vec3(-(faceH(q + vec2(ee,0.0)) - faceH(q - vec2(ee,0.0)))/(2.0*ee), -(faceH(q + vec2(0.0,ee)) - faceH(q - vec2(0.0,ee)))/(2.0*ee), 1.0));
+  float pore = fbm(vec3(q*26.0, uSeed), 1.0, 5), fine = fbm(vec3(q*7.0, uSeed + 2.0), 1.0, 5);
+  n = bumpN(n, vec3(q, 0.0), 0.0015*pore + 0.005*fine, 1.0);
+  vec3 alb = vec3(0.74,0.53,0.44)*(0.9 + 0.12*fine);
+  alb = mix(alb, vec3(0.78,0.46,0.42), 0.35*exp(-dot(q - vec2(1.6,-0.1), q - vec2(1.6,-0.1))/0.6));
+  /* Lachfältchen am äußeren Lidwinkel */
+  vec2 cf = q - vec2(-1.45, 0.05); float rc = length(cf), ac = atan(cf.y, cf.x);
+  float crow = smoothstep(0.35, 0.6, rc)*smoothstep(1.7, 1.0, rc)*step(q.x, -1.3);
+  alb *= 1.0 - 0.18*crow*smoothstep(0.42, 0.5, abs(fract(ac*11.0/TAU + 0.12*snoise(vec3(cf*3.0, 1.0))) - 0.5) + 0.0)*lodw(11.0);
+  /* Lidfalte */
+  float crease = exp(-pow((q.y - up - 0.3 - 0.1*e)/0.045, 2.0))*step(0.0, q.y - up)*smoothstep(1.5, 0.6, abs(q.x));
+  alb *= 1.0 - 0.3*crease;
+  /* Augenbraue: Haare schräg nach außen */
+  float yb = 1.72 + 0.28*exp(-pow((q.x + 0.25)/1.5, 2.0)) - 0.04*q.x, db = q.y - yb;
+  float band = smoothstep(0.3, 0.06, abs(db + 0.03*q.x))*smoothstep(-2.7, -1.6, q.x)*smoothstep(2.5, 1.4, q.x);
+  if(band > 0.0){
+    /* einzelne Haare mit zufälliger Lage, Länge und Stärke; innen dichter und aufrechter */
+    float slant = mix(0.45, 1.3, smoothstep(1.2, -1.0, q.x));
+    float hair = 0.0;
+    for(int k=0;k<2;k++){
+      float u = (q.x + db*slant)*22.0 + float(k)*0.5, id = floor(u);
+      vec3 hh = hash33(vec3(id, float(k), uSeed));
+      float st = abs(fract(u) - 0.5 - (hh.x - 0.5)*0.4);
+      float lenOk = smoothstep(0.32, 0.12, abs(db + 0.03*q.x - (hh.y - 0.5)*0.22));
+      hair = max(hair, smoothstep(0.16, 0.05, st)*lenOk*step(0.25, hh.z)*(0.55 + 0.45*hh.z));
+    }
+    hair *= band*lodw(22.0);
+    alb = mix(alb, vec3(0.12,0.085,0.065), clamp(hair*0.85 + band*0.16, 0.0, 0.85));
+  }
+  float ndl = dot(n, normalize(LF)), wrap = (ndl + 0.35)/1.35;
+  vec3 col = alb*(max(ndl, 0.0)*1.25*spot + 0.012) + alb*vec3(0.55,0.14,0.08)*max(wrap, 0.0)*spot*0.22;
+  /* schwacher goldener Widerschein des Visiers von unten rechts */
+  col += alb*vec3(0.32,0.22,0.08)*0.12*max(dot(n, normalize(vec3(0.5,-0.6,0.6))), 0.0)*exp(-dot(q,q)/30.0);
+  /* Lidränder fangen Licht */
+  col += vec3(0.85,0.6,0.52)*0.12*spot*(exp(-pow((q.y - up - 0.03)/0.03, 2.0)) + exp(-pow((q.y - lo + 0.025)/0.025, 2.0)))*step(abs(q.x), hw);
   if(open > 0.0){
     vec2 c = vec2(0.02, 0.07);
     vec2 s2 = q*vec2(0.78, 0.9); float zz = sqrt(max(1.0 - dot(s2,s2), 0.0));
-    vec3 n = normalize(vec3(s2, zz));
-    float dif = 0.45 + 0.55*max(dot(n, LD), 0.0);
+    vec3 nb = normalize(vec3(s2, zz));
+    float dif = 0.35 + 0.65*max(dot(nb, normalize(LF)), 0.0);
     float ir = length(q - c)/0.5, ang = atan(q.y - c.y, q.x - c.x);
-    float veins = pow(1.0 - abs(snoise(vec3(q*5.0, uSeed + 3.0))), 14.0)*(0.3 + 0.8*abs(xx)) + pow(1.0 - abs(snoise(vec3(q*11.0, uSeed))), 22.0)*0.5*abs(xx);
-    vec3 eyeC = mix(vec3(0.93,0.89,0.86), vec3(0.8,0.3,0.26), clamp(veins*lodw(5.0)*0.35, 0.0, 0.45));
+    float veins = pow(1.0 - abs(snoise(vec3(q*5.0, uSeed + 3.0))), 14.0)*(0.25 + 0.8*abs(xx)) + pow(1.0 - abs(snoise(vec3(q*11.0, uSeed))), 22.0)*0.5*abs(xx);
+    vec3 sclera = mix(vec3(0.92,0.89,0.86), vec3(0.84,0.86,0.9), smoothstep(1.6, 1.05, ir));
+    vec3 eyeC = mix(sclera, vec3(0.8,0.32,0.28), clamp(veins*lodw(5.0)*0.3, 0.0, 0.4));
+    /* Tränenkarunkel im inneren Lidwinkel */
+    float car = exp(-dot(q - vec2(1.22, 0.04), q - vec2(1.22, 0.04))/0.012);
+    eyeC = mix(eyeC, vec3(0.86,0.5,0.5), clamp(car*1.4, 0.0, 1.0));
     if(ir < 1.0){
-      float pup = 0.38 + 0.02*sin(uT*0.7);
-      float fib = 0.5 + 0.5*fbm(vec3(cos(ang)*7.0, sin(ang)*7.0, ir*1.6) + uSeed, 1.0, 6);
-      float fib2 = 0.5 + 0.5*fbm(vec3(cos(ang)*18.0, sin(ang)*18.0, ir*3.0) + uSeed + 5.0, 1.0, 5);
-      vec3 outer = vec3(0.3,0.43,0.55)*(0.6 + 0.7*fib)*(0.75 + 0.4*fib2);
-      vec3 coll = vec3(0.66,0.44,0.2)*(0.7 + 0.6*fib);
-      vec3 irC = mix(coll, outer, smoothstep(0.42, 0.62, ir + 0.08*fib));
-      irC *= 1.0 - 0.75*smoothstep(0.85, 1.0, ir);
-      irC = mix(irC, vec3(0.012), smoothstep(pup + 0.02, pup - 0.01, ir));
+      float pup = 0.36 + 0.02*sin(uT*0.7);
+      vec3 fq = vec3(cos(ang), sin(ang), 0.0);
+      float fib = 0.5 + 0.5*fbm(vec3(fq.xy*7.0, ir*1.8) + uSeed, 1.0, 6);
+      float fib2 = 0.5 + 0.5*fbm(vec3(fq.xy*22.0, ir*3.5) + uSeed + 5.0, 1.0, 5);
+      float crypt = smoothstep(0.62, 0.8, fbm(vec3(fq.xy*5.0, ir*5.0) + uSeed + 9.0, 1.0, 4))*smoothstep(0.45, 0.6, ir)*smoothstep(0.92, 0.75, ir);
+      vec3 outer = vec3(0.3,0.42,0.54)*(0.55 + 0.75*fib)*(0.75 + 0.45*fib2);
+      vec3 coll = vec3(0.68,0.45,0.2)*(0.7 + 0.6*fib);
+      float cr = 0.55 + 0.035*sin(ang*13.0 + uSeed*3.0) + 0.02*sin(ang*29.0);
+      vec3 irC = mix(coll, outer, smoothstep(cr - 0.04, cr + 0.04, ir + 0.06*fib));
+      irC *= 1.0 - 0.55*crypt;
+      irC += vec3(0.85,0.7,0.45)*0.12*exp(-pow((ir - cr)/0.02, 2.0));
+      irC *= 1.0 - 0.8*smoothstep(0.84, 1.0, ir);
+      irC = mix(irC, vec3(0.16,0.09,0.05), smoothstep(pup + 0.05, pup + 0.015, ir));
+      irC = mix(irC, vec3(0.008), smoothstep(pup + 0.012, pup - 0.008, ir));
       eyeC = mix(irC, eyeC, smoothstep(0.98, 1.0, ir));
       dif = mix(dif, 0.85, smoothstep(1.0, 0.8, ir));
     }
-    vec3 ec = eyeC*dif;
-    ec *= mix(0.35, 1.0, smoothstep(0.0, 0.2, up - q.y));
-    ec += vec3(1.0,0.97,0.92)*(exp(-dot(q - c - vec2(-0.16,0.16), q - c - vec2(-0.16,0.16))/0.0012)*1.4 + exp(-dot(q - c - vec2(0.1,-0.14), q - c - vec2(0.1,-0.14))/0.0004)*0.5);
-    ec += vec3(0.9,0.85,0.8)*0.35*exp(-pow((q.y - lo)/0.012, 2.0));
+    vec3 ec = eyeC*dif*mix(0.75, 1.15, spot);
+    /* Schatten von Oberlid und Wimpern */
+    float ls = smoothstep(0.0, 0.24, up - q.y);
+    ec *= mix(0.28, 1.0, ls)*(1.0 - 0.25*(1.0 - ls)*step(0.5, fract(q.x*30.0 + 0.3*snoise(vec3(q*30.0, 2.0)))));
+    /* Hornhaut: Fensterreflex, kleines Glanzlicht und die goldene Spiegelung des Visiers */
+    vec2 w = q - c - vec2(-0.17, 0.17);
+    float win = smoothstep(0.045, 0.012, length(max(abs(w) - vec2(0.045, 0.03), 0.0)))*(0.75 + 0.25*smoothstep(0.004, 0.012, abs(w.x)));
+    ec += vec3(1.0,0.97,0.92)*(win*0.55 + exp(-dot(q - c - vec2(0.12,-0.15), q - c - vec2(0.12,-0.15))/0.0004)*0.5);
+    float arc = exp(-pow((length(q - c - vec2(0.0, -1.1)) - 1.42)/0.025, 2.0))*smoothstep(0.75, 0.2, abs(q.x - c.x));
+    ec += vec3(0.85,0.62,0.25)*arc*0.22*step(length(q - c), 0.55);
+    /* Tränenfilm am Unterlid */
+    ec += vec3(0.95,0.92,0.9)*0.45*exp(-pow((q.y - lo - 0.012)/0.01, 2.0));
     col = mix(col, ec, open);
   }
-  /* Wimpern: oben lang und nach außen gebogen, unten kurz */
+  /* Wimpern: oben lang, gebogen und büschelig, unten kurz und spärlich */
   float du = q.y - up, dl = lo - q.y;
-  if(du > 0.0 && du < 0.34 && abs(xx) < 0.93){
-    float u = q.x + du*du*1.6*sign(q.x)*(0.4 + abs(xx));
-    float st = abs(fract(u*30.0 + 0.4*snoise(vec3(u*30.0, 1.0, uSeed))) - 0.5);
-    float len = 0.34*(0.55 + 0.45*hash12(vec2(floor(u*30.0), uSeed)))*(1.0 - 0.6*xx*xx);
-    float w = 0.16*(1.0 - du/len);
-    col = mix(col, vec3(0.05,0.035,0.03), smoothstep(w, w*0.4, st)*step(du, len)*lodw(30.0));
+  if(du > 0.0 && du < 0.36 && abs(xx) < 0.94){
+    float u = q.x + du*du*1.7*sign(q.x - 0.25)*(0.4 + abs(xx));
+    float id = floor(u*32.0), st = abs(fract(u*32.0 + 0.35*snoise(vec3(u*32.0, 1.0, uSeed))) - 0.5);
+    float len = 0.36*(0.5 + 0.5*hash12(vec2(id, uSeed)))*(1.0 - 0.55*xx*xx);
+    float wl = 0.17*(1.0 - du/len);
+    float lash = smoothstep(wl, wl*0.35, st)*step(du, len)*lodw(32.0);
+    col = mix(col, vec3(0.035,0.025,0.02) + vec3(0.12,0.1,0.08)*spot*smoothstep(0.1, 0.0, st), lash);
   }
-  if(dl > 0.0 && dl < 0.12 && abs(xx) < 0.85){
-    float u = q.x + dl*0.8*sign(q.x);
-    float st = abs(fract(u*36.0) - 0.5), w = 0.12*(1.0 - dl/0.12);
-    col = mix(col, vec3(0.06,0.045,0.04), smoothstep(w, w*0.4, st)*lodw(36.0)*0.8);
+  if(dl > 0.0 && dl < 0.13 && abs(xx) < 0.85){
+    float u = q.x + dl*0.9*sign(q.x - 0.25);
+    float st = abs(fract(u*24.0) - 0.5), wl = 0.12*(1.0 - dl/0.13);
+    col = mix(col, vec3(0.05,0.04,0.035), smoothstep(wl, wl*0.4, st)*step(0.45, hash12(vec2(floor(u*24.0), 3.0)))*lodw(24.0)*0.85);
   }
   return vec4(col, 1.0);
 }
@@ -2350,7 +2434,7 @@ function render(time){
     oyy = OY + (b.oy + det.py - OY)*dk;
   }
   const T = reduce ? 0 : time;
-  const labels = [], marks = [], discs = [];
+  const labels = [], marks = [], discs = [], rings = [];
 
   if (gl) {
     gl.viewport(0, 0, GW, GH);
@@ -2381,10 +2465,11 @@ function render(time){
     if (j === A0) tcA = a;
     if (a <= 0) continue;
     if (o.orbits) for (const q of o.orbits) q.cur = q.a + T*.12/Math.pow(q.au, 1.5);
-    if (gl && !t3Use(o, X, Y, R, a)) drawObj(o, X*KG, Y*KG, R*KG, a, T + j*3.1);
+    if (o.k === 'void') { const ra = a*(1 - smooth(.9, 1.6, Math.abs(j - t))); if (ra > .02 && R > 3 && R < MAXD*1.5) rings.push([X, Y, R, ra]); }
+    else if (gl && !t3Use(o, X, Y, R, a)) drawObj(o, X*KG, Y*KG, R*KG, a, T + j*3.1);
 
     const dpx = 2*R;
-    if (R > 4) discs.push([X, Y, R*(o.k === 'star' ? 1.05 : o.lx ? o.lx*.9 : 1), j]);
+    if (R > 4 && o.k !== 'void') discs.push([X, Y, R*(o.k === 'star' ? 1.05 : o.lx ? o.lx*.9 : 1), j]);
     let la = smooth(5, 30, dpx) * clamp((VM*.9 - dpx)/(VM*.3), 0, 1) * a * (1 - smooth(1.15, 1.75, Math.abs(j - t))) * (1 - dk);
     if (X < 0 || X > W) la = 0;
     if (la > .02) {
@@ -2409,6 +2494,11 @@ function render(time){
   const od = ov.width / W;
   octx.setTransform(od, 0, 0, od, 0, 0);
   octx.clearRect(0, 0, W, H);
+  if (rings.length) {
+    octx.setLineDash([3, 6]); octx.lineWidth = 1; octx.strokeStyle = '#9fb0d8';
+    for (const [x, y, r, ra] of rings) { octx.globalAlpha = ra*.7; octx.beginPath(); octx.arc(x, y, r, 0, TAU); octx.stroke(); }
+    octx.setLineDash([]); octx.globalAlpha = 1;
+  }
   labels.sort((a, b) => (b[4] - a[4]) || (b[2].d - a[2].d));
   const placed = [];
   const free = (x0, y0, x1, y1) => !placed.some(r => x0 < r[2] && x1 > r[0] && y0 < r[3] && y1 > r[1]);
@@ -2456,7 +2546,7 @@ const pos = L => (L - LMIN)/(LMAX - LMIN);
     if (p % 6 === 0) { const sp = document.createElement('span'); sp.textContent = '10' + sup(p) + ' m'; el.appendChild(sp); }
     ticks.appendChild(el);
   }
-  OBJ.forEach((o, j) => { const d = document.createElement('div'); d.className = 'odot'; d.style.left = pos(FL[j])*100 + '%'; dots.appendChild(d); o.dotEl = d; });
+  OBJ.forEach((o, j) => { const d = document.createElement('div'); d.className = 'odot' + (o.k === 'void' ? ' void' : ''); d.style.left = pos(FL[j])*100 + '%'; dots.appendChild(d); o.dotEl = d; });
 })();
 
 /* Zusammensetzung anzeigen */
@@ -2519,7 +2609,8 @@ function setFocus(j){
   if (!introActive) statsFocus(j);
   if (focus >= 0) { OBJ[focus].dotEl.classList.remove('on'); sfx(j); }
   focus = j; const o = OBJ[j]; o.dotEl.classList.add('on');
-  $('idx').textContent = String(j + 1).padStart(2, '0') + ' / ' + N;
+  $('idx').textContent = o.k === 'void' ? 'Wegmarke' : String(RI[j]).padStart(2, '0') + ' / ' + NR;
+  $('detOpen').hidden = o.k === 'void';
   $('cat').textContent = o.cat; $('name').textContent = o.n;
   $('size').textContent = fmtLen(o.d); $('size2').textContent = fmt2(o.d); $('desc').textContent = o.t;
   compShow(o);
@@ -2531,7 +2622,15 @@ function setFocus(j){
   rail.setAttribute('aria-valuenow', j + 1); rail.setAttribute('aria-valuetext', o.n + ', ' + fmtLen(o.d));
   measureAvoid();
 }
+/* Wie lange Licht für eine Strecke braucht */
+function fmtTime(x){
+  if (x < 1e-18) { const e = Math.floor(Math.log10(x)); return nf(x/10**e, 2) + ' × 10' + sup(e) + ' s'; }
+  const U = [[1e-15,'as',1e-18],[1e-12,'fs',1e-15],[1e-9,'ps',1e-12],[1e-6,'ns',1e-9],[1e-3,'µs',1e-6],[1,'ms',1e-3],[60,'s',1],[3600,'min',60],[86400,'Std.',3600],[3.15576e7,'Tage',86400]];
+  for (const [lim, u, d] of U) if (x < lim) return nf(x/d) + ' ' + u;
+  return big(x/3.15576e7) + ' Jahre';
+}
 function hud(s, w){
+  const lt = 'Licht: ' + fmtTime(W/s/299792458); if (lt !== hud.lt) { hud.lt = lt; $('ltime').textContent = lt; }
   const sym = w/FR < 4e-7; if (sym !== hud.sym) { hud.sym = sym; $('symb').hidden = !sym; }
   setFocus(clamp(Math.round(t), 0, N-1));
   const vis = W / s, fv = fmtLen(vis);
@@ -2918,7 +3017,7 @@ function onFocusObject(x, y){
 }
 function el(tag, cls, txt){ const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
 function openDetail(){
-  if (introActive || introT0 || det.target) return;
+  if (introActive || introT0 || det.target || OBJ[focus].k === 'void') return;
   const j = focus, o = OBJ[j], D = DETAIL[o.n] || {facts: [], src: []};
   if (touring) setTour(false);
   vel = 0; targetT = t;
@@ -2930,7 +3029,7 @@ function openDetail(){
   $('detHint').textContent = o.rot ? (touchUI ? 'Wischen dreht · zwei Finger zoomen' : 'Ziehen dreht · Scrollen zoomt')
                                    : (touchUI ? 'Wischen verschiebt · zwei Finger zoomen' : 'Ziehen verschiebt · Scrollen zoomt');
   $('detCtl').classList.remove('used');
-  $('detIdx').textContent = String(j + 1).padStart(2, '0') + ' / ' + N;
+  $('detIdx').textContent = String(RI[j]).padStart(2, '0') + ' / ' + NR;
   $('detCat').textContent = o.cat; $('detName').textContent = o.n;
   $('detSize').textContent = fmtLen(o.d); $('detSize2').textContent = fmt2(o.d);
   $('detText').textContent = o.t; $('detMore').textContent = D.more || '';
