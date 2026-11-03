@@ -12,6 +12,7 @@
 <meta property="og:url" content="https://kosmische-skala.de/">
 <meta property="og:site_name" content="Kosmische Skala">
 <meta property="og:locale" content="de_DE">
+<meta property="og:locale:alternate" content="en_US">
 <meta property="og:image" content="https://kosmische-skala.de/og.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
@@ -365,6 +366,17 @@ body.detail-on .det-ctl{opacity:1;transform:translate(-50%,0);pointer-events:aut
 
 <script>
 (() => {
+/* Sprache: Deutsch, wenn der Browser Deutsch bevorzugt, sonst Englisch. ?lang=de|en oder der Umschalter überschreiben das und werden gemerkt. */
+const LANG = (() => {
+  try {
+    const q = new URLSearchParams(location.search).get('lang');
+    if (q === 'de' || q === 'en') { localStorage.setItem('ks-lang', q); return q; }
+    const m = localStorage.getItem('ks-lang'); if (m === 'de' || m === 'en') return m;
+  } catch (e) {}
+  const l = ((navigator.languages && navigator.languages[0]) || navigator.language || 'de').toLowerCase();
+  return l.startsWith('de') ? 'de' : 'en';
+})();
+const T = (de, en) => LANG === 'en' ? en : de;
 const TAU = Math.PI * 2, LY = 9.4607e15, AU = 1.495978707e11, RSUN = 6.957e8;
 
 /* ======================================================================
@@ -511,9 +523,11 @@ const OBJ = [
    marks:[{x:0,y:0,l:'Milchstraße'},{x:0,y:-.965,l:'Hintergrundstrahlung'}],
    t:'Alles, dessen Licht uns seit dem Urknall vor 13,8 Milliarden Jahren erreichen konnte. Weil sich der Raum ausdehnt, liegt sein Rand heute rund 46 Milliarden Lichtjahre entfernt.'}
 ];
+/* Kennung bleibt deutsch (Steckbriefe, Statistik), angezeigt wird o.n in der gewählten Sprache */
+OBJ.forEach(o => { o.id = o.n; });
 const N = OBJ.length;
 /* Der Astronaut ist der Ausgangspunkt: links davon geht es ins Kleine, rechts ins Große */
-const A0 = OBJ.findIndex(o => o.n === 'Astronaut');
+const A0 = OBJ.findIndex(o => o.id === 'Astronaut');
 const RI = []; let NR = 0; OBJ.forEach((o, j) => { if (o.k !== 'void') RI[j] = ++NR; });
 /* Zusammensetzung: Formel, Name, Anteil in Prozent. Quellen: NASA Planetary Fact Sheets, Sonnen- und Krustenhäufigkeiten, Planck 2018 */
 const COMP = {
@@ -691,7 +705,217 @@ const DETAIL = {
     src: [['ESA: Planck', 'https://www.esa.int/Science_Exploration/Space_Science/Planck']]}
 };
 
-const wikiURL = o => 'https://de.wikipedia.org/wiki/Spezial:Suche?go=Artikel&search=' + encodeURIComponent(WIKI[o.n] || o.n);
+/* Englische Fassung: Namen, Kategorien, Kurztexte, Steckbriefe, Zusammensetzungen. Schlüssel ist die interne Kennung (deutscher Name). */
+const EN = {
+  obj: {
+    'Planck-Länge': ['Planck length', 'Limit of physics', 'The smallest length our physics can still make sense of. Below it, space and time probably lose their meaning and turn into a seething quantum foam.'],
+    'Strings': ['Strings', 'Hypothesis', 'According to string theory, all particles are made of tiny vibrating strings. Whether they exist is completely open: no experiment comes anywhere near this size.'],
+    'Große Vereinheitlichung': ['Grand unification', 'Hypothesis', 'At this length, the electromagnetic, weak and strong forces might merge into a single force. There is no evidence for this yet.'],
+    'Atom so groß wie die Milchstraße': ['An atom the size of the Milky Way', 'Comparison', 'Inflate a hydrogen atom to the size of the Milky Way, and the Planck length inside it would be about the size of a grain of sand.'],
+    'Die große Wüste': ['The great desert', 'Unknown', 'Between the quark and the Planck length lie 16 orders of magnitude we know nothing about. Many physicists suspect there are no new particles here.'],
+    'Grenze der Messbarkeit': ['Limit of measurement', 'Experiment', 'This is how finely particle colliders such as HERA and the LHC have looked into matter. No experiment has resolved anything smaller.'],
+    'Quark': ['Quark', 'Elementary particle', 'As far as we know, quarks have no size at all. Only an upper limit has been measured, shown dashed: smaller than a thousandth of a proton.'],
+    'Im Inneren des Protons': ['Inside the proton', 'Atomic nucleus', 'Between the quarks, almost all the mass of the visible world arises: as energy of the gluon field, not as the mass of the quarks.'],
+    'Proton': ['Proton', 'Atomic nucleus', 'The nucleus of the hydrogen atom: three quarks held together by gluons. Almost all of its mass is the energy of this field, not the quarks themselves.'],
+    'Leere im Atom': ['Emptiness in the atom', 'Atom', 'Atoms are almost entirely empty space. Without it, all of humanity would fit into a sugar cube.'],
+    'Gammastrahlung': ['Gamma rays', 'Light', 'This is how short the waves of gamma rays are. They arise when atomic nuclei rearrange or decay.'],
+    'Wasserstoffatom': ['Hydrogen atom', 'Atom', 'An electron as a cloud around a proton – and almost nothing in between. If the atom were the size of a stadium, its nucleus would be a peppercorn at the centre spot.'],
+    'Wassermolekül': ['Water molecule', 'Molecule', 'Two hydrogen atoms attached to oxygen at an angle of 104.5 degrees. The human body is about 60 percent water.'],
+    'DNA': ['DNA', 'Molecule', 'The double helix is only 2 nanometres thick. Its four bases write the blueprint of every living thing, including the astronaut.'],
+    'Ribosom': ['Ribosome', 'Cell component', 'Below the wavelength of light there are no colours – from here on they are symbolic. Ribosomes build proteins from blueprints in every cell.'],
+    'Wellenlänge des Lichts': ['Wavelength of light', 'Light', 'Green light oscillates once every 550 nanometres. No light microscope can show anything smaller sharply – from here on there are no colours.'],
+    'Bakterium': ['Bacterium', 'Living thing', 'Bacteria live on the mite, a hundred times smaller. A person carries roughly as many bacteria in and on their body as they have body cells.'],
+    'Haarbalgmilbe': ['Eyelash mite', 'Living thing', 'Almost everyone has tiny lodgers along their eyelashes: follicle mites, a third of a millimetre long. Shown here in dark field, as under a microscope.'],
+    'Auge': ['Eye', 'Human', 'Through the visor: the astronaut’s eye, about 2.4 centimetres across, in the shadow of the helmet. The pattern of the iris is as unique as a fingerprint.'],
+    'Astronaut': ['Astronaut', 'Spaceflight', 'A person in a spacesuit for spacewalks. The suit weighs about 130 kg and is a small spacecraft with its own air, cooling and radio.'],
+    'Internationale Raumstation': ['International Space Station', 'Spaceflight', 'The ISS is about as wide as a football field is long. It circles Earth at an altitude of about 400 km once every 90 minutes.'],
+    'Bennu': ['Bennu', 'Asteroid', 'A near-Earth asteroid shaped like a spinning top. The OSIRIS-REx probe collected rock from its surface in 2020 and brought it to Earth in 2023.'],
+    'Ryugu': ['Ryugu', 'Asteroid', 'Ryugu is also a loosely bound pile of rubble. The Japanese probe Hayabusa2 returned samples from it to Earth at the end of 2020.'],
+    'Komet 67P': ['Comet 67P', 'Comet', 'Churyumov–Gerasimenko consists of two joined lumps. In 2014, Philae became the first probe ever to land on a comet here.'],
+    'Deimos': ['Deimos', 'Moon', 'The smaller of the two moons of Mars. Seen from the Martian surface, it looks barely bigger than a bright star.'],
+    'Phobos': ['Phobos', 'Moon', 'Phobos orbits so close to Mars that it draws nearly two metres closer every century. In some tens of millions of years it will break apart.'],
+    'Vesta': ['Vesta', 'Asteroid', 'The brightest asteroid in the sky. An impact basin at its south pole is about 500 km wide – almost as wide as Vesta itself.'],
+    'Ceres': ['Ceres', 'Dwarf planet', 'The largest body in the asteroid belt and a dwarf planet. The bright spots in Occator crater are deposits of salt.'],
+    'Pluto': ['Pluto', 'Dwarf planet', 'Pluto has been classed as a dwarf planet since 2006. Its bright “heart” is a vast plain of frozen nitrogen.'],
+    'Mond': ['Moon', 'Moon', 'The Moon is a little more than a quarter as wide as Earth. Its light takes just over a second to reach us.'],
+    'Merkur': ['Mercury', 'Planet', 'The smallest planet and the closest to the Sun. By day it heats up to over 400 °C; at night it cools to about −180 °C.'],
+    'Mars': ['Mars', 'Planet', 'Mars is home to Olympus Mons, the tallest volcano in the Solar System. It rises about 22 km above its surroundings.'],
+    'Venus': ['Venus', 'Planet', 'Almost as large as Earth. Beneath its thick blanket of carbon dioxide it is hotter than Mercury, at about 465 °C.'],
+    'Erde': ['Earth', 'Planet', 'Our planet. Every human who has ever lived, lived here.'],
+    'Neptun': ['Neptune', 'Planet', 'The outermost planet. The fastest winds in the Solar System blow here, at over 2,000 km/h.'],
+    'Uranus': ['Uranus', 'Planet', 'Its axis of rotation is tilted by 98 degrees. That is why Uranus rolls around the Sun almost on its side.'],
+    'Saturn': ['Saturn', 'Planet', 'Its main rings are a good 270,000 km wide, yet in many places only about ten metres thick.'],
+    'Jupiter': ['Jupiter', 'Planet', 'The largest planet. Earth would fit inside the Great Red Spot, a storm that has raged for centuries.'],
+    'Sonne': ['Sun', 'Star', 'The Sun holds 99.8 % of the mass of the Solar System. About 1.3 million Earths would fit inside it.'],
+    'Sirius A': ['Sirius A', 'Star', 'The brightest star in the night sky, 8.6 light-years away. It is hotter than the Sun and almost twice its size.'],
+    'Arktur': ['Arcturus', 'Red giant', 'A red giant in the constellation Boötes. Our Sun will swell up in a similar way in about five billion years.'],
+    'Aldebaran': ['Aldebaran', 'Red giant', 'The orange eye of Taurus. The Pioneer 10 probe is flying roughly in its direction and would arrive in about two million years.'],
+    'Rigel': ['Rigel', 'Blue supergiant', 'Orion’s bright foot, about 860 light-years away. It shines some 120,000 times as brightly as the Sun.'],
+    'Erdbahn': ['Earth’s orbit', 'Orbit', 'The circle Earth traces around the Sun in one year. Its distance from the Sun, about 150 million km, is called the astronomical unit.'],
+    'Beteigeuze': ['Betelgeuse', 'Red supergiant', 'In place of the Sun, Betelgeuse would reach beyond the asteroid belt. One day it will explode as a supernova.'],
+    'Stephenson 2-18': ['Stephenson 2-18', 'Red supergiant', 'One of the largest known stars, though its size is uncertain. In place of the Sun it would reach roughly to the orbit of Saturn.'],
+    'Sonnensystem': ['Solar System', 'Orbits', 'The orbits of all eight planets. Sunlight takes a good four hours to reach Neptune.'],
+    'Heliosphäre': ['Heliosphere', 'Boundary', 'The bubble the solar wind blows into interstellar gas. Voyager 1 left it in 2012 and is now about 170 AU from the Sun.'],
+    'Oortsche Wolke': ['Oort cloud', 'Comet cloud', 'A suspected shell of trillions of icy bodies from which long-period comets come. Its outer edge may lie 1.5 light-years from the Sun.'],
+    'Nächster Stern': ['Nearest star', 'Neighbourhood', 'A circle with the distance to the nearest star: 4.24 light-years to Proxima Centauri. A probe of today would travel for tens of thousands of years.'],
+    'Orionnebel': ['Orion Nebula', 'Nebula', 'A nursery for stars about 1,340 light-years away. To the naked eye it appears as a bright patch in Orion’s sword.'],
+    'Omega Centauri': ['Omega Centauri', 'Globular cluster', 'The largest globular cluster of the Milky Way, with about ten million stars. It is probably the core of a swallowed dwarf galaxy.'],
+    'Milchstraße': ['Milky Way', 'Galaxy', 'Our galaxy with 100 to 400 billion stars. The Sun lies about 26,000 light-years from the centre and takes some 230 million years for one lap.'],
+    'Andromeda': ['Andromeda', 'Galaxy', 'The nearest large galaxy, 2.5 million light-years away. In a few billion years it may merge with the Milky Way.'],
+    'Lokale Gruppe': ['Local Group', 'Galaxy group', 'More than 80 galaxies held together by their mutual gravity. The Milky Way and Andromeda are the two largest.'],
+    'Virgo-Superhaufen': ['Virgo Supercluster', 'Supercluster', 'About a hundred groups and clusters of galaxies with the Virgo Cluster at its centre. Our Local Group lies at the edge.'],
+    'Laniakea': ['Laniakea', 'Supercluster', 'The supercluster we belong to, defined in 2014 by the motions of galaxies. The name is Hawaiian for “immeasurable heaven”.'],
+    'Herkules-Corona-Borealis-Mauer': ['Hercules–Corona Borealis Great Wall', 'Large-scale structure', 'One of the largest known structures, found through the distribution of gamma-ray bursts. Its extent is disputed; estimates reach ten billion light-years.'],
+    'Beobachtbares Universum': ['Observable universe', 'Everything', 'Everything whose light could reach us since the Big Bang 13.8 billion years ago. Because space is expanding, its edge now lies about 46 billion light-years away.']
+  },
+  marks: {'Sonne':'Sun', 'Erde':'Earth', 'Merkur':'Mercury', 'Venus':'Venus', 'Jupiter':'Jupiter', 'Saturn':'Saturn', 'Uranus':'Uranus', 'Neptun':'Neptune',
+    'Voyager 1':'Voyager 1', 'Voyager 2':'Voyager 2', 'Proxima Centauri':'Proxima Centauri', 'Milchstraße':'Milky Way', 'Andromeda':'Andromeda',
+    'Dreiecksgalaxie':'Triangulum Galaxy', 'Virgohaufen':'Virgo Cluster', 'Lokale Gruppe':'Local Group', 'Großer Attraktor':'Great Attractor', 'Hintergrundstrahlung':'Cosmic background radiation'},
+  wiki: {'Planck-Länge':'Planck length', 'Strings':'String theory', 'Große Vereinheitlichung':'Grand Unified Theory', 'Atom so groß wie die Milchstraße':'Planck length',
+    'Die große Wüste':'Hierarchy problem', 'Grenze der Messbarkeit':'Large Hadron Collider', 'Im Inneren des Protons':'Quantum chromodynamics', 'Leere im Atom':'Atom',
+    'Gammastrahlung':'Gamma ray', 'Wasserstoffatom':'Hydrogen atom', 'Wassermolekül':'Properties of water', 'Wellenlänge des Lichts':'Light', 'Bakterium':'Bacteria',
+    'Haarbalgmilbe':'Demodex folliculorum', 'Auge':'Human eye', 'Astronaut':'Extravehicular Mobility Unit', 'Komet 67P':'67P/Churyumov–Gerasimenko',
+    'Deimos':'Deimos (moon)', 'Phobos':'Phobos (moon)', 'Vesta':'4 Vesta', 'Ceres':'Ceres (dwarf planet)', 'Bennu':'101955 Bennu', 'Ryugu':'162173 Ryugu',
+    'Merkur':'Mercury (planet)', 'Pluto':'Pluto', 'Mond':'Moon', 'Erdbahn':'Earth\'s orbit', 'Nächster Stern':'Proxima Centauri', 'Sirius A':'Sirius',
+    'Laniakea':'Laniakea Supercluster', 'Andromeda':'Andromeda Galaxy'},
+  detail: {
+    'Planck-Länge': ['The Planck length follows from constants of nature alone: the speed of light, the gravitational constant and Planck’s constant. Below it, quantum mechanics and relativity together no longer predict anything meaningful. John Wheeler suggested that space and time turn into a seething quantum foam here. From the proton down to here is further than from the proton up to a human.',
+      [['Value', '1.616 × 10⁻³⁵ m'], ['Formula', '√(ħG/c³)'], ['Ratio to the proton', 'about 1 : 10²⁰'], ['Introduced', '1899, Max Planck']], ['NIST/CODATA: Planck length']],
+    'Strings': ['Between the quark and the Planck length lie 16 orders of magnitude we know nothing about – physicists speak of the great desert. String theory suggests vibrating strings here whose patterns of vibration make up the different particles. It is mathematically rich, but so far no experiment has confirmed it. That is why the strings are only hinted at.',
+      [['Status', 'hypothesis, unconfirmed'], ['Size', 'probably close to the Planck length'], ['Requires', 'extra spatial dimensions'], ['Developed', 'since the late 1960s']], []],
+    'Quark': ['Quarks are elementary particles: as far as we know, they are not made of anything smaller and have no size. Scattering experiments at the HERA collider only show that their radius is smaller than 0.43 × 10⁻¹⁸ m – the dashed line. Quarks never occur alone; they are always confined in particles such as the proton. All around, short-lived particle pairs flash up out of the vacuum.',
+      [['Size', 'point-like, radius < 4.3 × 10⁻¹⁹ m'], ['Kinds', '6: up, down, strange, charm, bottom, top'], ['Charge', '+2/3 or −1/3 e'], ['Mass (up)', 'about 2.2 MeV/c²'], ['Proposed', '1964, Gell-Mann and Zweig']], ['Particle Data Group (PDG)', 'ZEUS: limit on the quark radius (arXiv)']],
+    'Proton': ['The proton consists of two up quarks and one down quark held together by gluons. In between, quark–antiquark pairs constantly appear and vanish. The rest mass of the three quarks makes up only about 1 % of the proton’s mass; the rest is the energy of the field (E = mc²). The lumpy field is modelled on images from lattice simulations of quantum chromodynamics; the colours of the quarks symbolise their colour charge.',
+      [['Charge radius', '0.841 fm (CODATA 2022)'], ['Mass', '1.673 × 10⁻²⁷ kg'], ['Made of', '2 up quarks, 1 down quark'], ['Lifetime', 'no decay observed (> 10³⁴ years)'], ['Discovered', '1917–1919, Ernest Rutherford']], ['NIST/CODATA: proton radius', 'Leinweber et al.: visualising the QCD vacuum (arXiv)']],
+    'Wasserstoffatom': ['The simplest atom: one proton and one electron. The electron does not circle on an orbit but forms a cloud of probability – calculated here exactly according to quantum mechanics. The flashing dots show where a measurement would find it each time. It is most often found at the Bohr radius of 0.053 nm, drawn dashed. The nucleus at the centre is 60,000 times smaller than the atom.',
+      [['Bohr radius', '52.9 pm'], ['Nucleus', '1 proton'], ['Ionisation energy', '13.6 eV'], ['Share in the universe', 'about 74 % of normal matter']], ['NIST/CODATA: Bohr radius']],
+    'Wassermolekül': ['Two hydrogen atoms are attached to the oxygen at an angle of 104.5 degrees. Because oxygen pulls the electrons more strongly, the molecule is slightly negative at one end and slightly positive at the other. This polarity makes water the solvent of life. The blue haze hints at the electron density.',
+      [['Size', 'about 0.28 nm'], ['Bond angle', '104.5°'], ['O–H distance', '0.096 nm'], ['Molecular mass', '18 u'], ['In a glass of water', 'about 8 × 10²⁴ molecules']], ['NIST Chemistry WebBook: water']],
+    'DNA': ['The double helix stores the blueprint of life in four letters: the bases adenine, thymine, guanine and cytosine. One turn is 3.4 nm long and contains ten base pairs. Stretched out, the DNA of a single human cell would be about two metres long. The colours of the base pairs are symbolic.',
+      [['Diameter', '2 nm'], ['One turn', '3.4 nm, 10 base pairs'], ['Bases', 'A, T, G, C'], ['Human genome', 'about 3.1 billion base pairs'], ['Structure solved', '1953']], ['RCSB PDB-101: DNA', 'Watson and Crick, Nature 1953']],
+    'Ribosom': ['Ribosomes are the protein factories of every cell. They read the instructions from messenger RNA and link amino acids into proteins, about 15 to 20 per second. They are about two-thirds RNA. The depiction follows the style of David Goodsell’s molecular paintings.',
+      [['Diameter', 'about 20 nm (bacterium)'], ['Subunits', '2 (50S and 30S)'], ['Speed', 'about 15–20 amino acids per second'], ['Made of', 'about ⅔ RNA, ⅓ protein'], ['Nobel Prize', 'Chemistry 2009, for its structure']], ['RCSB PDB-101: ribosome', 'Nobel Prize in Chemistry 2009', 'David Goodsell: molecular art']],
+    'Bakterium': ['The rod-shaped bacterium Bacillus oleronius has been found on follicle mites. Bacteria are single-celled and have no nucleus: their genome lies free in the cell as a ring of DNA, together with tens of thousands of ribosomes. It is shown here as in a dark-field microscope.',
+      [['Length', 'about 3 µm'], ['Nucleus', 'none'], ['Ribosomes', 'up to about 70,000 per cell'], ['Doubling time', 'from about 20 minutes (E. coli)']], ['Bacillus oleronius (Wikipedia)']],
+    'Haarbalgmilbe': ['Demodex folliculorum lives in the hair follicles of almost all adults, especially along the eyelashes and on the face. The mites feed on sebum, are active at night and usually go completely unnoticed. Their worm-like body with eight stubby legs fits exactly into a hair follicle.',
+      [['Length', '0.3–0.4 mm'], ['Legs', '8 stubby legs'], ['Lifespan', 'about 2 weeks'], ['Prevalence', 'almost all adults']], ['Demodex folliculorum (Wikipedia)']],
+    'Auge': ['The human eye is about 24 mm across. Like an aperture, the iris controls how much light enters. In space the eye changes: on long missions many astronauts become slightly far-sighted because body fluid shifts into the head and deforms the eyeball.',
+      [['Eyeball', 'about 24 mm'], ['Iris', 'about 12 mm'], ['Pupil', '2–8 mm'], ['Light receptors', 'about 120 million rods, 6 million cones'], ['Blinks', 'about 15 per minute']], ['Eye changes in space, SANS (Wikipedia)']],
+    'Astronaut': ['The American EMU spacesuit has been used for spacewalks since 1981. Beneath the white outer shell lie more than a dozen layers that protect against micrometeoroids, radiation and extreme temperatures. A water cooling system in the undergarment carries away body heat.',
+      [['Suit mass', 'about 130 kg'], ['Duration', 'up to 8.5 hours'], ['Internal pressure', '0.3 bar'], ['Outside temperature', '−157 to +121 °C'], ['In use since', '1981'], ['First spacewalk', '18 March 1965, Alexei Leonov']], ['3D model: NASA 3D Resources']],
+    'Internationale Raumstation': ['The ISS is the largest structure humans have ever put into space. From 1998 it was assembled from more than 40 individual flights and is operated by the space agencies of the USA, Russia, Europe, Japan and Canada.',
+      [['Mass', 'about 420 tonnes'], ['Altitude', 'about 400–420 km'], ['Speed', '7.66 km/s (27,600 km/h)'], ['One orbit', 'about 92 minutes'], ['Inhabited since', '2 November 2000'], ['Pressurised volume', '916 m³']], ['ESA: International Space Station', '3D model: NASA 3D Resources']],
+    'Bennu': ['Bennu is a loose rubble pile held together only by its weak gravity. When the OSIRIS-REx probe took samples, its arm sank in as if dipping into a ball pit. The samples contain amino acids and other building blocks of life.',
+      [['Diameter', '490 m'], ['Mass', '7.3 × 10¹⁰ kg'], ['Rotation', '4.3 hours'], ['Discovered', '1999'], ['Returned to Earth', '121.6 g of rock (2023)']], ['NASA mission OSIRIS-REx']],
+    'Ryugu': ['Ryugu is one of the carbon-rich asteroids considered almost unchanged remnants from the time the Solar System formed. Hayabusa2 fired a small crater into its surface to collect material from below as well.',
+      [['Diameter', 'about 900 m'], ['Rotation', '7.6 hours'], ['Discovered', '1999'], ['Returned to Earth', '5.4 g of rock (2020)']], ['JAXA: Hayabusa2']],
+    'Komet 67P': ['ESA’s Rosetta probe accompanied the comet for two years on its way around the Sun, watching its ice evaporate and jets of dust erupt. In 2016 it ended its mission with a controlled touchdown on the surface.',
+      [['Size', '4.1 × 3.3 km (larger lobe)'], ['Orbital period', '6.4 years'], ['Rotation', '12.4 hours'], ['Discovered', '1969'], ['Visited', 'Rosetta 2014–2016']], ['ESA: Rosetta']],
+    'Deimos': ['Deimos is probably a captured asteroid or a fragment from a large impact on Mars. Its surface is covered in fine dust that smooths over many craters.',
+      [['Diameter', 'about 12 km'], ['Distance from Mars', '23,460 km'], ['Orbit', '30.3 hours'], ['Discovered', '1877, Asaph Hall']], ['NASA: Deimos']],
+    'Phobos': ['Phobos orbits Mars faster than the planet rotates, so seen from Mars it rises in the west. Tidal forces slowly pull it inward until, in the distant future, it is torn apart or crashes into Mars.',
+      [['Diameter', 'about 22 km'], ['Distance from Mars', '9,376 km'], ['Orbit', '7.7 hours'], ['Largest crater', 'Stickney, 9 km'], ['Discovered', '1877, Asaph Hall']], ['NASA: Phobos']],
+    'Vesta': ['Vesta is a protoplanet with an iron core – a planetary embryo that was never finished. Many meteorites on Earth come from Vesta; they were blasted out by the great impact at its south pole.',
+      [['Diameter', '525 km'], ['Mass', '2.6 × 10²⁰ kg'], ['Rotation', '5.3 hours'], ['Discovered', '1807, Heinrich Olbers'], ['Visited', 'Dawn 2011–2012']], ['NASA mission Dawn']],
+    'Ceres': ['Ceres was the first object discovered in the asteroid belt and was at times considered a planet. Researchers suspect remnants of a salty water layer beneath its surface.',
+      [['Diameter', '939 km'], ['Mass', '9.4 × 10²⁰ kg'], ['Rotation', '9.1 hours'], ['Orbital period', '4.6 years'], ['Discovered', '1 January 1801, Giuseppe Piazzi'], ['Visited', 'Dawn 2015–2018']], ['NASA mission Dawn']],
+    'Pluto': ['When New Horizons flew past Pluto in 2015, it revealed a surprisingly active world with mountains of water ice, glaciers of nitrogen and a thin, blue-shimmering atmosphere.',
+      [['Diameter', '2,377 km'], ['Mass', '1.3 × 10²² kg'], ['Orbital period', '248 years'], ['Day', '6.4 Earth days'], ['Temperature', 'about −230 °C'], ['Moons', '5'], ['Discovered', '1930, Clyde Tombaugh']], ['NASA Planetary Fact Sheet', 'NASA mission New Horizons']],
+    'Mond': ['The Moon probably formed about 4.5 billion years ago when a Mars-sized body collided with the young Earth. It always shows us the same side and moves away by almost four centimetres every year.',
+      [['Diameter', '3,474 km'], ['Mass', '7.35 × 10²² kg'], ['Distance', '384,400 km'], ['Orbit', '27.3 days'], ['Gravity', '1.62 m/s² (16 % of Earth’s)'], ['Temperature', '−173 to +127 °C'], ['First landing', '20 July 1969']], ['NASA Planetary Fact Sheet']],
+    'Merkur': ['Mercury has almost no atmosphere that could store heat. A Mercury day from sunrise to sunrise lasts longer than its year.',
+      [['Diameter', '4,879 km'], ['Mass', '3.3 × 10²³ kg'], ['Distance from the Sun', '57.9 million km'], ['Year', '88 days'], ['Rotation', '58.6 days'], ['Temperature', '−180 to +430 °C'], ['Moons', '0']], ['NASA Planetary Fact Sheet']],
+    'Mars': ['Mars once had rivers and lakes, as dried-up valleys and sediments show. Today several rovers are exploring its surface, including Curiosity and Perseverance.',
+      [['Diameter', '6,779 km'], ['Mass', '6.4 × 10²³ kg'], ['Distance from the Sun', '227.9 million km'], ['Year', '687 days'], ['Day', '24 h 37 min'], ['Mean temperature', '−65 °C'], ['Moons', '2']], ['NASA Planetary Fact Sheet']],
+    'Venus': ['Venus rotates backwards and so slowly that a Venus day lasts longer than its year. Its clouds of sulphuric acid reflect so much light that it is the brightest object in the night sky after the Moon.',
+      [['Diameter', '12,104 km'], ['Mass', '4.9 × 10²⁴ kg'], ['Distance from the Sun', '108.2 million km'], ['Year', '225 days'], ['Rotation', '243 days, retrograde'], ['Temperature', '464 °C'], ['Surface pressure', '92 bar']], ['NASA Planetary Fact Sheet']],
+    'Erde': ['Earth is the only known place with life. A magnetic field shields it from the solar wind, and about 71 percent of its surface is covered by water.',
+      [['Diameter', '12,742 km'], ['Mass', '5.97 × 10²⁴ kg'], ['Distance from the Sun', '149.6 million km'], ['Year', '365.25 days'], ['Rotation', '23 h 56 min'], ['Mean temperature', '15 °C'], ['Age', '4.54 billion years']], ['NASA Planetary Fact Sheet', 'NASA Visible Earth: Blue Marble']],
+    'Neptun': ['Neptune was not found by chance but predicted mathematically, because Uranus strayed from its calculated orbit. Only a single probe has visited it so far.',
+      [['Diameter', '49,244 km'], ['Mass', '1.0 × 10²⁶ kg'], ['Distance from the Sun', '4.5 billion km'], ['Year', '165 years'], ['Day', '16 h 6 min'], ['Discovered', '1846, Johann Galle'], ['Visited', 'Voyager 2, 1989']], ['NASA Planetary Fact Sheet', 'NASA mission Voyager']],
+    'Uranus': ['Uranus was the first planet discovered with a telescope. Because of its tilted axis, each pole has about 42 years of day followed by 42 years of night.',
+      [['Diameter', '50,724 km'], ['Mass', '8.7 × 10²⁵ kg'], ['Distance from the Sun', '2.9 billion km'], ['Year', '84 years'], ['Day', '17 h 14 min, retrograde'], ['Discovered', '1781, William Herschel'], ['Visited', 'Voyager 2, 1986']], ['NASA Planetary Fact Sheet', 'NASA mission Voyager']],
+    'Saturn': ['Saturn is less dense than water. Its rings consist mostly of chunks of ice from the size of dust grains to the size of houses. The Cassini probe explored it for 13 years.',
+      [['Diameter', '116,460 km'], ['Mass', '5.7 × 10²⁶ kg'], ['Distance from the Sun', '1.43 billion km'], ['Year', '29.4 years'], ['Day', '10 h 33 min'], ['Density', '0.69 g/cm³'], ['Visited', 'Cassini 2004–2017']], ['NASA Planetary Fact Sheet', 'NASA mission Cassini']],
+    'Jupiter': ['Jupiter has more than twice the mass of all the other planets combined. Its gravity deflects many comets, and among its moons Europa and Ganymede may hide oceans beneath their ice.',
+      [['Diameter', '139,820 km'], ['Mass', '1.9 × 10²⁷ kg'], ['Distance from the Sun', '778.5 million km'], ['Year', '11.9 years'], ['Day', '9 h 56 min'], ['Moons', 'more than 90'], ['Visited', 'Juno since 2016']], ['NASA Planetary Fact Sheet', 'NASA mission Juno']],
+    'Sonne': ['In its core the Sun fuses about 600 million tonnes of hydrogen into helium every second. The energy released takes tens of thousands of years to travel from the core to the surface.',
+      [['Diameter', '1.39 million km'], ['Mass', '1.99 × 10³⁰ kg'], ['Surface', '5,500 °C'], ['Core', '15 million °C'], ['Age', '4.6 billion years'], ['Light to Earth', '8 min 20 s'], ['Spectral type', 'G2V']], ['NASA Planetary Fact Sheet', 'ESA/NASA: Solar Orbiter']],
+    'Sirius A': ['Sirius is a double star. A white dwarf, Sirius B, orbits the bright main star; it is about the size of Earth but has almost as much mass as the Sun.',
+      [['Radius', '1.7 solar radii'], ['Mass', '2.1 solar masses'], ['Temperature', '9,940 K'], ['Distance', '8.6 light-years'], ['Spectral type', 'A1V']], []],
+    'Arktur': ['Arcturus is the brightest star in the northern sky. It has used up the hydrogen in its core and has therefore swollen up.',
+      [['Radius', '25 solar radii'], ['Mass', 'about 1.1 solar masses'], ['Temperature', '4,290 K'], ['Distance', '36.7 light-years'], ['Spectral type', 'K1.5 III']], []],
+    'Aldebaran': ['Aldebaran appears to sit in the Hyades star cluster, but it is only half as far away and does not belong to it.',
+      [['Radius', '44 solar radii'], ['Mass', 'about 1.2 solar masses'], ['Temperature', '3,900 K'], ['Distance', '65 light-years'], ['Spectral type', 'K5 III']], []],
+    'Rigel': ['Rigel is a young, massive star only a few million years old. It will probably end its life in a supernova.',
+      [['Radius', '79 solar radii'], ['Mass', 'about 21 solar masses'], ['Temperature', '12,100 K'], ['Distance', 'about 860 light-years'], ['Spectral type', 'B8 Ia']], []],
+    'Erdbahn': ['Earth’s orbit is almost a circle. Earth is closest to the Sun in early January and farthest in early July; the seasons, however, come from the tilt of Earth’s axis.',
+      [['Mean radius', '149,597,871 km (1 AU)'], ['Circumference', 'about 940 million km'], ['Orbital speed', '29.8 km/s'], ['Eccentricity', '0.0167']], ['NASA Planetary Fact Sheet']],
+    'Beteigeuze': ['At the end of 2019 Betelgeuse suddenly dimmed noticeably. The cause was a cloud of dust the star had ejected. When it will explode is open; it could be tomorrow or in 100,000 years.',
+      [['Radius', 'about 760 solar radii'], ['Mass', 'about 18 solar masses'], ['Temperature', 'about 3,600 K'], ['Distance', 'about 550–700 light-years'], ['Spectral type', 'M1–2 Ia']], []],
+    'Stephenson 2-18': ['The star lies in the cluster Stephenson 2 in the constellation Scutum. Because dust swallows much of its light and its distance is uncertain, estimates of its size vary widely.',
+      [['Radius', 'about 2,150 solar radii (uncertain)'], ['Temperature', 'about 3,200 K'], ['Distance', 'about 19,000 light-years'], ['Constellation', 'Scutum']], []],
+    'Sonnensystem': ['The Solar System formed about 4.6 billion years ago from a collapsing cloud of gas and dust. Besides the eight planets, it includes dwarf planets, moons, asteroids and comets.',
+      [['Age', '4.57 billion years'], ['Planets', '8'], ['Dwarf planets', '5 recognised'], ['Radius of Neptune’s orbit', '30.1 AU'], ['Mass in the Sun', '99.86 %']], ['NASA: Solar System']],
+    'Heliosphäre': ['The solar wind streams outward at about 400 km/s until it meets the gas between the stars. The Voyager probes are the only objects that have crossed this boundary so far.',
+      [['Termination shock', 'about 84–94 AU'], ['Heliopause (Voyager 1)', '121.6 AU, 2012'], ['Heliopause (Voyager 2)', '119 AU, 2018'], ['Solar wind', 'about 400 km/s']], ['NASA mission Voyager']],
+    'Oortsche Wolke': ['The Oort cloud has never been observed directly. In 1950 the astronomer Jan Oort inferred its existence from the orbits of long-period comets.',
+      [['Inner edge', 'about 2,000 AU'], ['Outer edge', 'about 100,000 AU'], ['Objects', 'probably trillions'], ['Named after', 'Jan Oort, 1950']], ['NASA: Oort Cloud']],
+    'Nächster Stern': ['Proxima Centauri is a small red dwarf, too faint to see with the naked eye. At least one Earth-sized planet, Proxima b, orbits it in the zone where liquid water would be possible.',
+      [['Distance', '4.24 light-years'], ['Type', 'red dwarf (M5.5)'], ['Planet', 'Proxima b, discovered 2016'], ['Alpha Centauri A and B', '4.37 light-years']], ['ESO: Proxima b']],
+    'Orionnebel': ['Thousands of new stars are forming in the Orion Nebula right now. The four bright stars of the Trapezium at its centre make the surrounding gas glow.',
+      [['Distance', 'about 1,340 light-years'], ['Diameter', 'about 24 light-years'], ['Mass', 'about 2,000 solar masses'], ['Catalogue', 'Messier 42']], ['ESA/Hubble: Orion Nebula']],
+    'Omega Centauri': ['In 2024 researchers found fast-moving stars at the centre of Omega Centauri that point to an intermediate-mass black hole. This supports the idea that the cluster is the core of a swallowed dwarf galaxy.',
+      [['Distance', 'about 17,000 light-years'], ['Stars', 'about 10 million'], ['Age', 'about 12 billion years'], ['Catalogue', 'NGC 5139']], ['Nature 2024: black hole in Omega Centauri']],
+    'Milchstraße': ['At the centre of the Milky Way sits the black hole Sagittarius A*, with about four million solar masses. ESA’s Gaia probe has measured the positions and motions of almost two billion stars.',
+      [['Diameter', 'about 100,000 light-years'], ['Stars', '100–400 billion'], ['Mass', 'about 1.5 trillion solar masses'], ['Centre', 'Sagittarius A*, 4.3 million solar masses'], ['Age', 'about 13.6 billion years']], ['ESA: Gaia']],
+    'Andromeda': ['Andromeda is visible to the naked eye as a faint smudge, making it the most distant object you can see without a telescope. It is approaching us at about 110 km/s.',
+      [['Distance', '2.5 million light-years'], ['Diameter', 'about 220,000 light-years'], ['Stars', 'about 1 trillion'], ['Approach', 'about 110 km/s'], ['Catalogue', 'Messier 31']], ['NASA: Andromeda']],
+    'Lokale Gruppe': ['Most members of the Local Group are small dwarf galaxies orbiting the Milky Way and Andromeda. The two large galaxies are moving towards each other.',
+      [['Diameter', 'about 10 million light-years'], ['Galaxies', 'more than 80'], ['Mass', 'about 2 × 10¹² solar masses'], ['Largest members', 'Andromeda, Milky Way, Triangulum Galaxy']], []],
+    'Virgo-Superhaufen': ['At its centre lies the Virgo Cluster with more than 1,000 galaxies. Its gravity measurably slows the expansion of space in our neighbourhood.',
+      [['Diameter', 'about 110 million light-years'], ['Groups and clusters', 'about 100'], ['Distance to the Virgo Cluster', 'about 54 million light-years'], ['Mass', 'about 10¹⁵ solar masses']], []],
+    'Laniakea': ['Laniakea was defined not by position but by the motions of about 8,000 galaxies. All galaxies within its boundary ultimately flow towards the Great Attractor.',
+      [['Diameter', 'about 520 million light-years'], ['Galaxies', 'about 100,000'], ['Mass', 'about 10¹⁷ solar masses'], ['Defined', '2014, R. Brent Tully and team']], ['Nature 2014: The Laniakea supercluster of galaxies']],
+    'Herkules-Corona-Borealis-Mauer': ['The structure was discovered in 2013 because gamma-ray bursts clustered in one region of the sky. Whether it is a single connected structure is still debated.',
+      [['Extent', 'up to 10 billion light-years (disputed)'], ['Distance', 'about 10 billion light-years'], ['Discovered', '2013, István Horváth and team']], ['arXiv 2013: Horváth, Hakkila, Bagoly']],
+    'Beobachtbares Universum': ['The observable universe is only the part from which light could reach us. How large the whole universe is – and whether it has an edge at all – is unknown.',
+      [['Diameter', 'about 93 billion light-years'], ['Age', '13.8 billion years'], ['Galaxies', 'hundreds of billions to 2 trillion'], ['Background radiation', '2.725 K']], ['ESA: Planck']]
+  },
+  comp: {
+    'Sonne': [['Sun', 'Mass fractions at the surface', ['Hydrogen', 'Helium', 'Oxygen', 'Carbon', 'Iron']]],
+    'Venus': [['Atmosphere', 'Volume fractions', ['Carbon dioxide', 'Nitrogen', 'Sulphur dioxide']]],
+    'Erde': [['Atmosphere', 'Volume fractions, dry air', ['Nitrogen', 'Oxygen', 'Argon', 'Carbon dioxide']], ['Crust', 'Mass fractions', ['Oxygen', 'Silicon', 'Aluminium', 'Iron', 'Calcium']], ['Whole planet', 'Mass fractions', ['Iron', 'Oxygen', 'Silicon', 'Magnesium', 'Sulphur']]],
+    'Mars': [['Atmosphere', 'Volume fractions', ['Carbon dioxide', 'Nitrogen', 'Argon', 'Oxygen', 'Carbon monoxide']]],
+    'Jupiter': [['Atmosphere', 'Volume fractions', ['Hydrogen', 'Helium', 'Methane', 'Ammonia']]],
+    'Saturn': [['Atmosphere', 'Volume fractions', ['Hydrogen', 'Helium', 'Methane', 'Ammonia']]],
+    'Uranus': [['Atmosphere', 'Volume fractions', ['Hydrogen', 'Helium', 'Methane']]],
+    'Neptun': [['Atmosphere', 'Volume fractions', ['Hydrogen', 'Helium', 'Methane']]],
+    'Pluto': [['Atmosphere', 'Volume fractions, estimate', ['Nitrogen', 'Methane', 'Carbon monoxide']]],
+    'Orionnebel': [['Gas', 'Mass fractions, typical of star-forming regions', ['Hydrogen', 'Helium', 'Heavier elements']]],
+    'Bakterium': [['Dry mass', 'Mass fractions, gut bacterium E. coli as an example', ['Proteins', 'Ribonucleic acid', 'Lipids', 'Lipopolysaccharides', 'Genome', 'Cell wall (murein)', 'Glycogen']]],
+    'Wassermolekül': [['Water', 'Mass fractions', ['Oxygen', 'Hydrogen']]],
+    'Wasserstoffatom': [['Atom', 'Mass fractions', ['Proton', 'Electron']]],
+    'Proton': [['Mass', 'Shares of the proton mass', ['Energy of the gluon field and quark motion', 'Rest mass of the down quark', 'Rest mass of the up quarks']]],
+    'Beobachtbares Universum': [['Energy budget', 'Shares of the total energy density', ['Dark energy', 'Dark matter', 'Ordinary matter']]]
+  }
+};
+/* Englische Fassung auf die Daten anwenden; die Kennung o.id bleibt deutsch (Statistik, Zuordnung) */
+function applyEN(){
+  for (const o of OBJ) {
+    const e = EN.obj[o.id]; if (e) { o.n = e[0]; o.cat = e[1]; o.t = e[2]; }
+    if (o.marks) o.marks.forEach(m => { m.l = EN.marks[m.l] || m.l; });
+    if (o.orbits) o.orbits.forEach(q => { if (q.l) q.l = EN.marks[q.l] || q.l; });
+  }
+  for (const id in DETAIL) { const e = EN.detail[id]; if (!e) continue; const D = DETAIL[id];
+    D.more = e[0]; D.facts = e[1]; D.src = (D.src || []).map((s, i) => [e[2][i] || s[0], s[1]]); }
+  for (const id in COMP) { const e = EN.comp[id]; if (!e) continue;
+    COMP[id] = COMP[id].map((L, i) => ({...L, t: e[i][0], u: e[i][1], r: L.r.map((r, k) => [r[0], e[i][2][k] || r[1], r[2]])})); }
+}
+if (LANG === 'en') applyEN();
+const wikiName = o => LANG === 'en' ? (EN.wiki[o.id] || o.n) : (WIKI[o.id] || o.id);
+const wikiURL = o => LANG === 'en' ? 'https://en.wikipedia.org/wiki/Special:Search?go=Go&search=' + encodeURIComponent(wikiName(o))
+                                   : 'https://de.wikipedia.org/wiki/Spezial:Suche?go=Artikel&search=' + encodeURIComponent(wikiName(o));
 
 const EXT = {void:1, micro:1.25, craft:1.3, rock:1.12, planet:1.1, star:2.6, orbits:1.12, helio:1.75, oort:1.1, proxima:1.12, nebula:1.2, cluster:1.3, galaxy:1.15, web:1.12};
 const SOLID = new Set(['craft','rock','planet']);
@@ -742,19 +966,20 @@ const LMIN = -35.5, LMAX = 27.3;
 
 /* Zahlen */
 const nfc = {};
-const nf = (x, sig = 3) => (nfc[sig] ||= new Intl.NumberFormat('de-DE', {maximumSignificantDigits: sig})).format(x);
+const nf = (x, sig = 3) => (nfc[sig] ||= new Intl.NumberFormat(T('de-DE', 'en-US'), {maximumSignificantDigits: sig})).format(x);
 const SUP = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
 const sup = n => String(n).split('').map(c => SUP[c]).join('');
 function big(x){ if (x > 0 && x < 1e-3) { const e = Math.floor(Math.log10(x)); return nf(x/10**e, 2) + ' × 10' + sup(e); }
   if (x >= 1e15) { const e = Math.floor(Math.log10(x)); return nf(x/10**e, 2) + ' × 10' + sup(e); }
-  if (x >= 1e12) return nf(x/1e12)+' Bio.'; if (x >= 1e9) return nf(x/1e9)+' Mrd.'; if (x >= 1e6) return nf(x/1e6)+' Mio.'; return nf(x); }
+  if (x >= 1e12) return nf(x/1e12)+T(' Bio.', ' trillion'); if (x >= 1e9) return nf(x/1e9)+T(' Mrd.', ' billion'); if (x >= 1e6) return nf(x/1e6)+T(' Mio.', ' million'); return nf(x); }
 function unit(m){ if (m < 1e-15) return [1,'m']; if (m < 1e-12) return [1e-15,'fm']; if (m < 1e-9) return [1e-12,'pm']; if (m < 1e-6) return [1e-9,'nm']; if (m < 1e-3) return [1e-6,'µm']; if (m < .01) return [1e-3,'mm'];
-  if (m < 1000) return [1,'m']; if (m < 1e11) return [1e3,'km']; if (m < .05*LY) return [AU,'AE']; return [LY,'Lichtjahre']; }
+  if (m < 1000) return [1,'m']; if (m < 1e11) return [1e3,'km']; if (m < .05*LY) return [AU,T('AE','AU')]; return [LY,LYU]; }
+const LYU = T('Lichtjahre', 'light-years');
 function fmtLen(m){ if (m < 1 && m >= .01) return nf(m*100)+' cm'; const [d,u] = unit(m); return big(m/d)+' '+u; }
 function fmt2(m){
   if (m < 1e5) return '';
-  if (m < 1e9) return '≈ '+nf(m/12742e3, 2)+' × Erde';
-  if (m < 1e11) return '≈ '+nf(m/1.3927e9, 2)+' × Sonne';
+  if (m < 1e9) return '≈ '+nf(m/12742e3, 2)+T(' × Erde', ' × Earth');
+  if (m < 1e11) return '≈ '+nf(m/1.3927e9, 2)+T(' × Sonne', ' × Sun');
   return big(m/1000)+' km';
 }
 
@@ -2051,10 +2276,56 @@ const SITE = {
 const HIST = {det: false, imp: false};
 function histPush(k){ if (HIST[k]) return; try { history.pushState({ks: k}, ''); HIST[k] = true; } catch (e) {} }
 function histPop(k){ if (!HIST[k]) return; HIST[k] = false; try { history.back(); } catch (e) {} }
+(function i18nDom(){
+  /* Umschalter: zeigt jeweils die andere Sprache */
+  const nav = document.querySelector('.meta');
+  const sep = document.createElement('span'); sep.setAttribute('aria-hidden', 'true'); sep.textContent = '·';
+  const lb = document.createElement('button'); lb.type = 'button'; lb.id = 'langBtn'; lb.lang = T('en', 'de');
+  lb.textContent = T('English', 'Deutsch'); lb.title = T('Switch to English', 'Auf Deutsch umschalten');
+  lb.addEventListener('click', () => { const u = new URL(location.href); u.searchParams.set('lang', T('en', 'de')); location.href = u.toString(); });
+  nav.append(sep, lb);
+  if (LANG !== 'en') return;
+  document.documentElement.lang = 'en';
+  document.title = 'Cosmic Scale';
+  const set = (sel, txt) => { const e = document.querySelector(sel); if (e) e.textContent = txt; };
+  const lastText = (sel, txt) => { const e = document.querySelector(sel); if (!e) return; const n = [...e.childNodes].reverse().find(c => c.nodeType === 3 && c.textContent.trim()); if (n) n.textContent = txt; };
+  const firstText = (sel, txt) => { const e = document.querySelector(sel); if (!e) return; const n = [...e.childNodes].find(c => c.nodeType === 3 && c.textContent.trim()); if (n) n.textContent = txt; };
+  const aria = (sel, txt) => { const e = document.querySelector(sel); if (e) e.setAttribute('aria-label', txt); };
+  aria('#ov', 'True-to-scale view from the Planck length through the astronaut to the observable universe');
+  set('.brand span', 'Cosmic Scale'); aria('.meta', 'Site information');
+  set('#impBtn', 'Legal notice'); lastText('#coffee', 'Buy me a coffee'); set('#sndLbl', 'Sound on');
+  set('.readout .lbl', 'View width'); set('#symb', 'Colours symbolic');
+  set('#compBtn span', 'Composition'); firstText('#detOpen', 'View details ');
+  aria('#detCtl', 'Object view'); aria('#detZout', 'Zoom out'); aria('#detZreset', 'Reset view'); aria('#detZin', 'Zoom in');
+  lastText('#detBack', 'Back to the scale');
+  const h3 = document.querySelectorAll('#detail h3'); if (h3.length >= 3) { h3[0].textContent = 'Key facts'; h3[1].textContent = 'Composition'; h3[2].textContent = 'Sources and more'; }
+  set('.intro-eye', '62 orders of magnitude · 51 objects');
+  set('#introTitle', 'Cosmic Scale'); aria('#introTitle', 'Cosmic Scale');
+  set('.intro-sub', 'From humans to the edge of the universe – and down to the smallest conceivable length.');
+  set('#introSound', 'Dive in with sound'); set('#introQuiet', 'Without sound'); set('.intro-tip', 'Headphones recommended');
+  $('hint').innerHTML = 'Scroll or swipe: <kbd>←</kbd> smaller, <kbd>→</kbd> larger';
+  aria('#prev', 'Previous object'); aria('#next', 'Next object'); aria('#rail', 'Size scale');
+  /* Impressum: Anbieterangaben bleiben nach deutschem Recht, Erläuterungen auf Englisch */
+  const fh = $('fontHost').textContent;
+  aria('#impClose', 'Close legal notice');
+  document.querySelector('#imp .imp-in').innerHTML = `<button type="button" class="x" id="impClose" aria-label="Close legal notice"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <h2 id="impTitle">Legal notice</h2>
+    <p class="lbl">Information pursuant to § 5 DDG (German law)</p>
+    <address id="impAddr"></address>
+    <p><span class="lbl">Email</span><br><span id="impMail"></span></p>
+    <h3>Content and links</h3>
+    <p>The texts, sizes and compositions have been compiled with care but without guarantee. The compositions come, among others, from NASA’s Planetary Fact Sheets and the results of the Planck mission. For many objects the values are scientific estimates. The operators of linked sites such as Wikipedia or NASA are responsible for their content.</p>
+    <h3>Visuals</h3>
+    <p>All celestial bodies are rendered live in your browser. Their sizes are true to scale, but surfaces and colours are artistic approximations, not photographs. Earth’s surface is NASA’s “Blue Marble” image (Visible Earth). The 3D models of the spacesuit (EMU) and the ISS come from <a href="https://science.nasa.gov/3d-resources/" target="_blank" rel="noopener">NASA 3D Resources</a>; materials and textures of the ISS were added.</p>
+    <h3>Privacy</h3>
+    <p>This site sets no cookies. When you visit, the web host processes technically necessary data such as IP address, time and browser identifier in server log files in order to deliver and secure the site (Art. 6(1)(f) GDPR). Sounds are generated live in the browser; no audio files are loaded. Fonts are loaded via <span id="fontHost">${fh}</span> and the 3D library three.js via the content delivery network jsDelivr; your IP address is transmitted to these services in the process. Links to Wikipedia, NASA and PayPal lead to external providers whose privacy policies apply once you visit them.</p>
+    <p id="statsNote" hidden>For anonymous reach measurement, this site uses Umami Cloud (Umami Software, Inc.). Without cookies and without profiling, it records: the page visited, referring page, browser, operating system, device type, screen size, country and events such as starting the journey, objects reached, detail views opened and external links clicked. IP addresses are not stored; visits are only grouped by a daily changing hash that cannot be reversed. If “Do Not Track” is enabled in your browser, nothing is measured. The legal basis is our legitimate interest in improving the site (Art. 6(1)(f) GDPR).</p>
+    <p>You have the right to access, rectification, erasure and restriction of processing, as well as the right to lodge a complaint with a data protection supervisory authority. The person named above is responsible.</p>`;
+})();
 (function setupMeta(){
   const addr = $('impAddr'); [SITE.name, SITE.street, SITE.city].forEach((l, i) => { if (i) addr.appendChild(document.createElement('br')); addr.appendChild(document.createTextNode(l)); });
   const m = $('impMail'), a = document.createElement('a'); a.href = 'mailto:' + SITE.email; a.textContent = SITE.email; m.appendChild(a);
-  $('coffee').href = SITE.paypal; $('coffee').title = 'Über PayPal einen Kaffee spendieren';
+  $('coffee').href = SITE.paypal; $('coffee').title = T('Über PayPal einen Kaffee spendieren', 'Buy me a coffee via PayPal');
   const dlg = $('imp');
   $('impBtn').addEventListener('click', () => { if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', ''); histPush('imp'); });
   dlg.addEventListener('close', () => histPop('imp'));
@@ -2077,7 +2348,7 @@ if (gl) {
   setupTextures();
 } else {
   const d = document.createElement('div'); d.className = 'nogl';
-  d.textContent = 'Dieser Browser unterstützt kein WebGL 2. Die Objekte lassen sich deshalb nicht zeichnen; Texte und Lineal funktionieren weiter.';
+  d.textContent = T('Dieser Browser unterstützt kein WebGL 2. Die Objekte lassen sich deshalb nicht zeichnen; Texte und Lineal funktionieren weiter.', 'This browser does not support WebGL 2, so the objects cannot be drawn. Texts and the ruler still work.');
   document.body.appendChild(d);
 }
 function setupTextures(){
@@ -2176,7 +2447,7 @@ function drawObj(o, X, Y, R, a, time, extra){
   if (o.k === 'planet') {
     gl.uniform4fv(U(e,'uRing'), g.ring || [0,0,0,0]); gl.uniform3fv(U(e,'uAtmo'), g.atmo || [0,0,0]);
     gl.uniform3fv(U(e,'uAxis'), g.axis || [0,0,.01]); gl.uniform1f(U(e,'uHaze'), g.haze || 0);
-    const tx = o.n === 'Erde' && earthTex;
+    const tx = o.id === 'Erde' && earthTex;
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tx || dummyTex);
     gl.uniform1i(U(e,'uTex'), 0); gl.uniform1f(U(e,'uHasTex'), tx ? 1 : 0);
   } else if (o.k === 'orbits') {
@@ -2514,7 +2785,7 @@ function render(time){
     if (o.marks || o.orbits) {
       const ma = smooth(150, 330, dpx) * a * clamp((3*MAXD - dpx/zd)/MAXD, 0, 1) * (j === det.j ? 1 : 1 - dk);
       if (ma > .02) {
-        const list = o.marks || [{x:0,y:0,l:'Sonne'}].concat(o.orbits.filter(q => q.l).map(q => ({x:q.r*Math.cos(q.cur), y:q.r*Math.sin(q.cur), l:q.l})));
+        const list = o.marks || [{x:0,y:0,l:T('Sonne','Sun')}].concat(o.orbits.filter(q => q.l).map(q => ({x:q.r*Math.cos(q.cur), y:q.r*Math.sin(q.cur), l:q.l})));
         for (const m of list) marks.push([X + m.x*R, Y - m.y*R, m.l, ma]);
       }
     }
@@ -2584,21 +2855,21 @@ const pos = L => (L - LMIN)/(LMAX - LMIN);
 /* Zusammensetzung anzeigen */
 const COMP_COL = ['#f2c27c','#e39a72','#c58fb8','#93b4ff','#6a7aa6','#4a5370'];
 let compOpen = false, compTab = 0, compObj = null;
-const nfc2 = new Intl.NumberFormat('de-DE', {maximumFractionDigits: 3});
+const nfc2 = new Intl.NumberFormat(T('de-DE', 'en-US'), {maximumFractionDigits: 3});
 function formula(el, fm){
   el.textContent = '';
   for (const part of fm.match(/\d+|\D+/g)) { if (/^\d+$/.test(part)) { const sb = document.createElement('sub'); sb.textContent = part; el.appendChild(sb); } else el.appendChild(document.createTextNode(part)); }
 }
 function compShow(o){
-  const data = COMP[o.n], box = $('comp');
+  const data = COMP[o.id], box = $('comp');
   compObj = o;
   if (!data) { box.hidden = true; panel.classList.remove('comp-open'); return; }
   box.hidden = false; compTab = 0;
-  $('compBtn').querySelector('span').textContent = data.length > 1 || data[0].t === 'Atmosphäre' ? 'Zusammensetzung · ' + (data.length > 1 ? data.length + ' Schichten' : data[0].t) : 'Zusammensetzung';
+  $('compBtn').querySelector('span').textContent = data.length > 1 || data[0].t === T('Atmosphäre', 'Atmosphere') ? T('Zusammensetzung · ', 'Composition · ') + (data.length > 1 ? data.length + T(' Schichten', ' layers') : data[0].t) : T('Zusammensetzung', 'Composition');
   compRender();
 }
 function compRender(){
-  const o = compObj, data = o && COMP[o.n]; if (!data) return;
+  const o = compObj, data = o && COMP[o.id]; if (!data) return;
   $('compBtn').setAttribute('aria-expanded', compOpen);
   $('compBody').hidden = !compOpen;
   panel.classList.toggle('comp-open', compOpen);
@@ -2611,7 +2882,7 @@ function compRender(){
   const d = data[compTab];
   $('compUnit').textContent = d.u;
   const rows = d.r.slice(), sum = rows.reduce((a, r) => a + r[2], 0);
-  if (sum < 99.5) rows.push(['…', 'Weitere', +(100 - sum).toFixed(2)]);
+  if (sum < 99.5) rows.push(['…', T('Weitere', 'Other'), +(100 - sum).toFixed(2)]);
   const bar = $('compBar'), list = $('compRows');
   bar.textContent = ''; list.textContent = '';
   rows.forEach((r, i) => {
@@ -2641,15 +2912,15 @@ function setFocus(j){
   if (!introActive) statsFocus(j);
   if (focus >= 0) { OBJ[focus].dotEl.classList.remove('on'); sfx(j); }
   focus = j; const o = OBJ[j]; o.dotEl.classList.add('on');
-  $('idx').textContent = o.k === 'void' ? 'Wegmarke' : String(RI[j]).padStart(2, '0') + ' / ' + NR;
+  $('idx').textContent = o.k === 'void' ? T('Wegmarke', 'Waypoint') : String(RI[j]).padStart(2, '0') + ' / ' + NR;
   $('detOpen').hidden = o.k === 'void';
   $('cat').textContent = o.cat; $('name').textContent = o.n;
   $('size').textContent = fmtLen(o.d); $('size2').textContent = fmt2(o.d); $('desc').textContent = o.t;
   compShow(o);
   const more = $('more'); more.textContent = '';
   const link = (href, label, title) => { const a = document.createElement('a'); a.href = href; a.target = '_blank'; a.rel = 'noopener'; a.textContent = label + ' ↗'; a.title = title; more.appendChild(a); };
-  link(wikiURL(o), 'Wikipedia', o.n + ' bei Wikipedia');
-  if (NASA[o.n]) link(NASA[o.n], 'NASA', o.n + ' bei der NASA');
+  link(wikiURL(o), 'Wikipedia', o.n + T(' bei Wikipedia', ' on Wikipedia'));
+  if (NASA[o.id]) link(NASA[o.id], 'NASA', o.n + T(' bei der NASA', ' at NASA'));
   panel.classList.remove('swap'); void panel.offsetWidth; panel.classList.add('swap');
   rail.setAttribute('aria-valuenow', j + 1); rail.setAttribute('aria-valuetext', o.n + ', ' + fmtLen(o.d));
   measureAvoid();
@@ -2657,19 +2928,19 @@ function setFocus(j){
 /* Wie lange Licht für eine Strecke braucht */
 function fmtTime(x){
   if (x < 1e-18) { const e = Math.floor(Math.log10(x)); return nf(x/10**e, 2) + ' × 10' + sup(e) + ' s'; }
-  const U = [[1e-15,'as',1e-18],[1e-12,'fs',1e-15],[1e-9,'ps',1e-12],[1e-6,'ns',1e-9],[1e-3,'µs',1e-6],[1,'ms',1e-3],[60,'s',1],[3600,'min',60],[86400,'Std.',3600],[3.15576e7,'Tage',86400]];
+  const U = [[1e-15,'as',1e-18],[1e-12,'fs',1e-15],[1e-9,'ps',1e-12],[1e-6,'ns',1e-9],[1e-3,'µs',1e-6],[1,'ms',1e-3],[60,'s',1],[3600,'min',60],[86400,T('Std.','h'),3600],[3.15576e7,T('Tage','days'),86400]];
   for (const [lim, u, d] of U) if (x < lim) return nf(x/d) + ' ' + u;
-  return big(x/3.15576e7) + ' Jahre';
+  return big(x/3.15576e7) + T(' Jahre', ' years');
 }
 function hud(s, w){
-  const lt = 'Licht: ' + fmtTime(W/s/299792458); if (lt !== hud.lt) { hud.lt = lt; $('ltime').textContent = lt; }
+  const lt = T('Licht: ', 'Light: ') + fmtTime(W/s/299792458); if (lt !== hud.lt) { hud.lt = lt; $('ltime').textContent = lt; }
   const sym = w/FR < 4e-7; if (sym !== hud.sym) { hud.sym = sym; $('symb').hidden = !sym; }
   setFocus(clamp(Math.round(t), 0, N-1));
   const vis = W / s, fv = fmtLen(vis);
   if (fv !== lastFov) { lastFov = fv; $('fov').textContent = fv; $('pow').textContent = '≈ 10' + sup(Math.round(Math.log10(vis))) + ' m'; }
   const m = 110 / s, [div, u] = unit(m), v = m/div, p = 10 ** Math.floor(Math.log10(v)), n = v/p, nice = (n >= 5 ? 5 : n >= 2 ? 2 : 1)*p;
   const bw = (nice*div*s).toFixed(1) + 'px'; if (bw !== hud.bw) { hud.bw = bw; $('bar').style.width = bw; }
-  const bl = big(nice) + ' ' + (u === 'Lichtjahre' ? 'Lj' : u);
+  const bl = big(nice) + ' ' + (u === LYU ? T('Lj', 'ly') : u);
   if (bl !== lastBar) { lastBar = bl; $('barlbl').textContent = bl; }
   const cl = (clamp(pos(Math.log10(w/FR)), 0, 1)*100).toFixed(3) + '%'; if (cl !== hud.cl) { hud.cl = cl; cursor.style.left = cl; }
   audioScale(Math.log10(w/FR));
@@ -2861,7 +3132,7 @@ function audioOn(on){
     g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(on ? .5 : 0, t + (on ? 3.5 : .6));
   }
   $('sndBtn').setAttribute('aria-pressed', on);
-  $('sndLbl').textContent = on ? 'Ton aus' : 'Ton an';
+  $('sndLbl').textContent = on ? T('Ton aus', 'Sound off') : T('Ton an', 'Sound on');
   $('sndIcon').innerHTML = on ? '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>' : '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l4 6M21 9l-4 6"/>';
 }
 function audioScale(L){
@@ -3034,7 +3305,7 @@ function detReset(){
   det.zt = 1; det.pxt = det.pyt = 0;
   const r = det.j >= 0 && OBJ[det.j].rot; if (r) { r.vy = r.vp = 0; r.ret = true; }
 }
-function detUsed(){ $('detCtl').classList.add('used'); if (det.j >= 0) trackOnce('i' + det.j, 'detail-bewegt', {objekt: OBJ[det.j].n}); }
+function detUsed(){ $('detCtl').classList.add('used'); if (det.j >= 0) trackOnce('i' + det.j, 'detail-bewegt', {objekt: OBJ[det.j].id}); }
 function spinStep(dt){
   for (const o of OBJ) { const r = o.rot; if (!r || (dptr.mode === 'rot' && det.j >= 0 && OBJ[det.j] === o)) continue;
     if (r.ret) { const k = 1 - Math.exp(-dt*5); r.yaw += (Math.round(r.yaw/TAU)*TAU - r.yaw)*k; r.pitch -= r.pitch*k;
@@ -3050,16 +3321,16 @@ function onFocusObject(x, y){
 function el(tag, cls, txt){ const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
 function openDetail(){
   if (introActive || introT0 || det.target || OBJ[focus].k === 'void') return;
-  const j = focus, o = OBJ[j], D = DETAIL[o.n] || {facts: [], src: []};
+  const j = focus, o = OBJ[j], D = DETAIL[o.id] || {facts: [], src: []};
   if (touring) setTour(false);
   vel = 0; targetT = t;
   det.j = j; det.target = 1;
   histPush('det');
-  track('detail', {objekt: o.n});
+  track('detail', {objekt: o.id});
   det.z = det.zt = 1; det.px = det.py = det.pxt = det.pyt = 0;
   const touchUI = matchMedia('(pointer: coarse)').matches;
-  $('detHint').textContent = o.rot ? (touchUI ? 'Wischen dreht · zwei Finger zoomen' : 'Ziehen dreht · Scrollen zoomt')
-                                   : (touchUI ? 'Wischen verschiebt · zwei Finger zoomen' : 'Ziehen verschiebt · Scrollen zoomt');
+  $('detHint').textContent = o.rot ? (touchUI ? T('Wischen dreht · zwei Finger zoomen', 'Swipe to rotate · pinch to zoom') : T('Ziehen dreht · Scrollen zoomt', 'Drag to rotate · scroll to zoom'))
+                                   : (touchUI ? T('Wischen verschiebt · zwei Finger zoomen', 'Swipe to pan · pinch to zoom') : T('Ziehen verschiebt · Scrollen zoomt', 'Drag to pan · scroll to zoom'));
   $('detCtl').classList.remove('used');
   $('detIdx').textContent = String(RI[j]).padStart(2, '0') + ' / ' + NR;
   $('detCat').textContent = o.cat; $('detName').textContent = o.n;
@@ -3067,14 +3338,14 @@ function openDetail(){
   $('detText').textContent = o.t; $('detMore').textContent = D.more || '';
   const facts = $('detFacts'); facts.textContent = '';
   for (const [k, v] of D.facts) { const d = el('div'); d.append(el('dt', '', k), el('dd', '', v)); facts.appendChild(d); }
-  const comp = COMP[o.n], cw = $('detComp'); cw.textContent = '';
+  const comp = COMP[o.id], cw = $('detComp'); cw.textContent = '';
   $('detCompWrap').hidden = !comp;
   if (comp) comp.forEach(layer => {
     const box = el('div', 'det-layer');
     box.append(el('h4', '', layer.t), el('div', 'comp-unit', layer.u));
     const bar = el('div', 'comp-bar'), list = el('ol', 'comp-rows');
     const rows = layer.r.slice(), sum = rows.reduce((a, r) => a + r[2], 0);
-    if (sum < 99.5) rows.push(['…', 'Weitere', +(100 - sum).toFixed(2)]);
+    if (sum < 99.5) rows.push(['…', T('Weitere', 'Other'), +(100 - sum).toFixed(2)]);
     rows.forEach((r, i) => {
       const col = r[0] === '…' ? '#3a4058' : COMP_COL[i % COMP_COL.length];
       const seg = el('i'); seg.style.background = col; bar.appendChild(seg);
@@ -3086,8 +3357,8 @@ function openDetail(){
     box.append(bar, list); cw.appendChild(box);
   });
   const src = $('detSrc'); src.textContent = '';
-  const links = [['Wikipedia: ' + (WIKI[o.n] || o.n), wikiURL(o)]];
-  if (NASA[o.n]) links.push(['NASA: ' + o.n, NASA[o.n]]);
+  const links = [['Wikipedia: ' + wikiName(o), wikiURL(o)]];
+  if (NASA[o.id]) links.push(['NASA: ' + o.n, NASA[o.id]]);
   for (const l of D.src) links.push(l);
   for (const [label, url] of links) {
     const a = el('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener';
@@ -3175,13 +3446,13 @@ function trackOnce(key, name, data){ if (STATS.sent.has(key)) return; STATS.sent
     const a = e.target.closest && e.target.closest('a[href^="http"]'); if (!a) return;
     if (a.id === 'coffee') { track('kaffee'); return; }
     let host = ''; try { host = new URL(a.href).hostname.replace(/^www\./, ''); } catch (er) {}
-    track('link', {ziel: host, objekt: det.target ? OBJ[det.j].n : OBJ[focus].n, ort: a.closest('.detail') ? 'detail' : 'skala'});
+    track('link', {ziel: host, objekt: det.target ? OBJ[det.j].id : OBJ[focus].id, ort: a.closest('.detail') ? 'detail' : 'skala'});
   }, true);
 })();
 /* Meilensteine der Reise: wie weit kommen die Besucher? */
 const MILESTONES = ['Auge', 'Haarbalgmilbe', 'Bakterium', 'DNA', 'Wasserstoffatom', 'Proton', 'Quark', 'Planck-Länge', 'Internationale Raumstation', 'Mond', 'Erde', 'Jupiter', 'Sonne', 'Beteigeuze', 'Sonnensystem', 'Nächster Stern', 'Milchstraße', 'Laniakea', 'Beobachtbares Universum'];
 function statsFocus(j){
-  const hit = k => { if (MILESTONES.includes(OBJ[k].n)) trackOnce('m' + k, 'erreicht', {objekt: OBJ[k].n, nr: k - A0}); };
+  const hit = k => { if (MILESTONES.includes(OBJ[k].id)) trackOnce('m' + k, 'erreicht', {objekt: OBJ[k].id, nr: k - A0}); };
   if (j > STATS.hi) { for (let k = STATS.hi + 1; k <= j; k++) hit(k); STATS.hi = j; }
   if (j < STATS.lo) { for (let k = STATS.lo - 1; k >= j; k--) hit(k); STATS.lo = j; }
 }
