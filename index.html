@@ -376,7 +376,7 @@ const LANG = (() => {
   const l = ((navigator.languages && navigator.languages[0]) || navigator.language || 'de').toLowerCase();
   return l.startsWith('de') ? 'de' : 'en';
 })();
-const T = (de, en) => LANG === 'en' ? en : de;
+const LT = (de, en) => LANG === 'en' ? en : de;
 const TAU = Math.PI * 2, LY = 9.4607e15, AU = 1.495978707e11, RSUN = 6.957e8;
 
 /* ======================================================================
@@ -966,20 +966,20 @@ const LMIN = -35.5, LMAX = 27.3;
 
 /* Zahlen */
 const nfc = {};
-const nf = (x, sig = 3) => (nfc[sig] ||= new Intl.NumberFormat(T('de-DE', 'en-US'), {maximumSignificantDigits: sig})).format(x);
+const nf = (x, sig = 3) => (nfc[sig] ||= new Intl.NumberFormat(LT('de-DE', 'en-US'), {maximumSignificantDigits: sig})).format(x);
 const SUP = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
 const sup = n => String(n).split('').map(c => SUP[c]).join('');
 function big(x){ if (x > 0 && x < 1e-3) { const e = Math.floor(Math.log10(x)); return nf(x/10**e, 2) + ' × 10' + sup(e); }
   if (x >= 1e15) { const e = Math.floor(Math.log10(x)); return nf(x/10**e, 2) + ' × 10' + sup(e); }
-  if (x >= 1e12) return nf(x/1e12)+T(' Bio.', ' trillion'); if (x >= 1e9) return nf(x/1e9)+T(' Mrd.', ' billion'); if (x >= 1e6) return nf(x/1e6)+T(' Mio.', ' million'); return nf(x); }
+  if (x >= 1e12) return nf(x/1e12)+LT(' Bio.', ' trillion'); if (x >= 1e9) return nf(x/1e9)+LT(' Mrd.', ' billion'); if (x >= 1e6) return nf(x/1e6)+LT(' Mio.', ' million'); return nf(x); }
 function unit(m){ if (m < 1e-15) return [1,'m']; if (m < 1e-12) return [1e-15,'fm']; if (m < 1e-9) return [1e-12,'pm']; if (m < 1e-6) return [1e-9,'nm']; if (m < 1e-3) return [1e-6,'µm']; if (m < .01) return [1e-3,'mm'];
-  if (m < 1000) return [1,'m']; if (m < 1e11) return [1e3,'km']; if (m < .05*LY) return [AU,T('AE','AU')]; return [LY,LYU]; }
-const LYU = T('Lichtjahre', 'light-years');
+  if (m < 1000) return [1,'m']; if (m < 1e11) return [1e3,'km']; if (m < .05*LY) return [AU,LT('AE','AU')]; return [LY,LYU]; }
+const LYU = LT('Lichtjahre', 'light-years');
 function fmtLen(m){ if (m < 1 && m >= .01) return nf(m*100)+' cm'; const [d,u] = unit(m); return big(m/d)+' '+u; }
 function fmt2(m){
   if (m < 1e5) return '';
-  if (m < 1e9) return '≈ '+nf(m/12742e3, 2)+T(' × Erde', ' × Earth');
-  if (m < 1e11) return '≈ '+nf(m/1.3927e9, 2)+T(' × Sonne', ' × Sun');
+  if (m < 1e9) return '≈ '+nf(m/12742e3, 2)+LT(' × Erde', ' × Earth');
+  if (m < 1e11) return '≈ '+nf(m/1.3927e9, 2)+LT(' × Sonne', ' × Sun');
   return big(m/1000)+' km';
 }
 
@@ -2280,9 +2280,9 @@ function histPop(k){ if (!HIST[k]) return; HIST[k] = false; try { history.back()
   /* Umschalter: zeigt jeweils die andere Sprache */
   const nav = document.querySelector('.meta');
   const sep = document.createElement('span'); sep.setAttribute('aria-hidden', 'true'); sep.textContent = '·';
-  const lb = document.createElement('button'); lb.type = 'button'; lb.id = 'langBtn'; lb.lang = T('en', 'de');
-  lb.textContent = T('English', 'Deutsch'); lb.title = T('Switch to English', 'Auf Deutsch umschalten');
-  lb.addEventListener('click', () => { const u = new URL(location.href); u.searchParams.set('lang', T('en', 'de')); location.href = u.toString(); });
+  const lb = document.createElement('button'); lb.type = 'button'; lb.id = 'langBtn'; lb.lang = LT('en', 'de');
+  lb.textContent = LT('English', 'Deutsch'); lb.title = LT('Switch to English', 'Auf Deutsch umschalten');
+  lb.addEventListener('click', () => { const u = new URL(location.href); u.searchParams.set('lang', LT('en', 'de')); location.href = u.toString(); });
   nav.append(sep, lb);
   if (LANG !== 'en') return;
   document.documentElement.lang = 'en';
@@ -2325,7 +2325,7 @@ function histPop(k){ if (!HIST[k]) return; HIST[k] = false; try { history.back()
 (function setupMeta(){
   const addr = $('impAddr'); [SITE.name, SITE.street, SITE.city].forEach((l, i) => { if (i) addr.appendChild(document.createElement('br')); addr.appendChild(document.createTextNode(l)); });
   const m = $('impMail'), a = document.createElement('a'); a.href = 'mailto:' + SITE.email; a.textContent = SITE.email; m.appendChild(a);
-  $('coffee').href = SITE.paypal; $('coffee').title = T('Über PayPal einen Kaffee spendieren', 'Buy me a coffee via PayPal');
+  $('coffee').href = SITE.paypal; $('coffee').title = LT('Über PayPal einen Kaffee spendieren', 'Buy me a coffee via PayPal');
   const dlg = $('imp');
   $('impBtn').addEventListener('click', () => { if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', ''); histPush('imp'); });
   dlg.addEventListener('close', () => histPop('imp'));
@@ -2348,7 +2348,7 @@ if (gl) {
   setupTextures();
 } else {
   const d = document.createElement('div'); d.className = 'nogl';
-  d.textContent = T('Dieser Browser unterstützt kein WebGL 2. Die Objekte lassen sich deshalb nicht zeichnen; Texte und Lineal funktionieren weiter.', 'This browser does not support WebGL 2, so the objects cannot be drawn. Texts and the ruler still work.');
+  d.textContent = LT('Dieser Browser unterstützt kein WebGL 2. Die Objekte lassen sich deshalb nicht zeichnen; Texte und Lineal funktionieren weiter.', 'This browser does not support WebGL 2, so the objects cannot be drawn. Texts and the ruler still work.');
   document.body.appendChild(d);
 }
 function setupTextures(){
@@ -2394,7 +2394,7 @@ function U(e, n){ if (!(n in e.u)) e.u[n] = gl.getUniformLocation(e.p, n); retur
 const KINDS = ['craft0','bg','craft1','micro','rock','planet','star','orbits','helio','oort','proxima','nebula','cluster','galaxy','web'];
 if (gl) {
   if (PEXT) KINDS.forEach(k => PROGS[k] || makeProg(k));
-  else { ['craft0','bg'].forEach(k => prog(k)); let i = 0; const idle = () => { while (i < KINDS.length && PROGS[KINDS[i]]) i++; if (i < KINDS.length) { prog(KINDS[i]); (window.requestIdleCallback || setTimeout)(idle, 60); } }; setTimeout(idle, 300); }
+  else { ['craft0','bg'].forEach(k => prog(k)); let i = 0; const idle = () => { while (i < KINDS.length && PROGS[KINDS[i]]) i++; if (i < KINDS.length) { prog(KINDS[i]); if (window.requestIdleCallback) requestIdleCallback(idle, {timeout: 400}); else setTimeout(idle, 60); } }; setTimeout(idle, 300); }
 }
 
 /* ======================================================================
@@ -2785,7 +2785,7 @@ function render(time){
     if (o.marks || o.orbits) {
       const ma = smooth(150, 330, dpx) * a * clamp((3*MAXD - dpx/zd)/MAXD, 0, 1) * (j === det.j ? 1 : 1 - dk);
       if (ma > .02) {
-        const list = o.marks || [{x:0,y:0,l:T('Sonne','Sun')}].concat(o.orbits.filter(q => q.l).map(q => ({x:q.r*Math.cos(q.cur), y:q.r*Math.sin(q.cur), l:q.l})));
+        const list = o.marks || [{x:0,y:0,l:LT('Sonne','Sun')}].concat(o.orbits.filter(q => q.l).map(q => ({x:q.r*Math.cos(q.cur), y:q.r*Math.sin(q.cur), l:q.l})));
         for (const m of list) marks.push([X + m.x*R, Y - m.y*R, m.l, ma]);
       }
     }
@@ -2855,7 +2855,7 @@ const pos = L => (L - LMIN)/(LMAX - LMIN);
 /* Zusammensetzung anzeigen */
 const COMP_COL = ['#f2c27c','#e39a72','#c58fb8','#93b4ff','#6a7aa6','#4a5370'];
 let compOpen = false, compTab = 0, compObj = null;
-const nfc2 = new Intl.NumberFormat(T('de-DE', 'en-US'), {maximumFractionDigits: 3});
+const nfc2 = new Intl.NumberFormat(LT('de-DE', 'en-US'), {maximumFractionDigits: 3});
 function formula(el, fm){
   el.textContent = '';
   for (const part of fm.match(/\d+|\D+/g)) { if (/^\d+$/.test(part)) { const sb = document.createElement('sub'); sb.textContent = part; el.appendChild(sb); } else el.appendChild(document.createTextNode(part)); }
@@ -2865,7 +2865,7 @@ function compShow(o){
   compObj = o;
   if (!data) { box.hidden = true; panel.classList.remove('comp-open'); return; }
   box.hidden = false; compTab = 0;
-  $('compBtn').querySelector('span').textContent = data.length > 1 || data[0].t === T('Atmosphäre', 'Atmosphere') ? T('Zusammensetzung · ', 'Composition · ') + (data.length > 1 ? data.length + T(' Schichten', ' layers') : data[0].t) : T('Zusammensetzung', 'Composition');
+  $('compBtn').querySelector('span').textContent = data.length > 1 || data[0].t === LT('Atmosphäre', 'Atmosphere') ? LT('Zusammensetzung · ', 'Composition · ') + (data.length > 1 ? data.length + LT(' Schichten', ' layers') : data[0].t) : LT('Zusammensetzung', 'Composition');
   compRender();
 }
 function compRender(){
@@ -2882,7 +2882,7 @@ function compRender(){
   const d = data[compTab];
   $('compUnit').textContent = d.u;
   const rows = d.r.slice(), sum = rows.reduce((a, r) => a + r[2], 0);
-  if (sum < 99.5) rows.push(['…', T('Weitere', 'Other'), +(100 - sum).toFixed(2)]);
+  if (sum < 99.5) rows.push(['…', LT('Weitere', 'Other'), +(100 - sum).toFixed(2)]);
   const bar = $('compBar'), list = $('compRows');
   bar.textContent = ''; list.textContent = '';
   rows.forEach((r, i) => {
@@ -2912,15 +2912,15 @@ function setFocus(j){
   if (!introActive) statsFocus(j);
   if (focus >= 0) { OBJ[focus].dotEl.classList.remove('on'); sfx(j); }
   focus = j; const o = OBJ[j]; o.dotEl.classList.add('on');
-  $('idx').textContent = o.k === 'void' ? T('Wegmarke', 'Waypoint') : String(RI[j]).padStart(2, '0') + ' / ' + NR;
+  $('idx').textContent = o.k === 'void' ? LT('Wegmarke', 'Waypoint') : String(RI[j]).padStart(2, '0') + ' / ' + NR;
   $('detOpen').hidden = o.k === 'void';
   $('cat').textContent = o.cat; $('name').textContent = o.n;
   $('size').textContent = fmtLen(o.d); $('size2').textContent = fmt2(o.d); $('desc').textContent = o.t;
   compShow(o);
   const more = $('more'); more.textContent = '';
   const link = (href, label, title) => { const a = document.createElement('a'); a.href = href; a.target = '_blank'; a.rel = 'noopener'; a.textContent = label + ' ↗'; a.title = title; more.appendChild(a); };
-  link(wikiURL(o), 'Wikipedia', o.n + T(' bei Wikipedia', ' on Wikipedia'));
-  if (NASA[o.id]) link(NASA[o.id], 'NASA', o.n + T(' bei der NASA', ' at NASA'));
+  link(wikiURL(o), 'Wikipedia', o.n + LT(' bei Wikipedia', ' on Wikipedia'));
+  if (NASA[o.id]) link(NASA[o.id], 'NASA', o.n + LT(' bei der NASA', ' at NASA'));
   panel.classList.remove('swap'); void panel.offsetWidth; panel.classList.add('swap');
   rail.setAttribute('aria-valuenow', j + 1); rail.setAttribute('aria-valuetext', o.n + ', ' + fmtLen(o.d));
   measureAvoid();
@@ -2928,19 +2928,19 @@ function setFocus(j){
 /* Wie lange Licht für eine Strecke braucht */
 function fmtTime(x){
   if (x < 1e-18) { const e = Math.floor(Math.log10(x)); return nf(x/10**e, 2) + ' × 10' + sup(e) + ' s'; }
-  const U = [[1e-15,'as',1e-18],[1e-12,'fs',1e-15],[1e-9,'ps',1e-12],[1e-6,'ns',1e-9],[1e-3,'µs',1e-6],[1,'ms',1e-3],[60,'s',1],[3600,'min',60],[86400,T('Std.','h'),3600],[3.15576e7,T('Tage','days'),86400]];
+  const U = [[1e-15,'as',1e-18],[1e-12,'fs',1e-15],[1e-9,'ps',1e-12],[1e-6,'ns',1e-9],[1e-3,'µs',1e-6],[1,'ms',1e-3],[60,'s',1],[3600,'min',60],[86400,LT('Std.','h'),3600],[3.15576e7,LT('Tage','days'),86400]];
   for (const [lim, u, d] of U) if (x < lim) return nf(x/d) + ' ' + u;
-  return big(x/3.15576e7) + T(' Jahre', ' years');
+  return big(x/3.15576e7) + LT(' Jahre', ' years');
 }
 function hud(s, w){
-  const lt = T('Licht: ', 'Light: ') + fmtTime(W/s/299792458); if (lt !== hud.lt) { hud.lt = lt; $('ltime').textContent = lt; }
+  const lt = LT('Licht: ', 'Light: ') + fmtTime(W/s/299792458); if (lt !== hud.lt) { hud.lt = lt; $('ltime').textContent = lt; }
   const sym = w/FR < 4e-7; if (sym !== hud.sym) { hud.sym = sym; $('symb').hidden = !sym; }
   setFocus(clamp(Math.round(t), 0, N-1));
   const vis = W / s, fv = fmtLen(vis);
   if (fv !== lastFov) { lastFov = fv; $('fov').textContent = fv; $('pow').textContent = '≈ 10' + sup(Math.round(Math.log10(vis))) + ' m'; }
   const m = 110 / s, [div, u] = unit(m), v = m/div, p = 10 ** Math.floor(Math.log10(v)), n = v/p, nice = (n >= 5 ? 5 : n >= 2 ? 2 : 1)*p;
   const bw = (nice*div*s).toFixed(1) + 'px'; if (bw !== hud.bw) { hud.bw = bw; $('bar').style.width = bw; }
-  const bl = big(nice) + ' ' + (u === LYU ? T('Lj', 'ly') : u);
+  const bl = big(nice) + ' ' + (u === LYU ? LT('Lj', 'ly') : u);
   if (bl !== lastBar) { lastBar = bl; $('barlbl').textContent = bl; }
   const cl = (clamp(pos(Math.log10(w/FR)), 0, 1)*100).toFixed(3) + '%'; if (cl !== hud.cl) { hud.cl = cl; cursor.style.left = cl; }
   audioScale(Math.log10(w/FR));
@@ -3132,7 +3132,7 @@ function audioOn(on){
     g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(on ? .5 : 0, t + (on ? 3.5 : .6));
   }
   $('sndBtn').setAttribute('aria-pressed', on);
-  $('sndLbl').textContent = on ? T('Ton aus', 'Sound off') : T('Ton an', 'Sound on');
+  $('sndLbl').textContent = on ? LT('Ton aus', 'Sound off') : LT('Ton an', 'Sound on');
   $('sndIcon').innerHTML = on ? '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>' : '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l4 6M21 9l-4 6"/>';
 }
 function audioScale(L){
@@ -3329,8 +3329,8 @@ function openDetail(){
   track('detail', {objekt: o.id});
   det.z = det.zt = 1; det.px = det.py = det.pxt = det.pyt = 0;
   const touchUI = matchMedia('(pointer: coarse)').matches;
-  $('detHint').textContent = o.rot ? (touchUI ? T('Wischen dreht · zwei Finger zoomen', 'Swipe to rotate · pinch to zoom') : T('Ziehen dreht · Scrollen zoomt', 'Drag to rotate · scroll to zoom'))
-                                   : (touchUI ? T('Wischen verschiebt · zwei Finger zoomen', 'Swipe to pan · pinch to zoom') : T('Ziehen verschiebt · Scrollen zoomt', 'Drag to pan · scroll to zoom'));
+  $('detHint').textContent = o.rot ? (touchUI ? LT('Wischen dreht · zwei Finger zoomen', 'Swipe to rotate · pinch to zoom') : LT('Ziehen dreht · Scrollen zoomt', 'Drag to rotate · scroll to zoom'))
+                                   : (touchUI ? LT('Wischen verschiebt · zwei Finger zoomen', 'Swipe to pan · pinch to zoom') : LT('Ziehen verschiebt · Scrollen zoomt', 'Drag to pan · scroll to zoom'));
   $('detCtl').classList.remove('used');
   $('detIdx').textContent = String(RI[j]).padStart(2, '0') + ' / ' + NR;
   $('detCat').textContent = o.cat; $('detName').textContent = o.n;
@@ -3345,7 +3345,7 @@ function openDetail(){
     box.append(el('h4', '', layer.t), el('div', 'comp-unit', layer.u));
     const bar = el('div', 'comp-bar'), list = el('ol', 'comp-rows');
     const rows = layer.r.slice(), sum = rows.reduce((a, r) => a + r[2], 0);
-    if (sum < 99.5) rows.push(['…', T('Weitere', 'Other'), +(100 - sum).toFixed(2)]);
+    if (sum < 99.5) rows.push(['…', LT('Weitere', 'Other'), +(100 - sum).toFixed(2)]);
     rows.forEach((r, i) => {
       const col = r[0] === '…' ? '#3a4058' : COMP_COL[i % COMP_COL.length];
       const seg = el('i'); seg.style.background = col; bar.appendChild(seg);
