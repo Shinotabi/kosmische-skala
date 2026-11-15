@@ -380,6 +380,17 @@ body.detail-on .det-ctl{opacity:1;transform:translate(-50%,0);pointer-events:aut
 .intro-load i{grid-column:1/-1;height:2px;border-radius:1px;background:rgba(160,178,230,.18);overflow:hidden}
 .intro-load b{display:block;height:100%;background:var(--sun);transform-origin:0 50%;transform:scaleX(0);transition:transform .45s ease}
 @media (prefers-reduced-motion:reduce){.intro-load b{transition:none}}
+
+/* ---------- Ladesequenz beim Aufruf ---------- */
+.boot{position:fixed;inset:0;z-index:30;display:grid;place-content:center;justify-items:center;gap:22px;background:var(--void);transition:opacity .6s ease,visibility 0s .6s;animation:bootBye .01s 14s forwards}
+.boot.done{opacity:0;visibility:hidden}
+.boot i{width:10px;height:10px;border-radius:50%;background:var(--sun);box-shadow:0 0 18px 4px rgba(242,194,124,.45);animation:bootPulse 1.4s ease-in-out infinite}
+.boot b{width:min(180px,46vw);height:2px;border-radius:1px;background:rgba(160,178,230,.16);overflow:hidden}
+.boot u{display:block;height:100%;background:var(--sun);transform-origin:0 50%;transform:scaleX(0);transition:transform .4s ease}
+@keyframes bootPulse{0%,100%{transform:scale(.8);opacity:.55}50%{transform:scale(1.25);opacity:1}}
+@keyframes bootBye{to{opacity:0;visibility:hidden}}
+/* bis dahin ruht das Intro */
+.intro.wait *{animation-play-state:paused!important}
 </style>
 </head>
 <body>
@@ -397,7 +408,7 @@ body.detail-on .det-ctl{opacity:1;transform:translate(-50%,0);pointer-events:aut
       <button type="button" id="impBtn">Impressum</button><span aria-hidden="true">·</span><a id="coffee" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM16 10h1.5a2.5 2.5 0 0 1 0 5H16M8 3.5c0 1.2 1 1.2 1 2.4M12 3.5c0 1.2 1 1.2 1 2.4"/></svg>Kaffee spendieren</a><span aria-hidden="true">·</span><button type="button" id="sndBtn" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" id="sndIcon"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l4 6M21 9l-4 6"/></svg><span id="sndLbl">Ton an</span></button>
     </nav>
   </div>
-  <div class="readout"><span class="lbl">Bildbreite</span><span id="fov">–</span><span id="pow"></span><span id="ltime"></span><span id="symb" class="symb" hidden>Farben symbolisch</span></div>
+  <div class="readout"><span class="lbl">Bildbreite</span><span id="fov">–</span><span id="pow"></span><span id="ltime"></span><span id="symb" class="symb" hidden>Farben symbolisch</span><span id="tlapse" class="symb" hidden>Zeitraffer</span></div>
 </header>
 
 <section class="panel" id="panel" aria-live="polite">
@@ -462,7 +473,8 @@ body.detail-on .det-ctl{opacity:1;transform:translate(-50%,0);pointer-events:aut
   </div>
 </dialog>
 
-<div class="intro" id="intro" role="dialog" aria-modal="true" aria-labelledby="introTitle">
+<div class="boot" id="boot" aria-hidden="true"><i></i><b><u id="bootBar"></u></b></div>
+<div class="intro wait" id="intro" role="dialog" aria-modal="true" aria-labelledby="introTitle">
   <canvas id="introCv" aria-hidden="true"></canvas>
   <div class="intro-in">
     <p class="intro-eye">62 Größenordnungen · 51 Objekte</p>
@@ -532,7 +544,7 @@ const OBJ = [
    t:'So kurz sind die Wellen von Gammastrahlung. Sie entsteht, wenn sich Atomkerne umordnen oder zerfallen.'},
   {n:'Wasserstoffatom', d:1.06e-10, k:'micro', cat:'Atom', dot:'#8fb0ff', ext:2.6, ly:1.3, at:[.545,-.3], g:{mode:6, edge:2.6, rot:1, pts:{m:0, n:6500}},
    t:'Ein Elektron als Wolke um ein Proton – dazwischen fast nur Leere. Wäre das Atom so groß wie ein Stadion, wäre sein Kern ein Pfefferkorn am Anstoßpunkt.'},
-  {n:'Wassermolekül', d:2.8e-10, k:'micro', cat:'Molekül', dot:'#ff8f80', ext:1.3, at:[.6,1.15], g:{mode:5, rot:1},
+  {n:'Wassermolekül', d:2.8e-10, k:'micro', cat:'Molekül', dot:'#ff8f80', ext:1.9, at:[.6,1.15], g:{mode:5, rot:1},
    t:'Zwei Wasserstoffatome am Sauerstoff, im Winkel von 104,5 Grad. Der Mensch besteht zu rund 60 Prozent aus Wasser.'},
   {n:'DNA', d:2e-9, lx:3.4, k:'micro', cat:'Molekül', dot:'#9fd0ff', ext:5.8, ly:1.2, at:[1.1,.35], g:{mode:4, rot:1},
    t:'Die Doppelhelix ist nur 2 Nanometer dick. Ihre vier Basen schreiben den Bauplan jedes Lebewesens, auch den des Astronauten.'},
@@ -614,7 +626,7 @@ const OBJ = [
    t:'Die Sonne enthält 99,8 % der Masse des Sonnensystems. Rund 1,3 Millionen Erden würden in sie hineinpassen.'},
   {n:'Sirius A', d:1.711*2*RSUN, k:'star', T:9940, cat:'Stern', dot:'#dfe9ff', g:{Q:[0,1.25,70,0]},
    t:'Der hellste Stern am Nachthimmel, 8,6 Lichtjahre entfernt. Er ist heißer als die Sonne und fast doppelt so groß.'},
-  {n:'Sagittarius A*', d:2.54e10, lx:9, ly:5.6, k:'hole', cat:'Schwarzes Loch', dot:'#ffb36b', g:{Q:[0,9,1.7,.16]},
+  {n:'Sagittarius A*', d:2.54e10, lx:3.4, ly:2.6, k:'hole', cat:'Schwarzes Loch', dot:'#ffb36b', g:{Q:[0,2.8,1.7,.16]},
    t:'Das Schwarze Loch im Zentrum der Milchstraße, vier Millionen Sonnenmassen schwer. Sein Schatten wirkt 2,6-mal größer als der Ereignishorizont, weil es das Licht um sich herumbiegt.'},
   {n:'Arktur', d:25.4*2*RSUN, k:'star', T:4290, cat:'Roter Riese', dot:'#ffb469', g:{Q:[0,.9,22,0]},
    t:'Ein Roter Riese im Sternbild Bärenhüter. Unsere Sonne wird sich in etwa fünf Milliarden Jahren ähnlich aufblähen.'},
@@ -635,7 +647,7 @@ const OBJ = [
   {n:'Heliosphäre', d:240*AU, k:'helio', cat:'Grenze', dot:'#8fb3ff',
    marks:[{x:0,y:0,l:'Sonne'},{x:1.42*Math.cos(.6),y:1.42*Math.sin(.6),l:'Voyager 1'},{x:1.18*Math.cos(-2.4),y:1.18*Math.sin(-2.4),l:'Voyager 2'}],
    t:'Die Blase, die der Sonnenwind ins interstellare Gas bläst. Voyager 1 hat sie 2012 verlassen und ist heute rund 170 AE von der Sonne entfernt.'},
-  {n:'M87*', d:3.84e13, lx:8, ly:5.2, k:'hole', cat:'Schwarzes Loch', dot:'#ffa560', g:{Q:[1,8,1.15,.34]},
+  {n:'M87*', d:3.84e13, lx:3.9, ly:3, k:'hole', cat:'Schwarzes Loch', dot:'#ffa560', g:{Q:[1,3.2,1.15,.34]},
    t:'Das erste Schwarze Loch, von dem es ein Bild gibt: 6,5 Milliarden Sonnenmassen im Herzen der Galaxie M87. Sein Ereignishorizont ist größer als unser Sonnensystem.'},
   {n:'TON 618', d:2.4e14, lx:10, ly:6, k:'hole', cat:'Schwarzes Loch', dot:'#ffd0a0', g:{Q:[1.5,10.5,1.6,.24]},
    t:'Eines der massereichsten bekannten Schwarzen Löcher: rund 40 Milliarden Sonnenmassen. Die Scheibe aus Gas, das hineinstürzt, leuchtet heller als hundert Billionen Sonnen.'},
@@ -1160,7 +1172,7 @@ OBJ.forEach((o, j) => {
   o.flat = ['orbits','helio','proxima','nebula','galaxy'].includes(o.k) ? 1 : ['oort','cluster'].includes(o.k) ? 2 : o.k === 'web' ? (o.g.mode === 3 ? 2 : 1) : 0;
   o.pk = o.fx || o.k + ':' + (o.g.mode || 0) + ':' + o.flat;
   /* Partikel zum Objekt (g.pts = {m: Art, n: Anzahl, q/q2: Parameter, b: Helligkeit}) */
-  if (o.g.pts) o.ptk = 'pts:' + o.g.pts.m + ':0';
+  if (o.g.pts) { o.ptk = 'pts:' + o.g.pts.m + ':0'; o.tl = o.g.pts.m >= 2; }
   o.edge = o.k === 'micro' ? (o.g.edge || 0) : (o.solid || o.k === 'hole' ? 0 : o.ext);
 });
 
@@ -1233,7 +1245,7 @@ layout(location=1) out vec4 fragGlow;
 uniform float uPass;
 #endif
 vec3 GLW = vec3(0.0);
-uniform float uT, uR, uSeed, uAlpha, uDpr, uEdge;
+uniform float uT, uR, uSeed, uAlpha, uDpr, uEdge, uExt;
 /* Schleifen beginnen bei ZERO statt 0: Der Wert ist immer 0, aber für den Compiler nicht vorhersehbar. So rollt der
    HLSL-Compiler unter Windows die Schleifen nicht aus, und die Shader sind in Sekunden statt Minuten übersetzt. */
 #define ZERO min(int(uT),0)
@@ -1412,6 +1424,10 @@ void main(){
 #endif
   float em = 1.0;
   if(uEdge>0.0){ float rr = length(p); em = smoothstep(uEdge, 1.0+0.3*(uEdge-1.0), rr); }
+#ifdef BFADE
+  /* Schleier und Leuchten laufen zum Rand des Zeichenfelds weich aus, sonst zeichnet sich dessen Quadrat ab */
+  em *= smoothstep(1.0, 0.86, max(abs(vP.x), abs(vP.y))/uExt);
+#endif
 #ifdef MRT
   fragColor = c*(em*uAlpha);
   fragGlow = vec4(GLW*em, c.a)*uAlpha;
@@ -1792,7 +1808,9 @@ vec3 holeStars(vec3 d, float apx){
 #endif
 vec4 shade(vec2 p0){
   const float D = 46.0;
-  float rin = 3.0, rout = uQ.y;
+  /* Sagittarius A* und M87*: Das heiße Gas leuchtet bis dicht an den Horizont und nur wenige Radien weit hinaus
+     (Bilder des Event Horizon Telescope). TON 618 hat als Quasar eine ausgedehnte Scheibe. */
+  float rout = uQ.y, rin = rout < 6.0 ? 1.5 : 3.0;
   vec2 p = rot2(-0.18)*p0;
   float el = clamp(uQ.w + uRot.y, -1.45, 1.45), az = uRot.x;
   vec3 cpos = D*vec3(sin(az)*cos(el), sin(el), cos(az)*cos(el));
@@ -1842,7 +1860,8 @@ vec4 shade(vec2 p0){
   }
   vec3 glow = col;
   /* eigener, gebogener Sternhimmel nur nahe am Loch; weiter außen scheint der gemeinsame Hintergrund durch */
-  float core = smoothstep(7.5, 4.0, length(p0));
+  /* deckt den gemeinsamen Hintergrund nur nahe am Loch ab und läuft vor dem Rand des Zeichenfelds aus */
+  float core = smoothstep(uQ.y*1.2, uQ.y*0.7, length(p0));
   if(!hit) col += tr*holeStars(normalize(v), PX/D)*0.9*core;
   GLW += max(glow - 0.25, 0.0)*1.2;
   float F = smoothstep(uQ.y*1.27, uQ.y, length(p0));
@@ -1892,7 +1911,10 @@ float mapM(vec3 q){
     float a = length(q - vec3(0.0, 0.2, 0.0)) - 0.6;
     float b = sdEll(q - vec3(0.05, -0.48, 0.06), vec3(0.56, 0.3, 0.44));
     float d = smin(a, b, 0.05);
-    return d - 0.05*snoise(q*6.5 + uSeed) - 0.025*snoise(q*13.0 + 3.0);
+    d = d - 0.05*snoise(q*6.5 + uSeed) - 0.025*snoise(q*13.0 + 3.0);
+    /* Boten-RNA: der Faden mit dem Bauplan läuft zwischen den beiden Untereinheiten hindurch */
+    float m = length(vec2(q.y + 0.21 - 0.05*sin(q.x*4.0), q.z - 0.3 - 0.06*cos(q.x*3.0))) - 0.035;
+    return min(d, max(m, abs(q.x) - 1.12));
   }
   if(uMode==4){
     /* DNA-Doppelhelix (B-Form): 3,4 nm pro Windung, 10 Basenpaare, große und kleine Furche */
@@ -1982,6 +2004,29 @@ vec4 shadeMarch(vec2 p){
     alb *= 0.9 + 0.14*snoise(q*9.0 + uSeed);
   }
   else { float isO = step(length(q - vec3(0.0,0.12,0.0)), 0.62); alb = mix(vec3(0.92,0.94,0.98), vec3(0.93,0.36,0.32), isO); }
+  if(uMode==3 || uMode==11){
+    /* weiches Licht mit Verschattung in den Vertiefungen, durchscheinendem Rand und feuchtem Glanz */
+    if(uMode==3){
+      float isM = step(length(vec2(q.y + 0.21 - 0.05*sin(q.x*4.0), q.z - 0.3 - 0.06*cos(q.x*3.0))), 0.06);
+      alb = mix(alb, mix(vec3(0.42,0.72,0.78), vec3(0.62,0.5,0.85), step(q.y, -0.2)), 0.55*smoothstep(0.1, 0.4, snoise(q*3.3 + 7.0 + uSeed)));
+      alb = mix(alb, vec3(0.98,0.42,0.62), isM);
+    } else {
+      /* Kapsid aus einzelnen Eiweißbausteinen */
+      vec3 wc = worley(q*13.0 + uSeed);
+      alb *= 0.82 + 0.3*smoothstep(0.05, 0.4, wc.y - wc.x)*step(-0.02, q.y);
+    }
+    float occ = 0.0, ow = 1.0;
+    for(int k=ZERO;k<4;k++){ float hs = 0.03 + 0.07*float(k); occ += ow*(hs - mapM(q + n*hs)); ow *= 0.6; }
+    float ao = clamp(1.0 - 2.4*occ, 0.0, 1.0);
+    float wrapL = clamp(dif*0.5 + 0.5, 0.0, 1.0);
+    vec3 hv = normalize(LD + vec3(0.0,0.0,1.0));
+    col = alb*(0.07 + 0.9*max(dif, 0.0)*ao + 0.3*wrapL*wrapL*ao);
+    col += alb*vec3(1.0,0.55,0.45)*0.18*pow(1.0 - wrapL, 2.0)*ao;
+    col += mix(alb, vec3(0.6,0.82,1.0), 0.55)*pow(fres, 1.5)*0.6*(0.35 + 0.65*ao);
+    col += vec3(1.0)*pow(max(dot(nw, hv), 0.0), 34.0)*0.32*ao;
+    GLW += max(col - 0.85, 0.0)*0.6;
+    return vec4(col, 1.0);
+  }
   float toon = 0.5 + 0.5*smoothstep(-0.3, 0.6, dif);
   col = alb*toon*(1.0 - 0.75*smoothstep(0.55, 0.9, fres));
   if(uMode==5){ vec3 hv = normalize(LD + vec3(0.0,0.0,1.0)); col += vec3(1.0)*pow(max(dot(nw,hv),0.0), 60.0)*0.4; }
@@ -2002,6 +2047,24 @@ float faceH(vec2 q){
   h -= 0.07*exp(-pow((q.y + 0.95 - 0.12*q.x)/0.2, 2.0) - pow((q.x - 0.5)/1.3, 2.0));
   return h;
 }
+/* Feinrelief der Haut: Lachfältchen am äußeren Lidwinkel, Fältchen unter dem Auge, Stirnlinien, Poren und Hautfelder.
+   Als Höhe, nicht als Farbe: So fängt jede Falte Licht und Schatten wie echte Haut. */
+float skinD(vec2 q){
+  float h = 0.0;
+  vec2 cf = q - vec2(-1.36, 0.06); float rc = length(cf), ac = atan(cf.y, -cf.x);
+  float fan = smoothstep(0.1, 0.28, rc)*smoothstep(1.0, 0.4, rc)*smoothstep(0.7, 0.4, abs(ac + 0.05));
+  h -= 0.009*fan*pow(0.5 + 0.5*cos(ac*13.0 + 1.3*sin(rc*5.0 + ac*3.0)), 8.0)*(0.45 + 0.55*snoise(vec3(ac*3.5, 1.0, uSeed)));
+  float e2 = max(1.0 - q.x*q.x/1.75, 0.0), lo2 = -0.38*pow(e2, 0.9), env = smoothstep(1.4, 0.7, abs(q.x));
+  h -= 0.008*exp(-pow((q.y - lo2 + 0.2 + 0.04*q.x)/0.03, 2.0))*env;
+  h -= 0.006*exp(-pow((q.y - lo2 + 0.43 + 0.08*q.x)/0.04, 2.0))*env;
+  h -= 0.006*exp(-pow((q.y - 3.0 - 0.07*sin(q.x*1.3))/0.05, 2.0))*smoothstep(-3.0, -1.2, q.x)*smoothstep(2.4, 1.0, q.x);
+  h -= 0.005*exp(-pow((q.y - 3.62 - 0.06*sin(q.x*1.1 + 1.0))/0.06, 2.0))*smoothstep(-3.0, -1.2, q.x)*smoothstep(2.4, 1.0, q.x);
+  vec3 w = worley(vec3(q*30.0, uSeed));
+  h -= 0.0016*smoothstep(0.3, 0.0, w.x)*lodw(30.0);
+  h += 0.0009*smoothstep(0.02, 0.2, w.y - w.x)*lodw(30.0);
+  h += 0.0012*fbm(vec3(q, uSeed), 14.0, 4);
+  return h;
+}
 /* Deckung eines Haares: dünner als ein Pixel wird es blasser statt zu verschwinden */
 float strandCov(float d, float w){ float ww = max(w, PX); return (w/ww)*clamp((0.5*ww - d)/PX + 0.5, 0.0, 1.0); }
 vec4 eye(vec2 q){
@@ -2016,18 +2079,18 @@ vec4 eye(vec2 q){
   float hc = faceH(q), ee = 0.03;
   vec3 n = normalize(vec3(-(faceH(q + vec2(ee,0.0)) - faceH(q - vec2(ee,0.0)))/(2.0*ee), -(faceH(q + vec2(0.0,ee)) - faceH(q - vec2(0.0,ee)))/(2.0*ee), 1.0));
   float pore = fbm(vec3(q, uSeed), 26.0, 5), fine = fbm(vec3(q, uSeed + 2.0), 7.0, 5);
-  n = bumpN(n, vec3(q, 0.0), 0.0018*pore + 0.005*fine, 1.0);
-  vec3 alb = vec3(0.74,0.53,0.44)*(0.9 + 0.12*fine);
-  /* Hautton: um die Lider rötlicher und dünner, unter dem Auge etwas dunkler, feine Fältchen am Unterlid */
+  /* Neigung des Feinreliefs aus vier Proben im Raum (glatt bei jeder Auflösung) */
+  { float es = max(0.006, 1.2*PX); vec2 gs = vec2(0.0);
+    for(int k=ZERO;k<4;k++){ vec2 o = k==0 ? vec2(es,0.0) : k==1 ? vec2(-es,0.0) : k==2 ? vec2(0.0,es) : vec2(0.0,-es); gs += o*skinD(q + o); }
+    gs /= 2.0*es*es;
+    n = normalize(vec3(n.xy/max(n.z, 0.2) - gs, 1.0)); }
+  vec3 alb = vec3(0.76,0.55,0.46)*(0.96 + 0.05*fine);
+  alb *= mix(vec3(1.03,0.98,0.96), vec3(0.97,1.0,1.02), 0.5 + 0.5*snoise(vec3(q*1.7, 5.0)));
+  /* Hautton: um die Lider rötlicher und dünner, unter dem Auge etwas dunkler */
   float nearEye = exp(-(q.x*q.x/2.6 + q.y*q.y/1.0));
   alb = mix(alb, vec3(0.72,0.44,0.4), 0.3*nearEye);
   alb *= 1.0 - 0.14*exp(-pow((q.y + 0.8 - 0.1*q.x)/0.28, 2.0) - pow((q.x - 0.3)/1.5, 2.0));
-  alb *= 1.0 - 0.07*smoothstep(0.3, 0.5, abs(fract((q.y + 0.06*q.x*q.x)*9.0 + 0.25*snoise(vec3(q*2.0, 3.0))) - 0.5))*smoothstep(-1.2, -0.5, q.y)*smoothstep(-0.25, -0.45, q.y)*smoothstep(1.4, 0.6, abs(q.x))*lodw(9.0);
   alb = mix(alb, vec3(0.78,0.46,0.42), 0.35*exp(-dot(q - vec2(1.6,-0.1), q - vec2(1.6,-0.1))/0.6));
-  /* Lachfältchen am äußeren Lidwinkel */
-  vec2 cf = q - vec2(-1.45, 0.05); float rc = length(cf), ac = atan(cf.y, cf.x);
-  float crow = smoothstep(0.35, 0.6, rc)*smoothstep(1.7, 1.0, rc)*step(q.x, -1.3);
-  alb *= 1.0 - 0.18*crow*smoothstep(0.42, 0.5, abs(fract(ac*11.0/TAU + 0.12*snoise(vec3(cf*3.0, 1.0))) - 0.5) + 0.0)*lodw(11.0);
   /* Lidfalte */
   float crease = exp(-pow((q.y - up - 0.3 - 0.1*e)/0.035, 2.0))*step(0.0, q.y - up)*smoothstep(1.5, 0.6, abs(q.x));
   alb *= 1.0 - 0.5*crease;
@@ -2859,35 +2922,61 @@ float shapeD(vec3 q){
   return smax(sdEll(q,vec3(1.0,0.93,0.97)), -(length(q-vec3(0.05,-1.3,0.25))-0.6), 0.12);
 }
 float sdf(vec3 q){ return shapeD(q) + uQ.z*fbm(q+uSeed,1.8,4); }
-vec4 shade(vec2 p){
-  if(dot(p,p)>1.25) return vec4(0.0);
-  mat3 Rv = rotX(0.4 + uRot.y)*rotY(uT*0.045 + uSeed + uRot.x);
-  mat3 Ri = transpose(Rv);
-  vec3 ro = Ri*vec3(p,1.6), rd = Ri*vec3(0.0,0.0,-1.0);
-  float t=0.0, dm=1e9, tm=0.0; bool hit=false;
-  for(int i=ZERO;i<90;i++){ vec3 q=ro+rd*t; float d=sdf(q); if(d<dm){dm=d;tm=t;} if(d<0.0004){hit=true;break;} t+=max(d*0.75,0.002); if(t>3.2) break; }
-  float a = hit ? 1.0 : smoothstep(1.5*PX,0.0,dm);
-  if(a<=0.0) return vec4(0.0);
-  vec3 q = ro+rd*(hit?t:tm);
-  vec2 e = vec2(1.0,-1.0)*max(0.0015,PX*0.5);
-  vec3 n = normalize(e.xyy*sdf(q+e.xyy)+e.yyx*sdf(q+e.yyx)+e.yxy*sdf(q+e.yxy)+e.xxx*sdf(q+e.xxx));
-  PX = PX/max(abs(dot(n,rd)),0.25);
-  float h = craters(q,2.2,0.5,uQ.x) + 0.006*fbm(q+5.0,9.0,12);
+/* Feinrelief als Versatz der Oberfläche: Körnung, Blöcke (Geröllhaufen wie Bennu) und Rillen (Phobos).
+   Es geht in die Normale ein, die aus vier Proben im Raum entsteht – nicht aus Differenzen zwischen Bildpunkten,
+   denn die flimmern bei jeder Bewegung und wirken verpixelt. Rillen sind mindestens zwei Bildpunkte breit. */
+float relief(vec3 q){
+  float h = 0.006*fbm(q+5.0,9.0,8);
   if(uQ.y>0.0){
     vec3 w1 = worley(q*16.0+uSeed), w2 = worley(q*40.0+uSeed+3.0);
     h += uQ.y*(0.007*smoothstep(0.45,0.0,w1.x)*lodw(16.0) + 0.0035*smoothstep(0.45,0.0,w2.x)*lodw(40.0));
   }
   if(uQ.w>0.5){
+    float wg = max(0.2, 96.0*PX);
     float gr = abs(sin(dot(q,normalize(vec3(1.0,0.35,0.2)))*48.0 + 2.0*fbm(q,3.0,4)));
-    h -= 0.004*smoothstep(0.2,0.0,gr)*smoothstep(-0.3,0.2,q.x)*lodw(48.0);
+    h -= 0.004*(0.2/wg)*smoothstep(wg,0.0,gr)*smoothstep(-0.3,0.2,q.x)*lodw(24.0);
   }
-  n = bumpN(n,q,h,1.0);
+  return h;
+}
+float sdr(vec3 q){ return sdf(q) - relief(q); }
+vec4 shade(vec2 p){
+  float r2 = dot(p,p);
+  if(r2>1.3) return vec4(0.0);
+  mat3 Rv = rotX(0.4 + uRot.y)*rotY(uT*0.045 + uSeed + uRot.x);
+  mat3 Ri = transpose(Rv);
+  vec3 ro = Ri*vec3(p,1.6), rd = Ri*vec3(0.0,0.0,-1.0);
+  /* nur innerhalb der Hüllkugel abtasten; fern der Oberfläche genügt die grobe Form (zwei Oktaven),
+     der Rest ist als Sicherheitsabstand eingerechnet. Das spart rund drei Viertel der Rechenzeit. */
+  float hz = sqrt(1.3 - r2), t = 1.6 - hz, t1 = 1.6 + hz, mg = 0.2*uQ.z + 0.004;
+  float dm = 1e9, tm = t; bool hit = false;
+  for(int i=ZERO;i<64;i++){
+    vec3 q = ro+rd*t;
+    float d = shapeD(q) + uQ.z*0.8*fbm(q+uSeed,1.8,2);
+    if(d < mg + 0.03){ d = sdf(q); if(d<dm){dm=d;tm=t;} if(d<0.0005){hit=true;break;} t += max(d*0.8,0.0015); }
+    else t += (d - mg)*0.9;
+    if(t>t1) break;
+  }
+  float a = hit ? 1.0 : smoothstep(1.5*PX,0.0,dm);
+  if(a<=0.0) return vec4(0.0);
+  vec3 q = ro+rd*(hit?t:tm);
+  float px0 = PX;
+  PX = PX/max(sqrt(max(1.0 - r2, 0.0)), 0.25);
+  vec2 e = vec2(1.0,-1.0)*max(0.0015,px0*0.6);
+  vec3 n = vec3(0.0);
+  for(int k=ZERO;k<4;k++){ vec3 o = k==0 ? e.xyy : k==1 ? e.yyx : k==2 ? e.yxy : e.xxx; n += o*sdr(q+o); }
+  n = normalize(n);
+  /* Krater: ihre Neigung kommt als Formel (HG), wie bei den Planeten */
+  HG = vec3(0.0); craters(q,2.2,0.5,uQ.x);
+  vec3 gv = HG - n*dot(HG,n); float gl = length(gv); if(gl>1.2) gv *= 1.2/gl;
+  n = normalize(n - gv);
   vec3 nw = Rv*n;
   float ndl = dot(nw,LD);
   vec3 alb = uA*(0.72+0.56*(0.5+0.5*fbm(q+9.0,3.0,12)));
   vec3 col = alb*(max(ndl,0.0)*1.35 + 0.014);
+  PX = px0;
   return vec4(col*a,a);
-}`;
+}
+`;
 SRC.star = `
 vec4 shade(vec2 p){
   float r = length(p);
@@ -3217,9 +3306,9 @@ void main(){
     /* Oortsche Wolke: innen eine flachere Scheibe (Hills-Wolke), außen eine Kugelschale mit Bahnen in alle Richtungen.
        Die ersten Punkte sind Kometen auf langgestreckten Bahnen mit Schweif von der Sonne weg. */
     mat3 tilt = rotX(1.05)*rotY(0.3);
-    if(i < 132){
+    if(i < 55){
       int c = i/11, kk = i - c*11;
-      float e = 0.93 + 0.05*rn(c,1), a = 0.2 + 0.3*rn(c,2), M = uT*(0.05 + 0.05*rn(c,3)) + TAU*rn(c,4);
+      float e = 0.93 + 0.05*rn(c,1), a = 0.2 + 0.3*rn(c,2), M = uT*(0.014 + 0.012*rn(c,3)) + TAU*rn(c,4);
       float E = M; for(int n=0;n<4;n++) E = M + e*sin(E);
       vec3 ax = rdir(rn(c,5), rn(c,6)), bx = normalize(cross(ax, vec3(0.3,0.5,0.8))), cx = cross(ax, bx);
       vec2 o2 = vec2(a*(cos(E) - e), a*sqrt(1.0 - e*e)*sin(E));
@@ -3231,24 +3320,29 @@ void main(){
       put(P, kk == 0 ? 3.2 : 2.6*fk + 0.8, col, 0.7);
       return;
     }
+    /* Die Körper selbst stehen praktisch still (Umlaufzeiten von Millionen Jahren) und sind einzeln unsichtbar.
+       Die Punkte zeigen deshalb nur, wo solche Körper vermutet werden: Sie blenden langsam ein und aus,
+       und jedes Mal steht der Punkt für einen anderen Körper an anderer Stelle. */
+    float T = 14.0 + 18.0*rn(i,6), ph = uT/T + rn(i,8)*7.0, f = fract(ph);
+    int j = i*29 + int(mod(floor(ph), 2048.0))*4099 + 3;
     vec3 P; vec3 col;
-    if(rn(i,7) < 0.3){
-      float r = mix(0.035, 0.3, pow(rn(i,1), 0.7)), a = TAU*rn(i,2) + uT*0.006/pow(r/0.3, 1.5);
-      P = tilt*vec3(cos(a)*r, sin(a)*r, gauss(rn(i,3), rn(i,4))*r*0.24);
+    if(rn(j,7) < 0.3){
+      float r = mix(0.035, 0.3, pow(rn(j,1), 0.7)), a = TAU*rn(j,2);
+      P = tilt*vec3(cos(a)*r, sin(a)*r, gauss(rn(j,3), rn(j,4))*r*0.24);
       col = vec3(0.86,0.9,1.0)*0.5;
     } else {
-      float r = mix(0.28, 1.0, pow(rn(i,1), 0.72));
-      vec3 d = rdir(rn(i,2), rn(i,3)), ax = normalize(cross(d, rdir(rn(i,4), rn(i,5)) + 1e-3));
-      P = rotAx(d*r, ax, uT*0.01/pow(r, 1.5));
+      float r = mix(0.28, 1.0, pow(rn(j,1), 0.72));
+      P = rdir(rn(j,2), rn(j,3))*r;
       col = vec3(0.68,0.8,1.0)*0.5*smoothstep(1.0, 0.92, r);
     }
-    float tw = 0.65 + 0.35*sin(uT*(0.4 + rn(i,6)) + TAU*rn(i,8)), mag = pow(rn(i,9), 5.0);
-    put(P, 1.2 + 2.0*mag, col*tw*(0.7 + 1.6*mag), 0.2);
+    float env = pow(sin(PI*f), 2.0), mag = pow(rn(j,9), 5.0);
+    put(P, 1.2 + 2.0*mag, col*env*(0.7 + 1.6*mag), 0.2);
   } else if(uMode==2){
-    /* Kugelsternhaufen: Dichte nach Plummer, jeder Stern auf einer eigenen Kreisbahn um das Zentrum */
+    /* Kugelsternhaufen: Dichte nach Plummer, jeder Stern auf einer eigenen Bahn um das Zentrum.
+       Im starken Zeitraffer und trotzdem ruhig: Ein Umlauf dauert in Wirklichkeit Hunderttausende Jahre. */
     float u = rn(i,0)*0.985 + 0.005, r = min(0.16/sqrt(pow(u, -0.6667) - 1.0), 1.5);
     vec3 d = rdir(rn(i,1), rn(i,2)), ax = normalize(cross(d, rdir(rn(i,3), rn(i,4)) + 1e-3));
-    vec3 P = rotAx(d*r, ax, uT*0.012/pow(r + 0.05, 1.5)*(0.6 + 0.8*rn(i,7)));
+    vec3 P = rotAx(d*r, ax, uT*0.0016/pow(r + 0.05, 1.5)*(0.6 + 0.8*rn(i,7)));
     float ty = rn(i,5), mag = pow(rn(i,6), 5.0);
     vec3 col = ty < 0.09 ? vec3(1.0,0.6,0.36) : ty < 0.15 ? vec3(0.72,0.82,1.0) : vec3(1.0,0.92,0.76);
     float big = ty < 0.09 ? 1.0 : 0.0;
@@ -3292,7 +3386,7 @@ void main(){
     if(t < 0.42){ c = vec3(-0.25, 0.1, 0.0); rr = 0.17; } else if(t < 0.9){ c = vec3(0.25, -0.05, 0.0); rr = 0.21; } else { c = vec3(0.0); rr = 0.9; }
     float r = rr*(0.14 + 0.86*pow(rn(i,1), 0.8));
     vec3 d = rdir(rn(i,2), rn(i,3)), ax = normalize(cross(d, rdir(rn(i,4), rn(i,6)) + 1e-3));
-    vec3 P = c + rotAx(d*r, ax, uT*0.03/(r/rr + 0.15))*vec3(1.0, 1.0, 0.6);
+    vec3 P = c + rotAx(d*r, ax, uT*0.006/(r/rr + 0.15))*vec3(1.0, 1.0, 0.6);
     float mag = pow(rn(i,5), 3.0);
     put(P, 1.6 + 4.6*mag, vec3(0.85,0.88,1.0)*(0.3 + 0.85*mag)*smoothstep(1.0, 0.85, length(P)), 0.3);
   } else if(uMode==5){
@@ -3348,7 +3442,7 @@ void main(){
     if(t < 0.25){
       vec3 d = rdir(rn(i,1), rn(i,2)); float r = 0.5*pow(rn(i,3), 1.6);
       vec3 P = d*r*vec3(1.0, 0.8, 0.6) + vec3(0.05, 0.02, 0.0);
-      float mag = pow(rn(i,5), 5.0), tw = 0.75 + 0.25*sin(uT*(0.8 + 2.0*rn(i,6)) + TAU*rn(i,7));
+      float mag = pow(rn(i,5), 5.0), tw = 1.0;
       put(P, 1.4 + 4.0*mag, mix(vec3(0.75,0.85,1.0), vec3(1.0,0.9,0.8), rn(i,8))*(0.35 + 1.3*mag)*tw, 0.6);
     } else {
       float T = 30.0 + 30.0*rn(i,3), ph = fract(uT/T + rn(i,4));
@@ -3398,7 +3492,7 @@ function histPop(k){ if (!HIST[k]) return; HIST[k] = false; try { history.back()
   aria('#ov', 'True-to-scale view from the Planck length through the astronaut to the observable universe');
   set('.brand span', 'Cosmic Scale'); aria('.meta', 'Site information');
   set('#impBtn', 'Legal notice'); lastText('#coffee', 'Buy me a coffee'); set('#sndLbl', 'Sound on');
-  set('.readout .lbl', 'View width'); set('#symb', 'Colours symbolic');
+  set('.readout .lbl', 'View width'); set('#symb', 'Colours symbolic'); set('#tlapse', 'Time-lapse');
   set('#compBtn span', 'Composition'); firstText('#detOpen', 'View details ');
   aria('#detCtl', 'Object view'); aria('#detZout', 'Zoom out'); aria('#detZreset', 'Reset view'); aria('#detZin', 'Zoom in');
   lastText('#detBack', 'Back to the scale');
@@ -3495,7 +3589,7 @@ function setupTextures(){
 function makeProg(name){
   const fs = gl.createShader(gl.FRAGMENT_SHADER);
   const [k, m = '0', f = '0'] = name.split(':');
-  const defs = 'const int uMode = ' + m + ';\n#define FLAT ' + f + '\n' + (k === 'craft' && m === '0' ? '#define ASTRO\n' : '') + (MOBILE ? '#define LOWQ\n' : '') + (k === 'planet' ? '#define CRG\n' : '') + (MRT ? '#define MRT\n' : '');
+  const defs = 'const int uMode = ' + m + ';\n#define FLAT ' + f + '\n' + (k === 'craft' && m === '0' ? '#define ASTRO\n' : '') + (MOBILE ? '#define LOWQ\n' : '') + (k === 'planet' || k === 'rock' ? '#define CRG\n' : '') + (k === 'micro' ? '#define BFADE\n' : '') + (MRT ? '#define MRT\n' : '');
   /* pts: Partikel mit eigenem Vertex-Shader, der Ort und Farbe jedes Punktes berechnet */
   let vs = vsh;
   if (k === 'pts') { vs = gl.createShader(gl.VERTEX_SHADER); gl.shaderSource(vs, GLSL_pts_vert.replace('//@DEFS', defs)); gl.compileShader(vs); gl.shaderSource(fs, GLSL_pts_frag.replace('//@DEFS', defs)); }
@@ -4298,6 +4392,8 @@ function fmtTime(x){
 function hud(s, w){
   const lt = LT('Licht: ', 'Light: ') + fmtTime(W/s/299792458); if (lt !== hud.lt) { hud.lt = lt; $('ltime').textContent = lt; }
   const sym = w/FR < 4e-7; if (sym !== hud.sym) { hud.sym = sym; $('symb').hidden = !sym; }
+  /* bewegte Großstrukturen laufen im Zeitraffer */
+  const tl = !!OBJ[focus].tl; if (tl !== hud.tl) { hud.tl = tl; $('tlapse').hidden = !tl; }
   setFocus(clamp(Math.round(t), 0, N-1));
   const vis = W / s, fv = fmtLen(vis);
   if (fv !== lastFov) { lastFov = fv; $('fov').textContent = fv; $('pow').textContent = '≈ 10' + sup(Math.round(Math.log10(vis))) + ' m'; }
@@ -4574,10 +4670,32 @@ function introSetup(skip){
     ttl.appendChild(w);
   });
   introActive = true; introCover = true;
-  orreryStart();
   $('introSound').addEventListener('click', () => introGo(true));
   $('introQuiet').addEventListener('click', () => introGo(false));
-  setTimeout(() => { try { $('introSound').focus({preventScroll: true}); } catch (e) {} }, 2200);
+}
+/* Ladesequenz beim Aufruf: Shader übersetzen, 3D-Modelle laden und vorwärmen kostet in den ersten Sekunden Rechenzeit
+   und ließe das Intro ruckeln. Solange zeigt die Seite nur einen ruhigen Ladepunkt (reine CSS-Animation, läuft auch
+   flüssig, wenn die Seite gerade beschäftigt ist). Danach starten Titel und Planetarium.
+   Mit paralleler Übersetzung (Chrome, Edge) wird auf alles gewartet; ohne (Firefox) nur auf die 3D-Modelle, weil die
+   Shader dort ohnehin im Hintergrund entstehen und der Anflug auf sie wartet. */
+const bootT0 = performance.now(); let bootDone = false;
+function bootReady(now){
+  const el = now - bootT0;
+  if (!gl || el > 10000) return true;
+  if (PEXT) return LOAD.all;
+  return el > 600 && T3.state !== 'loading' && (T3.state !== 'ready' || !!T3.models[0] || !!T3.bad[0]) || el > 7000;
+}
+function bootStep(now){
+  if (bootDone) return;
+  const b = $('bootBar'); if (b) b.style.transform = 'scaleX(' + (PEXT ? loadFrac() : Math.min(.92, (now - bootT0)/3000)).toFixed(3) + ')';
+  if (!bootReady(now)) return;
+  bootDone = true;
+  const el = $('boot'); if (el) { el.classList.add('done'); setTimeout(() => el.remove(), 800); }
+  const it = $('intro');
+  if (it && introActive) {
+    it.classList.remove('wait'); orreryStart();
+    setTimeout(() => { try { $('introSound').focus({preventScroll: true}); } catch (e) {} }, 2200);
+  }
 }
 /* Planetarium: eigenständige Intro-Szene mit stilisierten Abständen */
 const ORR = {raf: 0, t0: 0};
@@ -4884,6 +5002,7 @@ function frame(now){
     det.z = Math.exp(Math.log(det.z) + (Math.log(det.zt) - Math.log(det.z))*k);
     det.px += (det.pxt - det.px)*k; det.py += (det.pyt - det.py)*k; }
   spinStep(dt);
+  bootStep(now);
   if (introActive) astroDrop = H*1.4;
   else if (introT0) {
     if (!dropT0 || now < dropT0) astroDrop = H*1.4;
