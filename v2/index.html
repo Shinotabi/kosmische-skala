@@ -330,6 +330,35 @@ body.detail-on .det-ctl{opacity:1;transform:translate(-50%,0);pointer-events:aut
 }
 @media (prefers-reduced-motion:reduce){.toast{transition:none}body.menu-on .meta{animation:none}}
 .brand .ver{font-style:normal;font-size:9px;letter-spacing:.1em;padding:2px 5px 1px;border:1px solid var(--faint);border-radius:999px;color:var(--sun)}
+
+/* ---------- Detailansicht auf schmalen Bildschirmen: große Objektfläche, Infokarte als Lasche ---------- */
+.det-grab,.det-morebtn,.det-top,#detPeek{display:none}
+@media (max-width:760px){
+  #detPeek{display:block;position:fixed;visibility:hidden;pointer-events:none;left:0;bottom:0;width:1px;height:calc(188px + env(safe-area-inset-bottom,0px))}
+  .detail{top:auto;bottom:0;height:72%;width:100%;opacity:1;background:rgba(8,10,19,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--faint);border-radius:22px 22px 0 0;
+    transform:translateY(102%);transition:transform .55s cubic-bezier(.2,.7,.2,1);touch-action:none}
+  .detail.on{transform:translateY(calc(100% - 188px - env(safe-area-inset-bottom,0px)))}
+  .detail.on.open{transform:none;touch-action:auto}
+  .det-grab{display:grid;place-items:center;appearance:none;background:none;border:0;width:100%;height:26px;padding:0;cursor:pointer}
+  .det-grab i{width:38px;height:4px;border-radius:2px;background:rgba(150,165,210,.45)}
+  .det-scroll{height:calc(100% - 26px);padding:0 18px calc(env(safe-area-inset-bottom,0px) + 28px);overflow:hidden}
+  .detail.open .det-scroll{overflow-y:auto}
+  .detail h2{font-size:30px;line-height:1.1;margin:8px 0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .detail.open h2{white-space:normal}
+  .det-morebtn{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;appearance:none;margin:14px 0 0;height:40px;padding:0 14px;border-radius:12px;border:1px solid rgba(242,194,124,.35);background:rgba(242,194,124,.08);color:var(--sun);font:500 12px var(--mono);letter-spacing:.06em;cursor:pointer;text-align:left}
+  .det-morebtn span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .det-morebtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .det-morebtn:focus-visible,.det-grab:focus-visible{outline:2px solid var(--sun);outline-offset:-2px}
+  .detail.open .det-morebtn{display:none}
+  .det-lead{margin-top:14px}
+  .det-top{display:flex;gap:8px;position:fixed;z-index:16;left:12px;top:calc(env(safe-area-inset-top,0px) + 56px);opacity:0;pointer-events:none;transition:opacity .4s}
+  body.detail-on .det-top{opacity:1;pointer-events:auto}
+  .det-top .det-back,.det-top .det-share{margin:0;height:36px;background:rgba(10,13,24,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  .det-ctl,body.detail-on .det-ctl{left:12px;right:12px;bottom:calc(188px + env(safe-area-inset-bottom,0px) + 12px);transform:none;flex-direction:row;justify-content:space-between;align-items:center;gap:8px}
+  body.sheet-open .det-ctl{opacity:0!important;pointer-events:none!important}
+}
+@media (prefers-reduced-motion:reduce){.detail{transition:none}}
+.brand span{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -4073,12 +4102,22 @@ const det = {j: -1, k: 0, target: 0, z: 1, zt: 1, px: 0, py: 0, pxt: 0, pyt: 0};
 const ROT = new Set(['craft','rock','planet','star','hole','pulsar','orbits','helio','oort','proxima','nebula','cluster','galaxy','web']);
 OBJ.forEach(o => { if (ROT.has(o.k) || o.g.rot) o.rot = {yaw: 0, pitch: 0, vy: 0, vp: 0, ret: false}; });
 /* Lage des Objekts in der Detailansicht bei Zoom 1 und der freie Bildbereich daneben */
+/* Infokarte auf schmalen Bildschirmen: 0 = Lasche am unteren Rand, 1 = geöffnet. PEEKH ist die Höhe der Lasche. */
+let sheetK = 0, sheetT = 0, PEEKH = 188;
+function setSheet(open){
+  sheetT = open ? 1 : 0;
+  $('detail').classList.toggle('open', open); document.body.classList.toggle('sheet-open', open);
+  const g = $('detGrab'); if (g) g.setAttribute('aria-expanded', open);
+  if (!open) $('detScroll').scrollTop = 0;
+}
 function detBase(){
   const o = OBJ[det.j], narrow = W < 760;
-  const vmD = narrow ? Math.min(W*.9, H*.38 - 74) : Math.min(W*.52, H*.8);
+  /* schmal: Das Objekt füllt den Raum zwischen Kopfzeile und Oberkante der Karte */
+  const sb = narrow ? H - (PEEKH + (H*.72 - PEEKH)*sheetK) : H, st = 96;
+  const vmD = narrow ? Math.min(W*.94, (sb - st)*.9) : Math.min(W*.52, H*.8);
   const fr = o.k === 'star' ? 1.55 : o.k === 'helio' ? 1.9 : o.k === 'cluster' ? 1.4 : o.k === 'craft' ? 1.08 : 1.18;
-  const vr = narrow ? W : W - Math.min(480, W), vb = narrow ? H*.38 : H;
-  return {vmD, fr, ox: narrow ? W/2 : vr/2 + 20, oy: narrow ? 58 + (H*.38 - 58)/2 : H*.5, r1: vmD/(2*fr), vr, vb};
+  const vr = narrow ? W : W - Math.min(480, W), vb = sb;
+  return {vmD, fr, ox: narrow ? W/2 : vr/2 + 20, oy: narrow ? st + (sb - st)/2 : H*.5, r1: vmD/(2*fr), vr, vb};
 }
 function detClampPan(){
   const b = detBase(), rz = b.r1*det.zt, mx = Math.max(0, rz - 40), my = Math.max(0, rz - 40);
@@ -4116,6 +4155,7 @@ function openDetail(){
   if (touring) setTour(false);
   vel = 0; targetT = t;
   det.j = j; det.target = 1;
+  setSheet(false); sheetK = 0;
   histPush('det');
   track('detail', {objekt: o.id});
   det.z = det.zt = 1; det.px = det.py = det.pxt = det.pyt = 0;
@@ -4166,6 +4206,7 @@ function openDetail(){
 function closeDetail(){
   if (!det.target) return;
   det.target = 0;
+  setSheet(false);
   histPop('det');
   detReset(); dptr.pts.clear(); dptr.mode = null;
   const d = $('detail'); d.classList.remove('on'); d.setAttribute('aria-hidden', 'true');
@@ -4192,6 +4233,7 @@ function frame(now){
   qT += dt;
   det.k += (det.target - det.k)*(reduce ? 1 : 1 - Math.exp(-dt*4.2));
   if (!det.target && det.k < .002) { det.k = 0; det.j = -1; }
+  sheetK += (sheetT - sheetK)*(reduce ? 1 : 1 - Math.exp(-dt*9));
   { const k = reduce ? 1 : 1 - Math.exp(-dt*11);
     det.z = Math.exp(Math.log(det.z) + (Math.log(det.zt) - Math.log(det.z))*k);
     det.px += (det.pxt - det.px)*k; det.py += (det.pyt - det.py)*k; }
@@ -4395,6 +4437,39 @@ function jumpTo(j){
   /* Startbildschirm: Zahl der Objekte aus den Daten */
   const eye = document.querySelector('.intro-eye'); if (eye) eye.textContent = LT('62 Größenordnungen · ' + NR + ' Objekte', '62 orders of magnitude · ' + NR + ' objects');
   rail.setAttribute('aria-valuemax', N);
+})();
+/* ======================================================================
+   Detailansicht auf schmalen Bildschirmen: Das Objekt behält den größten Teil des Bildes. Die Infokarte liegt als
+   Lasche am unteren Rand (Name, Größe, Hinweis auf mehr) und öffnet sich durch Tippen oder Hochziehen.
+   ====================================================================== */
+(function sheet(){
+  const d = $('detail'), sc = $('detScroll');
+  const grab = mk('button', {type: 'button', id: 'detGrab', cls: 'det-grab', ariaLabel: LT('Infokarte öffnen oder einklappen', 'Open or collapse the info card'), ariaExpanded: 'false'}, mk('i'));
+  d.prepend(grab);
+  const more = mk('button', {type: 'button', id: 'detMoreBtn', cls: 'det-morebtn'}, mk('span', {textContent: LT('Steckbrief und Hintergrund', 'Key facts and background')}), icon('M6 15l6-6 6 6'));
+  d.querySelector('.det-size').after(more);
+  /* Höhe der Lasche samt Rand für die Bedienleiste des Telefons */
+  const probe = mk('div', {id: 'detPeek'}); document.body.appendChild(probe);
+  const upd = () => { PEEKH = probe.offsetHeight || 188; };
+  upd(); addEventListener('resize', upd);
+  /* Zurück und Teilen stehen auf schmalen Bildschirmen oben über dem Objekt statt in der Karte */
+  const top = mk('div', {id: 'detTop', cls: 'det-top'}); document.body.appendChild(top);
+  const mq = matchMedia('(max-width:760px)');
+  const place = () => { const b = $('detBack'), s = $('detShare'); if (mq.matches) top.append(b, s); else { sc.prepend(b); b.after(s); } upd(); };
+  place(); if (mq.addEventListener) mq.addEventListener('change', place);
+
+  const isOpen = () => d.classList.contains('open');
+  grab.addEventListener('click', e => { e.stopPropagation(); setSheet(!isOpen()); });
+  more.addEventListener('click', e => { e.stopPropagation(); setSheet(true); track('detail-karte', {objekt: det.j >= 0 ? OBJ[det.j].id : ''}); });
+  d.addEventListener('click', e => { if (mq.matches && !isOpen() && !e.target.closest('a,button')) setSheet(true); });
+  /* Hochziehen öffnet, Herunterziehen am Anfang des Textes klappt wieder ein */
+  let y0 = null, st0 = 0;
+  d.addEventListener('touchstart', e => { y0 = e.touches[0].clientY; st0 = sc.scrollTop; }, {passive: true});
+  d.addEventListener('touchend', e => {
+    if (y0 == null) return; const dy = e.changedTouches[0].clientY - y0; y0 = null;
+    if (!mq.matches) return;
+    if (!isOpen() && dy < -24) setSheet(true); else if (isOpen() && st0 <= 0 && dy > 56) setSheet(false);
+  }, {passive: true});
 })();
 })();
 </script>
