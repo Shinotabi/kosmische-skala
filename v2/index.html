@@ -626,7 +626,7 @@ const OBJ = [
    t:'Die Sonne enthält 99,8 % der Masse des Sonnensystems. Rund 1,3 Millionen Erden würden in sie hineinpassen.'},
   {n:'Sirius A', d:1.711*2*RSUN, k:'star', T:9940, cat:'Stern', dot:'#dfe9ff', g:{Q:[0,1.25,70,0]},
    t:'Der hellste Stern am Nachthimmel, 8,6 Lichtjahre entfernt. Er ist heißer als die Sonne und fast doppelt so groß.'},
-  {n:'Sagittarius A*', d:2.54e10, lx:3.4, ly:2.6, k:'hole', cat:'Schwarzes Loch', dot:'#ffb36b', g:{Q:[0,2.8,1.7,.16]},
+  {n:'Sagittarius A*', d:2.54e10, lx:9, ly:5.6, k:'hole', cat:'Schwarzes Loch', dot:'#ffb36b', g:{Q:[0,9,1.7,.16]},
    t:'Das Schwarze Loch im Zentrum der Milchstraße, vier Millionen Sonnenmassen schwer. Sein Schatten wirkt 2,6-mal größer als der Ereignishorizont, weil es das Licht um sich herumbiegt.'},
   {n:'Arktur', d:25.4*2*RSUN, k:'star', T:4290, cat:'Roter Riese', dot:'#ffb469', g:{Q:[0,.9,22,0]},
    t:'Ein Roter Riese im Sternbild Bärenhüter. Unsere Sonne wird sich in etwa fünf Milliarden Jahren ähnlich aufblähen.'},
@@ -647,7 +647,7 @@ const OBJ = [
   {n:'Heliosphäre', d:240*AU, k:'helio', cat:'Grenze', dot:'#8fb3ff',
    marks:[{x:0,y:0,l:'Sonne'},{x:1.42*Math.cos(.6),y:1.42*Math.sin(.6),l:'Voyager 1'},{x:1.18*Math.cos(-2.4),y:1.18*Math.sin(-2.4),l:'Voyager 2'}],
    t:'Die Blase, die der Sonnenwind ins interstellare Gas bläst. Voyager 1 hat sie 2012 verlassen und ist heute rund 170 AE von der Sonne entfernt.'},
-  {n:'M87*', d:3.84e13, lx:3.9, ly:3, k:'hole', cat:'Schwarzes Loch', dot:'#ffa560', g:{Q:[1,3.2,1.15,.34]},
+  {n:'M87*', d:3.84e13, lx:8, ly:5.2, k:'hole', cat:'Schwarzes Loch', dot:'#ffa560', g:{Q:[1,8,1.15,.34]},
    t:'Das erste Schwarze Loch, von dem es ein Bild gibt: 6,5 Milliarden Sonnenmassen im Herzen der Galaxie M87. Sein Ereignishorizont ist größer als unser Sonnensystem.'},
   {n:'TON 618', d:2.4e14, lx:10, ly:6, k:'hole', cat:'Schwarzes Loch', dot:'#ffd0a0', g:{Q:[1.5,10.5,1.6,.24]},
    t:'Eines der massereichsten bekannten Schwarzen Löcher: rund 40 Milliarden Sonnenmassen. Die Scheibe aus Gas, das hineinstürzt, leuchtet heller als hundert Billionen Sonnen.'},
@@ -1808,9 +1808,7 @@ vec3 holeStars(vec3 d, float apx){
 #endif
 vec4 shade(vec2 p0){
   const float D = 46.0;
-  /* Sagittarius A* und M87*: Das heiße Gas leuchtet bis dicht an den Horizont und nur wenige Radien weit hinaus
-     (Bilder des Event Horizon Telescope). TON 618 hat als Quasar eine ausgedehnte Scheibe. */
-  float rout = uQ.y, rin = rout < 6.0 ? 1.5 : 3.0;
+  float rin = 3.0, rout = uQ.y;
   vec2 p = rot2(-0.18)*p0;
   float el = clamp(uQ.w + uRot.y, -1.45, 1.45), az = uRot.x;
   vec3 cpos = D*vec3(sin(az)*cos(el), sin(el), cos(az)*cos(el));
@@ -1860,8 +1858,7 @@ vec4 shade(vec2 p0){
   }
   vec3 glow = col;
   /* eigener, gebogener Sternhimmel nur nahe am Loch; weiter außen scheint der gemeinsame Hintergrund durch */
-  /* deckt den gemeinsamen Hintergrund nur nahe am Loch ab und läuft vor dem Rand des Zeichenfelds aus */
-  float core = smoothstep(uQ.y*1.2, uQ.y*0.7, length(p0));
+  float core = smoothstep(7.5, 4.0, length(p0));
   if(!hit) col += tr*holeStars(normalize(v), PX/D)*0.9*core;
   GLW += max(glow - 0.25, 0.0)*1.2;
   float F = smoothstep(uQ.y*1.27, uQ.y, length(p0));
@@ -4700,7 +4697,11 @@ function bootStep(now){
 /* Planetarium: eigenständige Intro-Szene mit stilisierten Abständen */
 const ORR = {raf: 0, t0: 0};
 function orreryStart(){
-  const cv = $('introCv'), g = cv.getContext('2d');
+  /* Ohne parallele Shader-Übersetzung (Firefox) läuft eine beschleunigte Zeichenfläche über denselben Grafik-Thread wie
+     die Übersetzung und stockt, solange im Hintergrund geladen wird (gemessen: bis über zwei Sekunden am Stück).
+     Dort zeichnet das Intro deshalb ohne Beschleunigung, in einfacher Pixeldichte, damit es flüssig bleibt. */
+  const soft = !!gl && !PEXT;
+  const cv = $('introCv'), g = cv.getContext('2d', soft ? {willReadFrequently: true} : undefined);
   const PL = [
     {r:.17, sz:2.2, c:'#b9b1a8', p:.24}, {r:.25, sz:3.4, c:'#f0d8a4', p:.62}, {r:.34, sz:3.6, c:'#6fa8ff', p:1}, {r:.43, sz:2.8, c:'#d9744a', p:1.88},
     {r:.62, sz:8, c:'#e3c6a2', p:11.9}, {r:.75, sz:6.8, c:'#e6cf9d', p:29.5, ring:1}, {r:.87, sz:4.6, c:'#a9e0e3', p:84}, {r:.98, sz:4.4, c:'#5f86f0', p:165}
@@ -4710,7 +4711,7 @@ function orreryStart(){
   const stars = []; for (let i = 0; i < 380; i++) stars.push([Math.random(), Math.random(), Math.random(), Math.random()*TAU]);
   ORR.t0 = performance.now();
   function draw(now){
-    const dp = Math.min(window.devicePixelRatio || 1, 2), Wc = cv.clientWidth || innerWidth, Hc = cv.clientHeight || innerHeight;
+    const dp = soft ? 1 : Math.min(window.devicePixelRatio || 1, 2), Wc = cv.clientWidth || innerWidth, Hc = cv.clientHeight || innerHeight;
     if (cv.width !== Math.round(Wc*dp) || cv.height !== Math.round(Hc*dp)) { cv.width = Math.round(Wc*dp); cv.height = Math.round(Hc*dp); }
     g.setTransform(dp, 0, 0, dp, 0, 0);
     g.fillStyle = '#04050a'; g.fillRect(0, 0, Wc, Hc);
