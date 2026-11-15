@@ -939,6 +939,7 @@ OBJ.forEach((o, j) => {
   if (o.orbits) { const m = o.orbits[o.orbits.length-1].au; o.orbits.forEach(q => q.r = q.au/m); }
   /* 1 = Scheibe, 2 = Kugel */
   o.flat = ['orbits','helio','proxima','nebula','galaxy'].includes(o.k) ? 1 : ['oort','cluster'].includes(o.k) ? 2 : o.k === 'web' ? (o.g.mode === 3 ? 2 : 1) : 0;
+  o.pk = o.k + ':' + (o.g.mode || 0) + ':' + o.flat;
   o.edge = o.k === 'micro' ? (o.g.edge || 0) : (o.solid ? 0 : o.ext);
 });
 
@@ -995,10 +996,12 @@ void main(){ vP = aP*uExt; vec2 px = uCenter + vec2(aP.x, -aP.y)*uHalf;
 
 const PRE = `#version 300 es
 precision highp float; precision highp int;
+//@DEFS
 in vec2 vP; out vec4 fragColor;
 uniform float uT, uR, uSeed, uAlpha, uDpr, uEdge;
+/* ZERO ist zur Laufzeit 0, für den Übersetzer aber unbekannt: Schleifen werden so nicht ausgerollt */
+#define ZERO min(int(uT),0)
 uniform vec2 uRot;
-uniform int uMode, uFlat;
 /* PP: Musterkoordinaten; bei Kugeln abwechselnd Vorder- und Rückseite, bei Scheiben die Ebene.
    SJ bildet Abstände im Muster auf Abstände im Bild ab, damit Sterne rund bleiben. */
 vec2 PP; mat2 SJ = mat2(1.0);
@@ -1043,19 +1046,19 @@ vec3 hash33(vec3 p3){ p3=fract(p3*vec3(0.1031,0.1030,0.0973)); p3+=dot(p3,p3.yxz
 float lodw(float f){ return clamp((1.0/(f*PX*LK)-3.0)/3.0, 0.0, 1.0); }
 float fbm(vec3 p, float f, int oct){
   float s=0.0, a=0.5;
-  for(int i=0;i<12;i++){ if(i>=oct) break; float w=lodw(f); if(w<=0.0) break;
+  for(int i=ZERO;i<12;i++){ if(i>=oct) break; float w=lodw(f); if(w<=0.0) break;
     s+=a*w*snoise(p*f); f*=2.03; a*=0.5; p+=vec3(1.7,-3.1,2.3); }
   return s/(1.0-pow(0.5,float(oct)));
 }
 float rfbm(vec3 p, float f, int oct){
   float s=0.0, a=0.5;
-  for(int i=0;i<12;i++){ if(i>=oct) break; float w=lodw(f); if(w<=0.0) break;
+  for(int i=ZERO;i<12;i++){ if(i>=oct) break; float w=lodw(f); if(w<=0.0) break;
     float n=1.0-abs(snoise(p*f)); s+=a*w*n*n; f*=2.07; a*=0.5; p+=vec3(4.1,1.3,-2.7); }
   return s;
 }
 vec3 worley(vec3 p){
   vec3 i=floor(p), f=fract(p); vec3 d=vec3(8.0);
-  for(int z=-1;z<=1;z++) for(int y=-1;y<=1;y++) for(int x=-1;x<=1;x++){
+  for(int z=-1+ZERO;z<=1;z++) for(int y=-1+ZERO;y<=1;y++) for(int x=-1+ZERO;x<=1;x++){
     vec3 g=vec3(float(x),float(y),float(z)); vec3 r=g+hash33(i+g)-f; float e=dot(r,r);
     if(e<d.x){ d.z=d.y; d.y=d.x; d.x=e; } else if(e<d.y){ d.z=d.y; d.y=e; } else if(e<d.z){ d.z=e; }
   }
@@ -1084,10 +1087,10 @@ float sdSeg(vec2 p, vec2 a, vec2 b){ vec2 pa=p-a, ba=b-a; float h=clamp(dot(pa,b
 /* Krater-Höhenfeld: mehrere Zellgrößen, Schüssel + Wall, nur so fein wie sichtbar */
 float craters(vec3 p, float f0, float dens, float str){
   float h=0.0, f=f0;
-  for(int k=0;k<7;k++){
+  for(int k=ZERO;k<7;k++){
     float cw=clamp((0.15-f*PX)/0.07,0.0,1.0); if(cw<=0.0) break;
     vec3 q=p*f+vec3(float(k)*13.7+uSeed); vec3 i=floor(q), fr=fract(q);
-    for(int z=-1;z<=1;z++) for(int y=-1;y<=1;y++) for(int x=-1;x<=1;x++){
+    for(int z=-1+ZERO;z<=1;z++) for(int y=-1+ZERO;y<=1;y++) for(int x=-1+ZERO;x<=1;x++){
       vec3 g=vec3(float(x),float(y),float(z)); vec3 c=hash33(i+g);
       if(c.z>dens) continue;
       vec3 o=hash33(i+g+41.3)*0.6+0.2; float rad=0.12+0.3*c.x*c.x;
@@ -1101,7 +1104,7 @@ float craters(vec3 p, float f0, float dens, float str){
 /* Einzelsterne: pro Zellebene höchstens ein Stern, Ebenen werden beim Hineinzoomen aufgelöst */
 vec3 starLayers(vec2 q, float dens, float sc, float seed, float px){
   vec3 acc=vec3(0.0); if(dens<=0.001) return acc; dens=clamp(dens,0.0,1.0);
-  for(int i=0;i<9;i++){
+  for(int i=ZERO;i<9;i++){
     float cpx=1.0/(sc*px); if(cpx<2.5) break;
     float fade=smoothstep(2.5,7.0,cpx);
     vec2 g=floor(q*sc), f=fract(q*sc);
@@ -1124,22 +1127,29 @@ void main(){
   PX = 1.0/uR;
   if(uR < 1.5){ float d=length(vP)*uR; float rr=max(0.85,uR); float b=exp(-d*d/(rr*rr))*min(1.0,0.35+uR*1.2); fragColor=vec4(uDot*b,b)*uAlpha; return; }
   vec2 p = vP; vec4 c;
-  if(uFlat==1){
-    /* Scheibe: Sehstrahl mit der gedrehten Ebene schneiden; nie ganz auf die Kante, damit sie sichtbar bleibt */
-    mat3 Rm = rotX(uRot.y)*rotY(uRot.x);
-    vec3 n = Rm*vec3(0.0,0.0,1.0), ex = Rm*vec3(1.0,0.0,0.0), ey = Rm*vec3(0.0,1.0,0.0);
-    float nz = n.z >= 0.0 ? max(n.z, 0.12) : min(n.z, -0.12);
-    vec3 P = vec3(p, -(p.x*n.x + p.y*n.y)/nz);
-    p = vec2(dot(P,ex), dot(P,ey)); PP = p; setSJ(p); c = shade(p);
-  } else if(uFlat==2){
-    /* Kugel: Muster auf Vorder- und Rückhalbkugel, die sich beim Drehen gegeneinander bewegen */
-    mat3 Ri = transpose(rotX(uRot.y)*rotY(uRot.x));
-    float z0 = sqrt(max(1.0 - dot(p,p), 0.0));
-    vec3 Of = Ri*vec3(p, z0), Ob = Ri*vec3(p, -z0);
-    PP = Of.xy + (Of.z < 0.0 ? vec2(17.3,-9.1) : vec2(0.0)); setSJ(Of.xy); vec4 c1 = shade(p);
-    PP = Ob.xy + (Ob.z < 0.0 ? vec2(17.3,-9.1) : vec2(0.0)); setSJ(Ob.xy); vec4 c2 = shade(p);
-    c = max(c1, c2);
-  } else { PP = p; c = shade(p); }
+#if FLAT == 1
+  /* Scheibe: Sehstrahl mit der gedrehten Ebene schneiden; nie ganz auf die Kante, damit sie sichtbar bleibt */
+  mat3 Rm = rotX(uRot.y)*rotY(uRot.x);
+  vec3 n = Rm*vec3(0.0,0.0,1.0), ex = Rm*vec3(1.0,0.0,0.0), ey = Rm*vec3(0.0,1.0,0.0);
+  float nz = n.z >= 0.0 ? max(n.z, 0.12) : min(n.z, -0.12);
+  vec3 P = vec3(p, -(p.x*n.x + p.y*n.y)/nz);
+  p = vec2(dot(P,ex), dot(P,ey)); PP = p; setSJ(p); c = shade(p);
+#elif FLAT == 2
+  /* Kugel: Muster auf Vorder- und Rückhalbkugel, die sich beim Drehen gegeneinander bewegen.
+     Die Zeichenfunktion steht nur einmal im Programm (Schleife), sonst vervielfacht sich die Übersetzungszeit. */
+  mat3 Ri = transpose(rotX(uRot.y)*rotY(uRot.x));
+  float z0 = sqrt(max(1.0 - dot(p,p), 0.0));
+  vec3 Of = Ri*vec3(p, z0), Ob = Ri*vec3(p, -z0);
+  setSJ(Of.xy); mat2 SJf = SJ; setSJ(Ob.xy); mat2 SJb = SJ;
+  c = vec4(0.0);
+  for(int k=ZERO;k<2;k++){
+    vec3 O = k==0 ? Of : Ob; SJ = k==0 ? SJf : SJb;
+    PP = O.xy + (O.z < 0.0 ? vec2(17.3,-9.1) : vec2(0.0));
+    c = max(c, shade(p));
+  }
+#else
+  PP = p; c = shade(p);
+#endif
   if(uEdge>0.0){ float rr = length(p); c *= smoothstep(uEdge, 1.0+0.3*(uEdge-1.0), rr); }
   fragColor = c*uAlpha;
 }`;
@@ -1333,7 +1343,7 @@ vec4 shade(vec2 p){
   mat3 Ri = transpose(Rv);
   vec3 ro = Ri*vec3(p,1.6), rd = Ri*vec3(0.0,0.0,-1.0);
   float t=0.0, dm=1e9, tm=0.0; bool hit=false;
-  for(int i=0;i<90;i++){ vec3 q=ro+rd*t; float d=sdf(q); if(d<dm){dm=d;tm=t;} if(d<0.0004){hit=true;break;} t+=max(d*0.75,0.002); if(t>3.2) break; }
+  for(int i=ZERO;i<90;i++){ vec3 q=ro+rd*t; float d=sdf(q); if(d<dm){dm=d;tm=t;} if(d<0.0004){hit=true;break;} t+=max(d*0.75,0.002); if(t>3.2) break; }
   float a = hit ? 1.0 : smoothstep(1.5*PX,0.0,dm);
   if(a<=0.0) return vec4(0.0);
   vec3 q = ro+rd*(hit?t:tm);
@@ -1359,7 +1369,6 @@ vec4 shade(vec2 p){
 
 /* ---------- Astronaut und ISS als Distanzfelder ---------- */
 SRC.craft = `
-#define ZERO min(int(uT),0)
 float sdTorus(vec3 p, vec2 t){ vec2 q=vec2(length(p.xz)-t.x,p.y); return length(q)-t.y; }
 float capR(vec3 p, vec3 a, vec3 b, float r1, float r2){ vec3 pa=p-a, ba=b-a; float h=clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0); return length(pa-ba*h)-mix(r1,r2,h); }
 float bellows(vec3 p, vec3 a, vec3 b, float r, float n){ vec3 pa=p-a, ba=b-a; float h=clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0); return length(pa-ba*h)-(r+0.008*(0.5+0.5*cos(h*n*TAU))); }
@@ -1669,7 +1678,7 @@ SRC.orbits = `
 uniform vec4 uOrb[8]; uniform vec3 uOrbC[8]; uniform int uN;
 vec4 shade(vec2 p){
   float r = length(p); vec3 col = vec3(0.0);
-  for(int i=0;i<8;i++){
+  for(int i=ZERO;i<8;i++){
     if(i>=uN) break; vec4 o = uOrb[i];
     float line = smoothstep(1.5*PX,0.0,abs(r-o.x));
     col += (o.z>0.5 ? vec3(0.95,0.76,0.48)*0.85 : vec3(0.62,0.68,0.86)*0.42)*line;
@@ -1695,8 +1704,8 @@ vec4 shade(vec2 p){
   col += vec3(0.75,0.5,1.0)*exp(-pow((r-1.02*rs)/0.02,2.0))*0.18;
   col += vec3(0.55,0.7,1.0)*0.5*smoothstep(1.5*PX,0.0,abs(r0-0.75))*step(0.5,fract(ang*36.0/TAU));
   float orbs[4] = float[4](5.2,9.58,19.2,30.07);
-  for(int i=0;i<4;i++) col += vec3(0.6,0.66,0.85)*0.35*smoothstep(1.4*PX,0.0,abs(r0-orbs[i]/120.0));
-  for(int k=0;k<2;k++){
+  for(int i=ZERO;i<4;i++) col += vec3(0.6,0.66,0.85)*0.35*smoothstep(1.4*PX,0.0,abs(r0-orbs[i]/120.0));
+  for(int k=ZERO;k<2;k++){
     vec2 v = k==0 ? uVoy.xy : uVoy.zw;
     float sd = sdSeg(p,vec2(0.0),v); float hh = dot(p,normalize(v));
     col += vec3(0.95,0.75,0.45)*0.55*smoothstep(1.3*PX,0.0,sd)*step(0.5,fract(hh*50.0));
@@ -1819,7 +1828,7 @@ vec4 shade(vec2 p){
       col += vec3(0.85,0.88,1.0)*exp(-length(p-c2)/0.006)*0.6; }
     float dd = (0.5*(exp(-dot(p-c0,p-c0)/0.006)+exp(-dot(p-c1,p-c1)/0.01)) + 0.03)*smoothstep(1.05,0.75,length(p));
     col += starLayers(p,dd*0.6,7.0,uSeed+3.0,PX)*vec3(0.85,0.85,1.0)*0.9;
-    for(int k=0;k<70;k++){ vec3 h = hash33(vec3(float(k),uSeed,3.7)); vec2 cc = (k<50) ? ((k<25?c0:c1) + (h.xy-0.5)*0.28) : (h.xy-0.5)*1.5; float sz = 0.002+0.006*h.z*h.z; col += vec3(0.85,0.87,1.0)*exp(-length(p-cc)/sz)*0.35*(0.4+h.z); }
+    for(int k=ZERO;k<70;k++){ vec3 h = hash33(vec3(float(k),uSeed,3.7)); vec2 cc = (k<50) ? ((k<25?c0:c1) + (h.xy-0.5)*0.28) : (h.xy-0.5)*1.5; float sz = 0.002+0.006*h.z*h.z; col += vec3(0.85,0.87,1.0)*exp(-length(p-cc)/sz)*0.35*(0.4+h.z); }
   }
   return vec4(aces(col*1.1),1.0);
 }`;
@@ -1829,7 +1838,7 @@ SRC.web = `
 vec2 webField(vec2 q, float f0, float seed){
   vec2 w = vec2(fbm(vec3(q*1.3,seed),1.0,5), fbm(vec3(q*1.3,seed+3.3),1.0,5))*0.3;
   float d = 0.0, nd = 0.0, amp = 1.0, f = f0;
-  for(int i=0;i<6;i++){
+  for(int i=ZERO;i<6;i++){
     float cpx = 1.0/(f*PX); if(cpx<5.0) break;
     float fd = smoothstep(5.0,12.0,cpx);
     vec3 F = worley(vec3((q+w)*f, seed*1.37+float(i)*7.1));
@@ -1892,7 +1901,7 @@ float mapM(vec3 q){
     float rad = mix(0.03, 0.155, smoothstep(-0.95, 0.3, xc))*(1.0 - 0.6*smoothstep(0.55, 0.9, xc));
     float d = length(vec3(q.x - xc, q.y, q.z*1.15)) - rad;
     d += 0.005*sin(q.x*110.0)*smoothstep(0.3, 0.0, q.x)*step(-0.9, q.x);
-    for(int k=0;k<4;k++){
+    for(int k=ZERO;k<4;k++){
       float xk = 0.66 - float(k)*0.12;
       vec3 a = vec3(xk, -0.04, 0.0), b = vec3(xk + 0.035, -0.19, 0.0);
       vec3 qz = vec3(q.x, q.y, abs(q.z) - 0.1);
@@ -1942,7 +1951,7 @@ vec4 shadeMarch(vec2 p){
   /* nur innerhalb der Hüllkugel abtasten */
   float bR = uMode==4 ? 3.5 : 1.2, bb = dot(ro, rd), bc = dot(ro, ro) - bR*bR, bd = bb*bb - bc;
   if(bd > 0.0){ t = max(0.0, -bb - sqrt(bd)); float t1 = -bb + sqrt(bd);
-    for(int i=0;i<160;i++){ float d = mapM(ro + rd*t); dm = min(dm, d); if(d < 0.0015){ hit = true; break; } t += max(d*stepK, 0.002); if(t > t1) break; } }
+    for(int i=ZERO;i<160;i++){ float d = mapM(ro + rd*t); dm = min(dm, d); if(d < 0.0015){ hit = true; break; } t += max(d*stepK, 0.002); if(t > t1) break; } }
   vec3 col = vec3(0.0); float a = 0.0;
   /* Elektronendichte des Wassers als feiner Schleier um die Atome */
   if(uMode==5){
@@ -2024,7 +2033,7 @@ vec4 eye(vec2 q){
   if(band > 0.0){
     float slant = mix(2.6, 0.35, smoothstep(-1.6, 1.4, q.x)), nrm = 1.0/sqrt(1.0 + slant*slant);
     float cov = 0.0, sp = 0.03;
-    for(int k=0;k<3;k++){
+    for(int k=ZERO;k<3;k++){
       float u = (q.x + db*slant)/sp + float(k)*0.37, id = floor(u);
       vec3 hh = hash33(vec3(id, float(k), uSeed + 11.0));
       float fd = abs(fract(u) - 0.5 - (hh.x - 0.5)*0.5)*sp*nrm;
@@ -2094,7 +2103,7 @@ vec4 eye(vec2 q){
     float tt = max(du, 0.0)/cs, cov = 0.0, sp = 0.055;
     float x0 = q.x - sn*(tt + 0.45*tt*tt);
     float xr = x0/hw, onLid = smoothstep(-0.98, -0.82, xr)*smoothstep(0.95, 0.55, xr);
-    for(int k=0;k<3;k++){
+    for(int k=ZERO;k<3;k++){
       float s = x0/sp + float(k)*0.33, id = floor(s);
       vec3 hh = hash33(vec3(id, float(k), uSeed + 5.0));
       float L = (0.42 + 0.22*hh.y)*(1.0 - 0.4*xr*xr)*onLid;
@@ -2126,7 +2135,7 @@ vec4 eye(vec2 q){
    Die Punkte zeigen, wo eine Messung das Elektron jeweils finden würde. */
 vec4 hatom(vec2 p){
   float rho = length(p), dens = 0.0;
-  for(int i=0;i<12;i++){ float z = (float(i) + 0.5)*0.5; dens += exp(-2.0*sqrt(rho*rho + z*z))*0.5; }
+  for(int i=ZERO;i<12;i++){ float z = (float(i) + 0.5)*0.5; dens += exp(-2.0*sqrt(rho*rho + z*z))*0.5; }
   dens *= 2.0;
   vec3 col = vec3(0.42,0.58,1.0)*dens*0.5;
   float cs = 3.0*PX*uDpr; vec2 cell = floor(p/cs);
@@ -2176,7 +2185,7 @@ vec4 quark(vec2 p){
 /* Strings (hypothetisch): diffuse, schwingende Schleifen und offene Fäden */
 vec4 strings(vec2 p){
   vec3 col = vec3(0.0);
-  for(int k=0;k<5;k++){
+  for(int k=ZERO;k<5;k++){
     vec3 h = hash33(vec3(float(k), uSeed, 2.0));
     vec2 c = (h.xy - 0.5)*0.9; float rk = 0.12 + 0.2*h.z; float nk = floor(2.0 + h.x*4.0);
     vec2 d = p - c; float th = atan(d.y, d.x);
@@ -2184,7 +2193,7 @@ vec4 strings(vec2 p){
     float l = abs(length(d) - rr);
     col += mix(vec3(0.55,0.75,1.0), vec3(0.85,0.6,1.0), h.y)*exp(-l*l/0.0012)*0.3;
   }
-  for(int k=0;k<2;k++){
+  for(int k=ZERO;k<2;k++){
     vec2 a = vec2(-0.55 + 0.3*float(k), 0.4 - 0.9*float(k)), b = a + vec2(0.55, 0.2);
     vec2 ab = b - a; float hh = clamp(dot(p - a, ab)/dot(ab, ab), 0.0, 1.0);
     vec2 nrm = normalize(vec2(-ab.y, ab.x));
@@ -2234,7 +2243,7 @@ void main(){
   float wSch = smoothstep(-31.5,-33.5,uZ);
   vec3 col = vec3(0.010,0.012,0.022);
   if(wAll>0.001) col += vec3(0.06,0.05,0.12)*0.3*smoothstep(0.0,0.8,fbm(vec3(u*1.2,uZ*0.05),1.0,3))*wAll;
-  for(int l=0;l<3;l++){
+  for(int l=ZERO;l<3;l++){
     float ph = fract(uZ*0.2+float(l)/3.0);
     float sc = pow(2.3,1.0-ph), fd = pow(sin(PI*ph),1.4);
     float G = 30.0;
@@ -2248,7 +2257,7 @@ void main(){
     }
   }
   /* Schwebeteilchen wie Staub im Dunkelfeld: unscharfe, langsam treibende Scheibchen */
-  if(wMik>0.001) for(int l=0;l<2;l++){
+  if(wMik>0.001) for(int l=ZERO;l<2;l++){
     float ph = fract(uZ*0.3+float(l)*0.5), sc = pow(2.0,1.0-ph), fd = sin(PI*ph);
     float G = 6.0; vec2 q = u/sc*G + float(l)*13.0; vec2 g = floor(q), f = fract(q);
     vec3 h = hash32(g+float(l)*71.0+300.0);
@@ -2257,7 +2266,7 @@ void main(){
       col += vec3(0.95,0.85,0.7)*(smoothstep(rr,rr*0.5,d)*0.03 + exp(-pow((d-rr*0.8)/(rr*0.2),2.0))*0.045)*fd*wMik; }
   }
   /* Wärmezittern: Moleküle stehen nie still */
-  if(wNan>0.001) for(int l=0;l<2;l++){
+  if(wNan>0.001) for(int l=ZERO;l<2;l++){
     float ph = fract(uZ*0.3+float(l)*0.5), sc = pow(2.0,1.0-ph), fd = sin(PI*ph);
     float G = 34.0; vec2 q = u/sc*G + float(l)*7.0; vec2 g = floor(q), f = fract(q);
     vec3 h = hash32(g+float(l)*53.0+500.0);
@@ -2265,7 +2274,7 @@ void main(){
       float d = length(f-cc)*m*sc/G/uDpr; col += vec3(0.6,0.75,1.0)*exp(-d*d*0.7)*0.16*fd*wNan; }
   }
   /* Vakuumfluktuationen: Teilchenpaare entstehen und vergehen */
-  if(wVak>0.001) for(int l=0;l<2;l++){
+  if(wVak>0.001) for(int l=ZERO;l<2;l++){
     float ph = fract(uZ*0.3+float(l)*0.5), sc = pow(2.0,1.0-ph), fd = sin(PI*ph);
     float G = 14.0; vec2 q = u/sc*G + float(l)*29.0; vec2 g = floor(q), f = fract(q);
     vec3 h = hash32(g+float(l)*91.0+700.0);
@@ -2390,12 +2399,12 @@ function setupTextures(){
   };
   img.src = 'textures/earth.jpg';
 }
+/* Programmschlüssel „art:modus:form“, z. B. planet:3:0. Jede Kombination wird ein eigenes kleines Programm. */
 function makeProg(name){
   const fs = gl.createShader(gl.FRAGMENT_SHADER);
-  let src;
-  if (name === 'bg') src = BG;
-  else if (name.startsWith('craft')) src = PRE.replace('#version 300 es\n', '#version 300 es\n' + (name === 'craft0' ? '#define ASTRO\n' : '')) + SRC.craft + MAIN;
-  else src = PRE + SRC[name] + MAIN;
+  const [k, m = '0', f = '0'] = name.split(':');
+  const defs = 'const int uMode = ' + m + ';\n#define FLAT ' + f + '\n' + (k === 'craft' && m === '0' ? '#define ASTRO\n' : '');
+  const src = (k === 'bg' ? BG : PRE + SRC[k] + MAIN).replace('//@DEFS', defs);
   gl.shaderSource(fs, src); gl.compileShader(fs);
   const p = gl.createProgram(); gl.attachShader(p, vsh); gl.attachShader(p, fs);
   gl.bindAttribLocation(p, 0, 'aP'); gl.linkProgram(p);
@@ -2414,10 +2423,15 @@ function prog(name){
 }
 function U(e, n){ if (!(n in e.u)) e.u[n] = gl.getUniformLocation(e.p, n); return e.u[n]; }
 /* Shader vorkompilieren: zuerst die nahen, dann der Rest im Leerlauf */
-const KINDS = ['craft0','bg','craft1','micro','rock','planet','star','orbits','helio','oort','proxima','nebula','cluster','galaxy','web'];
-if (gl) {
-  if (PEXT) KINDS.forEach(k => PROGS[k] || makeProg(k));
-  else { ['craft0','bg'].forEach(k => prog(k)); let i = 0; const idle = () => { while (i < KINDS.length && PROGS[KINDS[i]]) i++; if (i < KINDS.length) { prog(KINDS[i]); if (window.requestIdleCallback) requestIdleCallback(idle, {timeout: 400}); else setTimeout(idle, 60); } }; setTimeout(idle, 300); }
+/* Zuerst der Hintergrund und die Objekte nahe am Startpunkt, dann nach außen.
+   Die Ersatz-Shader für Astronaut und ISS entstehen nur bei Bedarf (falls die 3D-Modelle nicht laden). */
+function precompile(center){
+  if (!gl) return;
+  const keys = ['bg'];
+  OBJ.map((o, j) => [Math.abs(j - center), o]).sort((a, b) => a[0] - b[0]).forEach(([, o]) => { if (o.k !== 'void' && o.k !== 'craft' && !keys.includes(o.pk)) keys.push(o.pk); });
+  let i = 0;
+  if (PEXT) { const go = () => { for (let n = 0; n < 4 && i < keys.length; n++, i++) PROGS[keys[i]] || makeProg(keys[i]); if (i < keys.length) setTimeout(go, 30); }; go(); }
+  else { prog(keys[i++]); const idle = () => { while (i < keys.length && PROGS[keys[i]]) i++; if (i < keys.length) { prog(keys[i]); if (window.requestIdleCallback) requestIdleCallback(idle, {timeout: 400}); else setTimeout(idle, 60); } }; setTimeout(idle, 200); }
 }
 
 /* ======================================================================
@@ -2454,7 +2468,7 @@ if (window.visualViewport) visualViewport.addEventListener('resize', resize);
 
 function setVec(e, n, v){ if (v) gl.uniform3fv(U(e, n), v); }
 function drawObj(o, X, Y, R, a, time, extra){
-  const e = prog(o.k === 'craft' ? 'craft' + (o.g.mode || 0) : o.k); if (!e) return;
+  const e = prog(o.pk); if (!e) return;
   gl.useProgram(e.p);
   const half = Math.max(R*o.ext, 3);
   gl.uniform2f(U(e,'uRes'), GW, GH); gl.uniform2f(U(e,'uCenter'), X, Y);
@@ -2463,9 +2477,7 @@ function drawObj(o, X, Y, R, a, time, extra){
   gl.uniform1f(U(e,'uAlpha'), a); gl.uniform1f(U(e,'uDpr'), KG); gl.uniform1f(U(e,'uEdge'), o.edge);
   gl.uniform3fv(U(e,'uDot'), o.dotv);
   gl.uniform2f(U(e,'uRot'), o.rot ? o.rot.yaw : 0, o.rot ? o.rot.pitch : 0);
-  gl.uniform1i(U(e,'uFlat'), o.flat || 0);
   const g = o.g;
-  gl.uniform1i(U(e,'uMode'), g.mode || 0);
   setVec(e,'uA',g.A); setVec(e,'uB',g.B); setVec(e,'uC',g.C); setVec(e,'uD',g.D);
   gl.uniform4fv(U(e,'uQ'), g.Q || [0,0,0,0]);
   if (o.k === 'planet') {
@@ -3486,6 +3498,7 @@ function statsFocus(j){
 const start = data => {
   if (data && typeof data.t === 'number') t = targetT = clamp(data.t, 0, N-1);
   setFocus(clamp(Math.round(t), 0, N-1));
+  precompile(Math.round(t));
   requestAnimationFrame(frame);
   t3Start();
   introSetup(data && typeof data.t === 'number');
