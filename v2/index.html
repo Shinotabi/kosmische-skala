@@ -1132,6 +1132,8 @@ const DRAW = [];
 for (let j = A0; j >= 0; j--) DRAW.push(j);
 for (let j = A0 + 1; j < N; j++) DRAW.push(j);
 const FL = WV.map(w => Math.log10(w/FR));
+/* Schmale Bildschirme: das Objekt im Fokus füllt mehr von der Breite (bis zum 1,45-Fachen), Nachbarn rücken an den Rand */
+const ZK = OBJ.map((o, j) => clamp(WV[j]/Math.max(o.d*FR/1.45, o.d*(o.lx || 1)*1.15), 1, 1.45));
 const LMIN = -35.5, LMAX = 27.3;
 
 /* Zahlen */
@@ -1691,6 +1693,13 @@ vec3 holeStars(vec3 d, float apx){
   }
   return acc;
 }
+#ifdef LOWQ
+#define HSTEPS 84
+#define HDT 0.23
+#else
+#define HSTEPS 120
+#define HDT 0.16
+#endif
 vec4 shade(vec2 p0){
   const float D = 46.0;
   float rin = 3.0, rout = uQ.y;
@@ -1701,11 +1710,11 @@ vec4 shade(vec2 p0){
   vec3 pos = cpos, v = normalize(fw*D + rt*p.x + up*p.y);
   vec3 hv = cross(pos, v); float h2 = dot(hv, hv);
   vec3 col = vec3(0.0); float tr = 1.0; bool hit = false;
-  for(int i=ZERO;i<120;i++){
+  for(int i=ZERO;i<HSTEPS;i++){
     float r2 = dot(pos, pos), r = sqrt(r2);
     if(r < 1.0){ hit = true; break; }
     if(r > D*1.02 && dot(pos, v) > 0.0) break;
-    float dt = clamp(0.16*(r - 0.6), 0.04, 5.0);
+    float dt = clamp(HDT*(r - 0.6), 0.04, 5.0);
     vec3 v2 = v - 1.5*h2*pos/(r2*r2*r)*dt;
     vec3 np = pos + v2*dt;
     if(pos.y*np.y < 0.0){
@@ -2173,11 +2182,13 @@ vec4 shade(vec2 p){
 }`;
 SRC.planet = `
 uniform vec4 uRing; uniform vec3 uAtmo, uAxis; uniform float uHaze, uHasTex; uniform sampler2D uTex;
-/* ---- Geografie: Orte als (Breite, Länge Ost) in Grad; Radien als Winkel im Bogenmaß (Kilometer / Körperradius) ---- */
+/* ---- Geografie: Orte als (Breite, Länge Ost) in Grad; Radien als Winkel im Bogenmaß (Kilometer / Körperradius).
+   LL(Breite, Länge) und GEO(Breite, Länge, Radius) mit festen Zahlen rechnet schon der Bau (build.js) in Vektoren um. ---- */
 vec3 LL(float lat, float lon){ lat = radians(lat); lon = radians(lon); float c = cos(lat); return vec3(c*sin(lon), sin(lat), c*cos(lon)); }
-float adist(vec3 s, vec3 c){ return acos(clamp(dot(s,c),-1.0,1.0)); }
+/* Abstand zweier Orte als Sehnenlänge: für die hier vorkommenden Winkel praktisch gleich dem Bogen, aber ohne Winkelfunktion */
+float adist(vec3 s, vec3 c){ return sqrt(max(2.0 - 2.0*dot(s,c), 0.0)); }
 /* Fleck mit Winkelradius r; n franst den Rand aus */
-float spot(vec3 s, float lat, float lon, float r, float n){ return 1.0 - smoothstep(0.72, 1.0, adist(s, LL(lat,lon))/r + n); }
+float spot(vec3 s, vec3 c, float r, float n){ return 1.0 - smoothstep(0.72, 1.0, adist(s,c)/r + n); }
 /* Strahlensystem eines jungen Kraters */
 float rays(vec3 s, vec3 c, float len, float sd){
   float d = adist(s,c); if(d > len*4.0) return 0.0;
@@ -2188,15 +2199,16 @@ float rays(vec3 s, vec3 c, float len, float sd){
   return r*exp(-d/len)*smoothstep(0.0, len*0.06, d);
 }
 /* benannter Krater als Höhe: Schüssel und Wall */
-float crat(vec3 s, float lat, float lon, float r){
-  float x = adist(s, LL(lat,lon))/r; if(x >= 2.0) return 0.0;
+float crat(vec3 s, vec3 c, float r){
+  float x = adist(s,c)/r; if(x >= 2.0) return 0.0;
   return ((x<1.0 ? (x*x-1.0)*0.6 : 0.0) + exp(-(x-1.0)*(x-1.0)*10.0)*0.28)*r*0.5;
 }
 /* Abstand zu einem kurzen Bogenstück a–b */
 float arcd(vec3 s, vec3 a, vec3 b){ vec3 pa = s-a, ba = b-a; float h = clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0); return length(pa-ba*h); }
 /* Flächen aus mehreren Flecken: Die Einzelfelder werden addiert und an einer Schwelle geschnitten, die Lage vorher leicht verzerrt */
 vec3 warp(vec3 s, float k){ return normalize(s + k*vec3(fbm(s+uSeed,2.2,5), fbm(s+uSeed+5.2,2.2,5), fbm(s+uSeed+9.1,2.2,5))); }
-float blob(vec3 s, vec4 m){ float x = adist(s, LL(m.x,m.y))/m.z; return exp(-0.916*x*x); }
+/* m = (Ort, 0,916/r²): am Rand des Flecks (Abstand r) ist das Feld 0,4 */
+float blob(vec3 s, vec4 m){ return exp(-m.w*(2.0 - 2.0*dot(s,m.xyz))); }
 float jb(float x, float a, float b, float w){ return smoothstep(a-w,a+w,x)*(1.0-smoothstep(b-w,b+w,x)); }
 float ringDens(float rr){
   if(uRing.z<=0.0||rr<uRing.x||rr>uRing.y) return 0.0;
@@ -2231,58 +2243,60 @@ vec4 shade(vec2 p){
       /* Merkur (MESSENGER): Caloris-Becken, glatte Ebenen im Norden, dunkles kohlenstoffreiches Material, junge Strahlenkrater */
       float n = 0.3*fbm(s+uSeed,3.0,6);
       vec3 sw = warp(s, 0.06);
-      float cal = smoothstep(0.3,0.5, blob(sw,vec4(31.5,162.7,0.32,1.0)) + n*0.4), npl = smoothstep(0.78,0.9,s.y+0.1*n);
+      float cal = smoothstep(0.3,0.5, blob(sw,vec4(0.25355,0.5225,-0.81407,8.94531)) + n*0.4), npl = smoothstep(0.78,0.9,s.y+0.1*n);
       float pl = max(cal,npl);
       alb = mix(uA, uB, smoothstep(0.1,0.5,fbm(s+11.0,1.6,6))*0.8);
       alb = mix(alb, uA*vec3(1.1,1.02,0.9), pl*0.3);
       alb *= 0.82+0.36*(0.5+0.5*fbm(s+7.0,5.0,12));
-      float ry = rays(s,LL(57.8,16.9),0.32,1.0) + rays(s,LL(-11.3,-31.3),0.12,2.0) + rays(s,LL(-33.9,12.5),0.2,3.0)
-               + rays(s,LL(37.1,-127.3),0.1,4.0) + rays(s,LL(10.6,123.8),0.12,5.0) + rays(s,LL(-32.4,-169.7),0.1,6.0) + rays(s,LL(-0.2,-124.4),0.1,7.0);
+      float ry = rays(s,vec3(0.15491,0.84619,0.50986),0.32,1.0) + rays(s,vec3(-0.50945,-0.19595,0.83789),0.12,2.0) + rays(s,vec3(0.17965,-0.55775,0.81034),0.2,3.0)
+               + rays(s,vec3(-0.63446,0.60321,-0.48333),0.1,4.0) + rays(s,vec3(0.8168,0.18395,-0.5468),0.12,5.0) + rays(s,vec3(-0.15097,-0.53583,-0.83072),0.1,6.0) + rays(s,vec3(-0.82511,-0.00349,-0.56496),0.1,7.0);
       alb = mix(alb, uC, clamp(ry*0.5,0.0,0.75));
       h = craters(s,5.0,0.55,uQ.x*(1.0-0.6*pl)) + 0.004*fbm(s+3.0,7.0,12)
-        + exp(-pow((adist(s,LL(31.5,162.7))-0.32)/0.02,2.0))*0.003
-        + crat(s,27.6,57.4,0.06) + crat(s,-32.9,87.9,0.147)*0.5 + crat(s,-20.8,-123.9,0.13)*0.5 + crat(s,-16.3,-164.6,0.074);
+        + exp(-pow((adist(s,vec3(0.25355,0.5225,-0.81407))-0.32)/0.02,2.0))*0.003
+        + crat(s,vec3(0.74658,0.4633,0.47746),0.06) + crat(s,vec3(0.83906,-0.54317,0.03077),0.147)*0.5 + crat(s,vec3(-0.77592,-0.35511,-0.52139),0.13)*0.5 + crat(s,vec3(-0.25488,-0.28067,-0.92534),0.074);
     } else if(uMode==7){
       /* Mond: Meere, Becken und Strahlenkrater an ihren wahren Orten. Nullmeridian = Mitte der erdzugewandten Seite. */
       const vec4 MARE[30] = vec4[30](
-        vec4(32.8,-15.6,0.33,1.0), vec4(28.0,17.5,0.2,1.0), vec4(8.5,31.4,0.25,1.0), vec4(17.0,59.1,0.15,1.0), vec4(-7.8,51.3,0.22,0.9),
-        vec4(-15.2,35.5,0.1,0.9), vec4(-21.3,-16.6,0.2,0.9), vec4(-24.4,-38.6,0.115,1.0), vec4(22.0,-57.0,0.33,0.95), vec4(4.0,-47.0,0.26,0.9),
-        vec4(44.0,-52.0,0.2,0.85), vec4(57.0,-28.0,0.1,0.8), vec4(56.0,-2.0,0.1,0.8), vec4(55.0,24.0,0.1,0.8), vec4(13.3,3.6,0.07,0.85),
-        vec4(7.5,-30.9,0.14,0.8), vec4(-10.0,-23.1,0.1,0.85), vec4(56.8,81.5,0.08,0.8), vec4(1.3,87.5,0.1,0.8), vec4(13.3,86.1,0.1,0.7),
-        vec4(-19.4,-92.8,0.085,0.9), vec4(27.3,147.9,0.08,0.9), vec4(-33.7,163.5,0.08,0.7), vec4(-20.4,129.1,0.05,1.0), vec4(-38.9,93.0,0.15,0.5),
-        vec4(-5.5,-68.3,0.05,1.0), vec4(51.6,-9.4,0.03,1.0), vec4(2.4,1.7,0.06,0.7), vec4(10.9,-8.8,0.07,0.75), vec4(38.0,29.2,0.09,0.6));
+        vec4(-0.22605,0.54171,0.8096,8.41139), vec4(0.26551,0.46947,0.84208,22.9), vec4(0.51529,0.14781,0.84418,14.656), vec4(0.82057,0.29237,0.4911,40.71111), vec4(0.77321,-0.13572,0.61946,18.92562),
+        vec4(0.56039,-0.26219,0.78563,91.6), vec4(-0.26617,-0.36325,0.89286,22.9), vec4(-0.56816,-0.4131,0.71172,69.26276), vec4(-0.7776,0.37461,0.50498,8.41139), vec4(-0.72957,0.06976,0.68034,13.5503),
+        vec4(-0.56685,0.69466,0.44287,22.9), vec4(-0.25569,0.83867,0.48089,91.6), vec4(-0.01952,0.82904,0.55885,91.6), vec4(0.23329,0.81915,0.52399,91.6), vec4(0.06111,0.23005,0.97126,186.93878),
+        vec4(-0.50915,0.13053,0.85072,46.73469), vec4(-0.38638,-0.17365,0.90585,91.6), vec4(0.54155,0.83676,0.08093,143.125), vec4(0.99879,0.02269,0.04361,91.6), vec4(0.97093,0.23005,0.06619,91.6),
+        vec4(-0.9421,-0.33216,-0.04608,126.78201), vec4(0.47221,0.45865,-0.75277,143.125), vec4(0.23629,-0.55484,-0.79769,143.125), vec4(0.72737,-0.34857,-0.59112,366.4), vec4(0.77718,-0.62796,-0.04073,40.71111),
+        vec4(-0.92486,-0.09585,0.36804,366.4), vec4(-0.10145,0.78369,0.61281,1017.77778), vec4(0.02964,0.04188,0.99868,254.44444), vec4(-0.15023,0.1891,0.9704,186.93878), vec4(0.38444,0.61566,0.68787,113.08642));
+      const float MAREW[30] = float[30](1.0, 1.0, 1.0, 1.0, 0.9, 0.9, 0.9, 1.0, 0.95, 0.9, 0.85, 0.8, 0.8, 0.8, 0.85, 0.8, 0.85, 0.8, 0.8, 0.7, 0.9, 0.9, 0.7, 1.0, 0.5, 1.0, 1.0, 0.7, 0.75, 0.6);
       float n = 0.2*fbm(s+uSeed,3.0,6) + 0.07*fbm(s+3.0,11.0,5);
       vec3 sw = warp(s, 0.07);
       float fl = 0.0, fw = 0.0;
-      for(int k=ZERO;k<30;k++){ vec4 m = MARE[k]; float g = blob(sw,m); fl += g; fw += g*m.w; }
+      for(int k=ZERO;k<30;k++){ float g = blob(sw,MARE[k]); fl += g; fw += g*MAREW[k]; }
       float mar = smoothstep(0.5,0.62,fl+n)*clamp(fw/max(fl,1e-3),0.0,1.0);
       alb = mix(uA, uB, mar);
       /* Südpol-Aitken-Becken auf der Rückseite: etwas dunkler */
-      alb *= 1.0 - 0.13*spot(s,-53.0,-169.0,0.7,n);
+      alb *= 1.0 - 0.13*spot(s,vec3(-0.11483,-0.79864,-0.59076),0.7,n);
       alb *= 0.82+0.36*(0.5+0.5*fbm(s+7.0,5.0,12));
-      float ry = rays(s,LL(-43.3,-11.4),0.22,1.0) + rays(s,LL(9.6,-20.1),0.09,2.0) + rays(s,LL(8.1,-38.0),0.05,3.0) + rays(s,LL(23.7,-47.4),0.04,4.0)
-               + rays(s,LL(16.1,46.8),0.04,5.0) + rays(s,LL(36.0,102.9),0.08,6.0) + rays(s,LL(22.4,-163.1),0.1,7.0) + rays(s,LL(18.4,-113.5),0.08,8.0)
-               + rays(s,LL(-24.5,-63.7),0.06,9.0) + rays(s,LL(-31.8,51.6),0.05,10.0) + rays(s,LL(73.4,-10.1),0.06,11.0);
+      float ry = rays(s,vec3(-0.14385,-0.68582,0.71341),0.22,1.0) + rays(s,vec3(-0.33885,0.16677,0.92594),0.09,2.0) + rays(s,vec3(-0.60952,0.1409,0.78015),0.05,3.0) + rays(s,vec3(-0.67402,0.40195,0.61979),0.04,4.0)
+               + rays(s,vec3(0.70038,0.27731,0.6577),0.04,5.0) + rays(s,vec3(0.7886,0.58779,-0.18061),0.08,6.0) + rays(s,vec3(-0.26877,0.38107,-0.88462),0.1,7.0) + rays(s,vec3(-0.87018,0.31565,-0.37836),0.08,8.0)
+               + rays(s,vec3(-0.81577,-0.41469,0.40318),0.06,9.0) + rays(s,vec3(0.66606,-0.52696,0.52791),0.05,10.0) + rays(s,vec3(-0.0501,0.95832,0.28126),0.06,11.0);
       alb = mix(alb, uC, clamp(ry*0.55,0.0,0.8));
-      float dor = adist(s,LL(-19.4,-92.8));
+      float dor = adist(s,vec3(-0.9421,-0.33216,-0.04608));
       h = craters(s,5.0,0.5,uQ.x*(1.0-0.75*mar)) + 0.004*fbm(s+3.0,7.0,12)*(1.0-0.6*mar)
-        + crat(s,-43.3,-11.4,0.0245) + crat(s,9.6,-20.1,0.027) + crat(s,51.6,-9.4,0.029) + crat(s,-58.6,-14.7,0.065) + crat(s,8.1,-38.0,0.009)
-        + crat(s,23.7,-47.4,0.0115) + crat(s,-8.9,61.1,0.038) + crat(s,-11.4,26.4,0.029) + crat(s,-25.1,60.4,0.052) + crat(s,-9.3,-1.9,0.044)
-        + crat(s,-44.3,-55.3,0.06) + crat(s,-66.5,-69.1,0.083)
+        + crat(s,vec3(-0.14385,-0.68582,0.71341),0.0245) + crat(s,vec3(-0.33885,0.16677,0.92594),0.027) + crat(s,vec3(-0.10145,0.78369,0.61281),0.029) + crat(s,vec3(-0.13221,-0.85355,0.50396),0.065) + crat(s,vec3(-0.60952,0.1409,0.78015),0.009)
+        + crat(s,vec3(-0.67402,0.40195,0.61979),0.0115) + crat(s,vec3(0.86492,-0.15471,0.47746),0.038) + crat(s,vec3(0.43586,-0.19766,0.87804),0.029) + crat(s,vec3(0.78739,-0.4242,0.4473),0.052) + crat(s,vec3(-0.03272,-0.1616,0.98631),0.044)
+        + crat(s,vec3(-0.5884,-0.69842,0.40743),0.06) + crat(s,vec3(-0.37251,-0.91706,0.14225),0.083)
         + (exp(-pow((dor-0.268)/0.02,2.0)) + 0.7*exp(-pow((dor-0.18)/0.015,2.0)))*0.008;
     } else if(uMode==8){
       /* Mars: dunkle Basaltgebiete, helle Staubebenen, Hellas, Tharsis-Vulkane, Valles Marineris und Polkappen an ihren wahren Orten (Länge Ost) */
       const vec4 DARK[30] = vec4[30](
-        vec4(12.0,69.0,0.17,1.0), vec4(3.0,70.5,0.15,1.0), vec4(-5.0,72.0,0.1,0.8), vec4(-15.0,95.0,0.16,0.8), vec4(-22.0,112.0,0.18,0.8),
-        vec4(-27.0,135.0,0.18,0.85), vec4(-33.0,158.0,0.2,0.85), vec4(-42.0,178.0,0.14,0.7), vec4(-36.0,-158.0,0.17,0.8), vec4(-30.0,-140.0,0.13,0.75),
-        vec4(-25.0,-40.0,0.2,0.75), vec4(-35.0,-25.0,0.14,0.6), vec4(-10.0,-22.0,0.13,0.8), vec4(-3.0,-3.0,0.09,0.9), vec4(-8.0,12.0,0.08,0.85),
-        vec4(-9.0,26.0,0.08,0.85), vec4(-10.0,40.0,0.09,0.8), vec4(47.0,-30.0,0.2,0.9), vec4(32.0,-32.0,0.1,0.7), vec4(48.0,112.0,0.24,0.5),
-        vec4(-26.0,-85.0,0.09,0.8), vec4(-14.0,-50.0,0.1,0.7), vec4(-65.0,30.0,0.3,0.4), vec4(38.0,180.0,0.08,0.4), vec4(10.0,155.0,0.1,0.6),
-        vec4(20.0,162.0,0.06,0.5), vec4(30.0,-55.0,0.08,0.5), vec4(-48.0,35.0,0.12,0.6), vec4(-20.0,65.0,0.1,0.5), vec4(-58.0,150.0,0.2,0.4));
+        vec4(0.91318,0.20791,0.35054,31.6955), vec4(0.94135,0.05234,0.33335,40.71111), vec4(0.94744,-0.08716,0.30784,91.6), vec4(0.96225,-0.25882,-0.08419,35.78125), vec4(0.85967,-0.37461,-0.34733,28.2716),
+        vec4(0.63004,-0.45399,-0.63004,28.2716), vec4(0.31417,-0.54464,-0.7776,22.9), vec4(0.02594,-0.66913,-0.74269,46.73469), vec4(-0.30306,-0.58779,-0.75011,31.6955), vec4(-0.55667,-0.5,-0.66341,54.20118),
+        vec4(-0.58256,-0.42262,0.69427,22.9), vec4(-0.34619,-0.57358,0.7424,46.73469), vec4(-0.36892,-0.17365,0.9131,54.20118), vec4(-0.05226,-0.05234,0.99726,113.08642), vec4(0.20589,-0.13917,0.96863,143.125),
+        vec4(0.43297,-0.15643,0.88773,143.125), vec4(0.63302,-0.17365,0.75441,113.08642), vec4(-0.341,0.73135,0.59063,22.9), vec4(-0.4494,0.52992,0.71919,91.6), vec4(0.62041,0.74314,-0.25066,15.90278),
+        vec4(-0.89537,-0.43837,0.07834,113.08642), vec4(-0.74329,-0.24192,0.62369,91.6), vec4(0.21131,-0.90631,0.366,10.17778), vec4(0.0,0.61566,-0.78801,143.125), vec4(0.4162,0.17365,-0.89254,91.6),
+        vec4(0.29038,0.34202,-0.8937,254.44444), vec4(-0.70941,0.5,0.49673,143.125), vec4(0.3838,-0.74314,0.54812,63.61111), vec4(0.85165,-0.34202,0.39713,91.6), vec4(0.26496,-0.84805,-0.45892,22.9));
+      const float DARKW[30] = float[30](1.0, 1.0, 0.8, 0.8, 0.8, 0.85, 0.85, 0.7, 0.8, 0.75, 0.75, 0.6, 0.8, 0.9, 0.85, 0.85, 0.8, 0.9, 0.7, 0.5, 0.8, 0.7, 0.4, 0.4, 0.6, 0.5, 0.5, 0.6, 0.5, 0.4);
       float n = 0.26*fbm(s+uSeed,2.6,6) + 0.1*fbm(s+3.0,9.0,5);
       vec3 sw = warp(s, 0.09);
       float fl = 0.0, fw = 0.0;
-      for(int k=ZERO;k<30;k++){ vec4 m = DARK[k]; float g = blob(sw,m); fl += g; fw += g*m.w; }
+      for(int k=ZERO;k<30;k++){ float g = blob(sw,DARK[k]); fl += g; fw += g*DARKW[k]; }
       float dk = smoothstep(0.42,0.7,fl+n)*clamp(fw/max(fl,1e-3),0.0,1.0);
       /* vom Wind verwehte, fleckige Ränder statt glatter Flächen */
       dk *= 0.55+0.45*smoothstep(-0.45,0.4,fbm(s+17.0,5.0,9));
@@ -2291,19 +2305,19 @@ vec4 shade(vec2 p){
       dk = max(dk, 0.6*jb(s.y,0.93,0.972,0.012));
       alb = mix(uA, uB, dk);
       alb = mix(alb, uC, smoothstep(0.2,0.6,fbm(s+11.0,2.5,8))*0.4*(1.0-dk));
-      float hel = spot(s,-42.4,70.5,0.3,n*0.5), arg = spot(s,-49.7,-44.0,0.12,n*0.5);
+      float hel = spot(s,vec3(0.6961,-0.6743,0.2465),0.3,n*0.5), arg = spot(s,vec3(-0.4493,-0.76267,0.46526),0.12,n*0.5);
       alb = mix(alb, uC*1.04, max(hel,arg)*0.7);
       alb *= 0.85+0.3*(0.5+0.5*fbm(s+7.0,8.0,12));
       /* Schildvulkane: flache Kegel mit Gipfelkrater */
       float vol = 0.0, vh = 0.0, x;
-      x = adist(s,LL(18.65,-133.8))/0.09;  vol = max(vol, exp(-pow((x-0.7)/0.35,2.0))); vh += 0.04*smoothstep(1.0,0.15,x) - 0.012*smoothstep(0.16,0.08,x);
-      x = adist(s,LL(11.9,-104.1))/0.07;   vol = max(vol, exp(-pow((x-0.7)/0.35,2.0))); vh += 0.03*smoothstep(1.0,0.15,x) - 0.01*smoothstep(0.16,0.08,x);
-      x = adist(s,LL(1.5,-113.0))/0.055;   vol = max(vol, exp(-pow((x-0.7)/0.35,2.0))); vh += 0.025*smoothstep(1.0,0.15,x) - 0.01*smoothstep(0.2,0.1,x);
-      x = adist(s,LL(-8.4,-120.1))/0.065;  vol = max(vol, exp(-pow((x-0.7)/0.35,2.0))); vh += 0.03*smoothstep(1.0,0.15,x) - 0.012*smoothstep(0.28,0.16,x);
-      x = adist(s,LL(25.0,147.2))/0.06;    vol = max(vol, exp(-pow((x-0.7)/0.35,2.0))*0.7); vh += 0.022*smoothstep(1.0,0.15,x);
+      x = adist(s,vec3(-0.68386,0.31979,-0.6558))/0.09;  vol = max(vol, exp(-pow((x-0.7)/0.35,2.0))); vh += 0.04*smoothstep(1.0,0.15,x) - 0.012*smoothstep(0.16,0.08,x);
+      x = adist(s,vec3(-0.94903,0.2062,-0.23838))/0.07;   vol = max(vol, exp(-pow((x-0.7)/0.35,2.0))); vh += 0.03*smoothstep(1.0,0.15,x) - 0.01*smoothstep(0.16,0.08,x);
+      x = adist(s,vec3(-0.92019,0.02618,-0.3906))/0.055;   vol = max(vol, exp(-pow((x-0.7)/0.35,2.0))); vh += 0.025*smoothstep(1.0,0.15,x) - 0.01*smoothstep(0.2,0.1,x);
+      x = adist(s,vec3(-0.85587,-0.14608,-0.49613))/0.065;  vol = max(vol, exp(-pow((x-0.7)/0.35,2.0))); vh += 0.03*smoothstep(1.0,0.15,x) - 0.012*smoothstep(0.28,0.16,x);
+      x = adist(s,vec3(0.49095,0.42262,-0.76181))/0.06;    vol = max(vol, exp(-pow((x-0.7)/0.35,2.0))*0.7); vh += 0.022*smoothstep(1.0,0.15,x);
       alb = mix(alb, uB*1.15, vol*0.5);
       /* Valles Marineris: 4.000 km lang, bis 200 km breit */
-      vec3 v0 = LL(-7.0,-102.0), v1 = LL(-8.0,-88.0), v2 = LL(-10.0,-72.0), v3 = LL(-12.5,-57.0), v4 = LL(-14.0,-42.0);
+      vec3 v0 = vec3(-0.97086,-0.12187,-0.20636), v1 = vec3(-0.98966,-0.13917,0.03456), v2 = vec3(-0.93661,-0.17365,0.30432), v3 = vec3(-0.81879,-0.21644,0.53173), v4 = vec3(-0.64925,-0.24192,0.72107);
       vec3 sc = normalize(s + 0.012*vec3(fbm(s,14.0,4), fbm(s+4.0,14.0,4), fbm(s+8.0,14.0,4)));
       float vd = min(min(arcd(sc,v0,v1), arcd(sc,v1,v2)), min(arcd(sc,v2,v3), arcd(sc,v3,v4)));
       float vw = 0.026*(0.35+1.1*(0.5+0.5*fbm(s+5.0,7.0,4)))*smoothstep(-1.85,-1.65,atan(s.x,s.z))*smoothstep(-0.7,-0.85,atan(s.x,s.z));
@@ -2312,19 +2326,20 @@ vec4 shade(vec2 p){
       /* Polkappen: Norden mit Spiraltälern, Süden klein und gegen den Pol versetzt */
       float capN = smoothstep(0.972,0.982, s.y + 0.012*fbm(s,7.0,5));
       float tro = smoothstep(0.7,0.95, sin(lon + acos(clamp(s.y,-1.0,1.0))*46.0));
-      float capS = max(spot(s,-87.0,-45.0,0.07,n*0.6), 0.45*smoothstep(-0.975,-0.985, s.y + 0.01*fbm(s+2.0,9.0,5)));
+      float capS = max(spot(s,vec3(-0.03701,-0.99863,0.03701),0.07,n*0.6), 0.45*smoothstep(-0.975,-0.985, s.y + 0.01*fbm(s+2.0,9.0,5)));
       alb = mix(alb, mix(vec3(0.95,0.94,0.92), vec3(0.78,0.66,0.55), tro*0.6), capN);
       alb = mix(alb, vec3(0.95,0.94,0.93), capS);
       /* Süden alt und kraterreich, Norden und Tharsis jung und glatt */
-      float old = smoothstep(0.35,-0.15, s.y + 0.22*sin(lon-0.9))*(1.0 - spot(s,0.0,-110.0,0.55,0.0))*(1.0-0.7*hel);
+      float old = smoothstep(0.35,-0.15, s.y + 0.22*sin(lon-0.9))*(1.0 - spot(s,vec3(-0.93969,0.0,-0.34202),0.55,0.0))*(1.0-0.7*hel);
       h = craters(s,4.0,0.45,uQ.x*mix(0.2,1.0,old)*(1.0-max(capN,capS))) + 0.008*fbm(s+3.0,3.0,12) + vh - can*0.006
-        - 0.012*hel + exp(-pow((adist(s,LL(-42.4,70.5))-0.32)/0.03,2.0))*0.005;
+        - 0.012*hel + exp(-pow((adist(s,vec3(0.6961,-0.6743,0.2465))-0.32)/0.03,2.0))*0.005;
     } else if(uMode==9){
       /* Pluto (New Horizons): helles Herz Tombaugh Regio mit der Eisebene Sputnik Planitia, dunkle Maculae am Äquator, gelblicher Norden */
       const vec4 MAC[12] = vec4[12](
-        vec4(-6.0,40.0,0.2,1.0), vec4(-8.0,70.0,0.24,1.0), vec4(-9.0,100.0,0.25,1.0), vec4(-7.0,128.0,0.22,1.0), vec4(-3.0,152.0,0.14,0.9),
-        vec4(-12.0,213.0,0.1,0.9), vec4(-14.0,233.0,0.09,0.8), vec4(-5.0,262.0,0.11,0.7), vec4(0.0,292.0,0.13,0.85), vec4(2.0,318.0,0.13,0.85),
-        vec4(-2.0,345.0,0.13,0.85), vec4(0.0,10.0,0.1,0.8));
+        vec4(0.63927,-0.10453,0.76185,22.9), vec4(0.93055,-0.13917,0.33869,15.90278), vec4(0.97268,-0.15643,-0.17151,14.656), vec4(0.78214,-0.12187,-0.61107,18.92562), vec4(0.46883,-0.05234,-0.88174,46.73469),
+        vec4(-0.53274,-0.20791,-0.82034,91.6), vec4(-0.77491,-0.24192,-0.58394,113.08642), vec4(-0.9865,-0.08716,-0.13864,75.70248), vec4(-0.92718,0.0,0.37461,54.20118), vec4(-0.66872,0.0349,0.74269,54.20118),
+        vec4(-0.25866,-0.0349,0.96534,54.20118), vec4(0.17365,0.0,0.98481,91.6));
+      const float MACW[12] = float[12](1.0, 1.0, 1.0, 1.0, 0.9, 0.9, 0.8, 0.7, 0.85, 0.85, 0.85, 0.8);
       float n = 0.3*fbm(s+uSeed,3.0,6), n2 = fbm(s+9.0,2.2,8);
       alb = mix(uA*vec3(0.8,0.72,0.66), uA, smoothstep(-0.5,0.3,s.y));
       alb = mix(alb, vec3(0.86,0.76,0.56), smoothstep(0.75,0.92,s.y+0.08*n2));
@@ -2332,31 +2347,31 @@ vec4 shade(vec2 p){
       float mac = 0.0;
       vec3 sw = warp(s, 0.09);
       float fl = 0.0, fw = 0.0;
-      for(int k=ZERO;k<12;k++){ vec4 m = MAC[k]; float g = blob(sw,m); fl += g; fw += g*m.w; }
+      for(int k=ZERO;k<12;k++){ float g = blob(sw,MAC[k]); fl += g; fw += g*MACW[k]; }
       mac = smoothstep(0.45,0.65,fl+n)*clamp(fw/max(fl,1e-3),0.0,1.0);
       alb = mix(alb, uB, mac*0.92);
       vec3 sh = warp(s, 0.035);
-      float spk = smoothstep(0.37,0.43, blob(sh,vec4(31.0,176.0,0.25,1.0)) + blob(sh,vec4(11.0,180.0,0.24,1.0)) + blob(sh,vec4(-10.0,187.0,0.15,1.0)) + n*0.25);
-      float east = smoothstep(0.2,0.42, blob(sw,vec4(22.0,203.0,0.24,1.0)) + blob(sw,vec4(4.0,200.0,0.16,1.0)) + n)*(0.5+0.5*smoothstep(-0.3,0.3,n2));
+      float spk = smoothstep(0.37,0.43, blob(sh,vec4(0.05979,0.51504,-0.85508,14.656)) + blob(sh,vec4(0.0,0.19081,-0.98163,15.90278)) + blob(sh,vec4(-0.12002,-0.17365,-0.97747,40.71111)) + n*0.25);
+      float east = smoothstep(0.2,0.42, blob(sw,vec4(-0.36228,0.37461,-0.85348,15.90278)) + blob(sw,vec4(-0.34119,0.06976,-0.9374,35.78125)) + n)*(0.5+0.5*smoothstep(-0.3,0.3,n2));
       alb = mix(alb, uC*vec3(0.97,0.98,1.0), east*0.85*(1.0-spk));
       /* Sputnik Planitia: Stickstoffeis in langsam umwälzenden Zellen, keine Krater */
       vec3 w = worley(s*26.0+uSeed);
       alb = mix(alb, uC*(0.95+0.05*mix(1.0, smoothstep(0.0,0.07,w.y-w.x), lodw(26.0))), spk);
       h = craters(s,5.0,0.4,uQ.x*(1.0-max(spk,east*0.6))) + 0.003*fbm(s+3.0,8.0,12)*(1.0-spk)
-        + 0.01*rfbm(s*4.0+uSeed,3.0,5)*jb(adist(s,LL(15.0,160.0)),0.0,0.12,0.03);
+        + 0.01*rfbm(s*4.0+uSeed,3.0,5)*jb(adist(s,vec3(0.33037,0.25882,-0.90767)),0.0,0.12,0.03);
     } else if(uMode==10){
       /* Ceres (Dawn): dunkle, kraterreiche Kruste; Salzflecken im Krater Occator, junger Strahlenkrater Haulani, Berg Ahuna Mons */
       alb = mix(uA, uB, smoothstep(0.0,0.5,fbm(s+uSeed,1.5,6))*0.6);
       alb *= 0.8+0.4*(0.5+0.5*fbm(s+7.0,4.0,12));
       float fw = max(0.012, PX*1.3), fk = min(1.0, 0.03/fw);
-      float fac = exp(-pow(adist(s,LL(19.82,239.33))/fw,2.0))*fk + 0.7*exp(-pow(adist(s,LL(20.2,241.3))/(fw*0.7),2.0))*fk
-                + 0.5*exp(-pow(adist(s,LL(24.3,138.2))/(fw*0.6),2.0))*fk + 0.5*exp(-pow(adist(s,LL(42.2,-0.4))/(fw*0.6),2.0))*fk;
-      float ry = rays(s,LL(5.8,10.77),0.1,1.0) + 0.6*rays(s,LL(-39.4,173.2),0.06,2.0);
+      float fac = exp(-pow(adist(s,vec3(-0.80917,0.33907,-0.47988))/fw,2.0))*fk + 0.7*exp(-pow(adist(s,vec3(-0.8232,0.3453,-0.45069))/(fw*0.7),2.0))*fk
+                + 0.5*exp(-pow(adist(s,vec3(0.60748,0.41151,-0.67943))/(fw*0.6),2.0))*fk + 0.5*exp(-pow(adist(s,vec3(-0.00517,0.67172,0.74079))/(fw*0.6),2.0))*fk;
+      float ry = rays(s,vec3(0.18591,0.10106,0.97736),0.1,1.0) + 0.6*rays(s,vec3(0.09149,-0.63473,-0.7673),0.06,2.0);
       alb = mix(alb, uC, clamp(fac,0.0,1.0));
       alb = mix(alb, vec3(0.62,0.66,0.72), clamp(ry*0.5,0.0,0.6));
       h = craters(s,4.0,0.6,uQ.x) + 0.004*fbm(s+3.0,7.0,12)
-        + crat(s,19.82,239.33,0.098) + crat(s,-10.8,124.0,0.3)*0.3 + crat(s,-42.6,292.5,0.277)*0.4 + crat(s,-46.0,249.0,0.18)*0.5 + crat(s,24.3,138.2,0.134)
-        + 0.012*exp(-pow(adist(s,LL(-10.5,316.2))/0.02,2.0));
+        + crat(s,vec3(-0.80917,0.33907,-0.47988),0.098) + crat(s,vec3(0.81435,-0.18738,-0.54929),0.3)*0.3 + crat(s,vec3(-0.68007,-0.67688,0.28169),0.277)*0.4 + crat(s,vec3(-0.64852,-0.71934,-0.24894),0.18)*0.5 + crat(s,vec3(0.60748,0.41151,-0.67943),0.134)
+        + 0.012*exp(-pow(adist(s,vec3(-0.68055,-0.18224,0.70967))/0.02,2.0));
     } else if(uMode==1 && uHasTex>0.5){
       float lon = atan(s.x, s.z), lat = asin(clamp(s.y,-1.0,1.0));
       vec2 uv = vec2(lon/TAU + 0.5, 0.5 - lat/PI);
@@ -2471,10 +2486,10 @@ vec4 shade(vec2 p){
         lava += cal*smoothstep(0.45,0.85, 0.5+0.5*fbm(s*f*5.0+uT*0.02,1.0,5) + 0.3*(1.0-dn))*step(bh.x,0.6);
       }
       /* Pele: roter Schwefelring von 1.200 km Durchmesser; Loki Patera: dunkler Lavasee mit heller Insel */
-      float dp = adist(s,LL(-18.7,104.7)) + 0.03*fbm(s+3.0,6.0,4);
+      float dp = adist(s,vec3(0.91621,-0.32061,-0.24036)) + 0.03*fbm(s+3.0,6.0,4);
       alb = mix(alb, vec3(0.78,0.25,0.1), exp(-pow((dp-0.3)/0.07,2.0))*0.85);
       alb = mix(alb, uD, 1.0-smoothstep(0.02,0.035,dp));
-      float lk = (1.0-smoothstep(0.045,0.055,adist(s,LL(13.0,51.0))))*smoothstep(0.018,0.026,adist(s,LL(12.4,51.6)));
+      float lk = (1.0-smoothstep(0.045,0.055,adist(s,vec3(0.75723,0.22495,0.61319))))*smoothstep(0.018,0.026,adist(s,vec3(0.76541,0.21474,0.60666)));
       alb = mix(alb, uD*0.7, lk);
       lava += lk*0.5 + (1.0-smoothstep(0.02,0.035,dp))*0.6;
       emis = vec3(1.0,0.42,0.1)*lava*1.6;
@@ -2483,7 +2498,7 @@ vec4 shade(vec2 p){
       /* Europa: helles Wassereis, rotbraune Bruchlinien (Lineae) quer über die Kugel, fleckiges Chaos-Terrain, kaum Krater */
       float n1 = fbm(s+uSeed,1.4,8);
       /* die in Bahnrichtung hintere Halbkugel (um 90° Ost) ist dunkler und rötlicher */
-      float chaos = smoothstep(0.05,0.5, fbm(s+21.0,1.1,6) + 0.3*n1 + 0.35*dot(s,LL(0.0,90.0)) - 0.1);
+      float chaos = smoothstep(0.05,0.5, fbm(s+21.0,1.1,6) + 0.3*n1 + 0.35*dot(s,vec3(1.0,0.0,0.0)) - 0.1);
       alb = mix(uA, uB, chaos*0.8);
       alb *= 0.9+0.2*(0.5+0.5*fbm(s+7.0,9.0,12));
       float lin = 0.0;
@@ -2499,7 +2514,7 @@ vec4 shade(vec2 p){
       float fine = pow(rfbm(s*3.0+uSeed,1.0,8),3.0);
       alb = mix(alb, uC, clamp(lin*0.85 + fine*0.3*(0.4+0.6*chaos), 0.0, 1.0));
       /* junger Krater Pwyll mit hellen Eisstrahlen */
-      alb = mix(alb, vec3(0.96,0.97,0.98), clamp(rays(s,LL(-25.2,88.6),0.18,1.0)*0.5,0.0,0.7));
+      alb = mix(alb, vec3(0.96,0.97,0.98), clamp(rays(s,vec3(0.90456,-0.42578,0.02211),0.18,1.0)*0.5,0.0,0.7));
       h = 0.002*fbm(s+3.0,10.0,12) + craters(s,6.0,0.08,uQ.x);
     } else {
       float lat = s.y;
@@ -2541,7 +2556,7 @@ vec4 shade(vec2 p){
   }
   if(uMode==5){
     /* Io: Auswurfwolke eines Vulkans am Rand, schirmförmig, rund 300 km hoch */
-    vec3 v0 = M*(rotY(-(uT*uAxis.z - uRot.x))*LL(-18.7,104.7));
+    vec3 v0 = M*(rotY(-(uT*uAxis.z - uRot.x))*vec3(0.91621,-0.32061,-0.24036));
     float l0 = length(v0.xy); vec2 dir = v0.xy/max(l0,1e-3);
     float al = dot(p,dir) - l0, ac = abs(p.x*dir.y - p.y*dir.x);
     float wp = 0.012 + 0.75*max(al,0.0);
@@ -3009,7 +3024,7 @@ function setupTextures(){
 function makeProg(name){
   const fs = gl.createShader(gl.FRAGMENT_SHADER);
   const [k, m = '0', f = '0'] = name.split(':');
-  const defs = 'const int uMode = ' + m + ';\n#define FLAT ' + f + '\n' + (k === 'craft' && m === '0' ? '#define ASTRO\n' : '');
+  const defs = 'const int uMode = ' + m + ';\n#define FLAT ' + f + '\n' + (k === 'craft' && m === '0' ? '#define ASTRO\n' : '') + (MOBILE ? '#define LOWQ\n' : '');
   const src = (k === 'bg' ? BG : PRE + SRC[k] + MAIN).replace('//@DEFS', defs);
   gl.shaderSource(fs, src); gl.compileShader(fs);
   const p = gl.createProgram(); gl.attachShader(p, vsh); gl.attachShader(p, fs);
@@ -3043,10 +3058,14 @@ function precompile(center){
    Bühne
    ====================================================================== */
 let W = 0, H = 0, dpr = 1, OX = 0, OY = 0, VM = 0, MAXD = 0, GW = 0, GH = 0, KG = 1;
-let quality = innerWidth < 760 ? .8 : 1;
+/* Auflösung: bis zur doppelten Pixeldichte, begrenzt durch ein Budget an Bildpunkten (Handy 1,7 Mio., sonst 4,2 Mio.).
+   quality regelt nur noch nach, wenn das Gerät die Bildrate nicht hält. */
+let quality = 1;
+const MOBILE = matchMedia('(pointer:coarse)').matches || innerWidth < 760;
+function resScale(){ return Math.min(Math.min(dpr, 2), Math.sqrt((MOBILE ? 1.7e6 : 4.2e6)/Math.max(1, W*H)))*quality; }
 let avoid = [], postReady = false;
 function sizeGL(){
-  const s = Math.min(dpr, 1.5)*quality;
+  const s = resScale();
   GW = Math.max(1, Math.round(W*s)); GH = Math.max(1, Math.round(H*s));
   if (glc.width !== GW || glc.height !== GH) { glc.width = GW; glc.height = GH; }
   KG = GW / W;
@@ -3122,7 +3141,7 @@ function textW(s, font){ const k = font + s; if (!(k in twCache)) { octx.font = 
    das am Ende mit weicher Lichterbegrenzung und feinem Korn über das Bild gelegt wird.
    Fehlt die Unterstützung, zeichnet die Seite wie bisher direkt auf die Leinwand.
    ====================================================================== */
-const POST = {on: false, fbo: null, scene: null, glow: null, mips: [], w: 0, h: 0, float: false, bloom: .2, grain: .014, ca: .004};
+const POST = {on: false, fbo: null, scene: null, glow: null, mips: [], w: 0, h: 0, float: false, bloom: .2, grain: MOBILE ? .008 : .014, ca: .004};
 function postProg(fsrc){
   const vs = gl.createShader(gl.VERTEX_SHADER); gl.shaderSource(vs, GLSL_post_vert); gl.compileShader(vs);
   const fs = gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(fs, fsrc); gl.compileShader(fs);
@@ -3147,7 +3166,8 @@ function postInit(){
 function postResize(w, h){
   if (!POST.ready || (POST.w === w && POST.h === h && POST.on)) return;
   const build = fl => {
-    const fS = fl ? [gl.RGBA16F, gl.RGBA, gl.HALF_FLOAT] : [gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE];
+    /* Das Bild selbst liegt schon im darstellbaren Bereich, 8 Bit genügen; nur der Leuchtanteil braucht mehr Umfang */
+    const fS = [gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE];
     const fG = fl ? [gl.R11F_G11F_B10F, gl.RGB, gl.HALF_FLOAT] : [gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE];
     if (POST.fbo) { gl.deleteFramebuffer(POST.fbo); gl.deleteTexture(POST.scene); gl.deleteTexture(POST.glow); POST.mips.forEach(m => { gl.deleteFramebuffer(m.fb); gl.deleteTexture(m.t); }); }
     POST.scene = postTex(w, h, fS); POST.glow = postTex(w, h, fG);
@@ -3158,7 +3178,7 @@ function postResize(w, h){
     let ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
     POST.mips = [];
     let mw = w, mh = h;
-    for (let i = 0; i < 6 && ok; i++) {
+    for (let i = 0; i < (MOBILE ? 5 : 6) && ok; i++) {
       mw = Math.max(1, mw >> 1); mh = Math.max(1, mh >> 1);
       const t = postTex(mw, mh, fG), fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
@@ -3424,7 +3444,7 @@ function t3Use(o, X, Y, R, a){
 function t3Render(time){
   if (T3.state !== 'ready') return;
   const {R3, scene, cam, sun, rim} = T3;
-  const pr = Math.min(dpr, 1.5)*quality;
+  const pr = resScale();
   if (T3.pr !== pr || T3.w !== W || T3.h !== H) { R3.setPixelRatio(pr); R3.setSize(W, H, false); T3.pr = pr; T3.w = W; T3.h = H; }
   for (const k in T3.models) T3.models[k].holder.visible = false;
   if (!T3.draws.length) { if (T3.drawn) { R3.clear(); T3.drawn = false; } return; }
@@ -3466,7 +3486,7 @@ function render(time){
   const w = Math.exp(Math.log(WV[i])*(1-f) + Math.log(WV[i+1])*f);
   /* Kamera relativ zu Objekt i, damit auch winzige Abstände genau bleiben */
   const fc = (w - WV[i]) / (WV[i+1] - WV[i]);
-  let s = VM / w, camX = DX[i]*fc, camY = DY[i]*fc, oxx = OX, oyy = OY;
+  let s = VM / w * (W < 760 ? Math.exp(Math.log(ZK[i])*(1-f) + Math.log(ZK[i+1])*f) : 1), camX = DX[i]*fc, camY = DY[i]*fc, oxx = OX, oyy = OY;
   const dk = det.j >= 0 ? det.k*det.k*(3 - 2*det.k) : 0;
   if (dk > 0) {
     /* Detailansicht: Kamera rahmt das gewählte Objekt groß, links neben der Seitenleiste */
@@ -4137,11 +4157,15 @@ addEventListener('popstate', () => {
 });
 $('detBack').addEventListener('click', closeDetail);
 
-/* Bildrate halten: Auflösung passt sich an */
-let ema = 16, qT = 0, introR = 0;
+/* Bildrate halten: Die Auflösung sinkt erst, wenn über mehrere Sekunden Bilder ausfallen (unter rund 48 pro Sekunde),
+   und steigt wieder, sobald das Gerät mithält. Ruckler beim Übersetzen der Shader zählen nicht. Eine Stufe, die nicht
+   gehalten wurde, wird für eine wachsende Zeit nicht erneut versucht, damit die Schärfe nicht pumpt. */
+let ema = 16, qT = 0, introR = 0, qSlow = 0, qFast = 0, qCap = 9, qCapT = 0, qWait = 15;
 function frame(now){
   const dtms = last ? now - last : 16, dt = Math.min(.05, dtms/1000); last = now;
-  ema = ema*.94 + Math.min(dtms, 100)*.06; qT += dt;
+  if (progMissLast > 0) { qT = -1.5; qSlow = qFast = 0; }
+  else if (dtms < 70) ema = ema*.94 + dtms*.06;
+  qT += dt;
   det.k += (det.target - det.k)*(reduce ? 1 : 1 - Math.exp(-dt*4.2));
   if (!det.target && det.k < .002) { det.k = 0; det.j = -1; }
   { const k = reduce ? 1 : 1 - Math.exp(-dt*11);
@@ -4156,8 +4180,9 @@ function frame(now){
     if (e > INTRO_MS) { introT0 = 0; astroDrop = 0; }
   }
   if (qT > 1.2) { qT = 0;
-    if (ema > 25 && quality > .5) { quality = Math.max(.5, quality*.82); sizeGL(); }
-    else if (ema < 13.5 && quality < 1) { quality = Math.min(1, quality*1.1); sizeGL(); } }
+    qSlow = ema > 21 ? qSlow + 1 : 0; qFast = ema < 17.6 ? qFast + 1 : 0;
+    if (qSlow >= 2 && quality > .55) { qCap = quality; qCapT = now + qWait*1000; qWait = Math.min(240, qWait*2); quality = Math.max(.55, quality*.85); qSlow = 0; sizeGL(); }
+    else if (qFast >= 3 && quality < 1) { const q = Math.min(1, quality*1.09); if (q < qCap - .01 || now > qCapT) { quality = q; sizeGL(); } qFast = 0; } }
   if (touring) {
     const fr = targetT - Math.floor(targetT);
     targetT += tourDir*dt*.42*(.2 + .8*Math.pow(Math.sin(Math.PI*fr), 2));
