@@ -528,19 +528,19 @@ const OBJ = [
    t:'Der Kern des Wasserstoffatoms: drei Quarks, zusammengehalten von Gluonen. Fast seine ganze Masse steckt in der Energie dieses Feldes, nicht in den Quarks selbst.'},
   {n:'Leere im Atom', d:1e-13, k:'void', cat:'Atom', dot:'#59617a', at:[0,0],
    t:'Atome bestehen fast nur aus Leere. Ohne sie passte die gesamte Menschheit in einen Zuckerwürfel.'},
-  {n:'Gammastrahlung', d:1e-11, k:'void', cat:'Licht', dot:'#59617a', at:[0,0],
+  {n:'Gammastrahlung', d:1e-11, k:'void', cat:'Licht', dot:'#59617a', at:[0,0], fx:'micro:12:0', ext:4.2, g:{mode:12, Q:[0,0,0,0]},
    t:'So kurz sind die Wellen von Gammastrahlung. Sie entsteht, wenn sich Atomkerne umordnen oder zerfallen.'},
-  {n:'Wasserstoffatom', d:1.06e-10, k:'micro', cat:'Atom', dot:'#8fb0ff', ext:2.6, ly:1.3, at:[.545,-.3], g:{mode:6, edge:2.6},
+  {n:'Wasserstoffatom', d:1.06e-10, k:'micro', cat:'Atom', dot:'#8fb0ff', ext:2.6, ly:1.3, at:[.545,-.3], g:{mode:6, edge:2.6, rot:1, pts:{m:0, n:6500}},
    t:'Ein Elektron als Wolke um ein Proton – dazwischen fast nur Leere. Wäre das Atom so groß wie ein Stadion, wäre sein Kern ein Pfefferkorn am Anstoßpunkt.'},
   {n:'Wassermolekül', d:2.8e-10, k:'micro', cat:'Molekül', dot:'#ff8f80', ext:1.3, at:[.6,1.15], g:{mode:5, rot:1},
    t:'Zwei Wasserstoffatome am Sauerstoff, im Winkel von 104,5 Grad. Der Mensch besteht zu rund 60 Prozent aus Wasser.'},
-  {n:'DNA', d:2e-9, lx:3.4, k:'micro', cat:'Molekül', dot:'#9fd0ff', ext:3.6, ly:1.2, at:[1.1,.35], g:{mode:4, rot:1},
+  {n:'DNA', d:2e-9, lx:3.4, k:'micro', cat:'Molekül', dot:'#9fd0ff', ext:5.8, ly:1.2, at:[1.1,.35], g:{mode:4, rot:1},
    t:'Die Doppelhelix ist nur 2 Nanometer dick. Ihre vier Basen schreiben den Bauplan jedes Lebewesens, auch den des Astronauten.'},
   {n:'Ribosom', d:2e-8, k:'micro', cat:'Zellbestandteil', dot:'#f5b878', ext:1.25, at:[1.25,-.75], g:{mode:3, rot:1},
    t:'Im Inneren des Bakteriums bauen Ribosomen Proteine nach Bauplan – auch die Bausteine neuer Viren, wenn eine Phage die Zelle gekapert hat.'},
   {n:'Bakteriophage', d:2e-7, k:'micro', cat:'Virus', dot:'#b7a6ff', ext:1.5, ly:1.1, at:[0,0], g:{mode:11, rot:1},
    t:'Kleiner als die Wellenlänge des Lichts gibt es keine Farben mehr – ab hier sind sie symbolisch. Dieses Virus befällt Bakterien: Es landet wie eine Mondfähre und spritzt sein Erbgut in die Zelle.'},
-  {n:'Wellenlänge des Lichts', d:5.5e-7, k:'void', cat:'Licht', dot:'#59617a', at:[.15,.05],
+  {n:'Wellenlänge des Lichts', d:5.5e-7, k:'void', cat:'Licht', dot:'#59617a', at:[.15,.05], fx:'micro:12:0', ext:4.2, g:{mode:12, Q:[1,0,0,0]},
    t:'Grünes Licht schwingt einmal auf 550 Nanometern. Kleineres kann kein Lichtmikroskop mehr scharf zeigen – ab hier gibt es keine Farben mehr.'},
   {n:'Bakterium', d:3e-6, k:'micro', cat:'Lebewesen', dot:'#9fdcef', ext:1.15, ly:.45, at:[.25,.14], g:{mode:2, rot:1},
    t:'Auf der Milbe sitzen Bakterien, hundertmal kleiner. Ein Mensch trägt etwa so viele Bakterien in und auf sich, wie er Körperzellen hat.'},
@@ -639,33 +639,33 @@ const OBJ = [
    t:'Das erste Schwarze Loch, von dem es ein Bild gibt: 6,5 Milliarden Sonnenmassen im Herzen der Galaxie M87. Sein Ereignishorizont ist größer als unser Sonnensystem.'},
   {n:'TON 618', d:2.4e14, lx:10, ly:6, k:'hole', cat:'Schwarzes Loch', dot:'#ffd0a0', g:{Q:[1.5,10.5,1.6,.24]},
    t:'Eines der massereichsten bekannten Schwarzen Löcher: rund 40 Milliarden Sonnenmassen. Die Scheibe aus Gas, das hineinstürzt, leuchtet heller als hundert Billionen Sonnen.'},
-  {n:'Oortsche Wolke', d:200000*AU, k:'oort', cat:'Kometenwolke', dot:'#bcd0ff',
+  {n:'Oortsche Wolke', d:200000*AU, k:'oort', cat:'Kometenwolke', dot:'#bcd0ff', g:{pts:{m:1, n:9000}},
    marks:[{x:0,y:0,l:'Sonne'}],
    t:'Eine vermutete Hülle aus Billionen eisiger Körper, aus der langperiodische Kometen kommen. Ihr äußerer Rand liegt vielleicht 1,5 Lichtjahre von der Sonne entfernt.'},
   {n:'Nächster Stern', d:2*4.24*LY, k:'proxima', cat:'Nachbarschaft', dot:'#ffd27a',
    marks:[{x:0,y:0,l:'Sonne'},{x:Math.cos(.7),y:Math.sin(.7),l:'Proxima Centauri'}],
    t:'Ein Kreis mit dem Abstand zum nächsten Stern: 4,24 Lichtjahre bis Proxima Centauri. Eine heutige Raumsonde wäre Zehntausende Jahre unterwegs.'},
-  {n:'Orionnebel', d:24*LY, k:'nebula', cat:'Nebel', dot:'#ff8fb0',
+  {n:'Orionnebel', d:24*LY, k:'nebula', cat:'Nebel', dot:'#ff8fb0', g:{pts:{m:7, n:2600}},
    t:'Eine Kinderstube für Sterne, rund 1.340 Lichtjahre entfernt. Mit bloßem Auge ist er als heller Fleck im Schwert des Orion zu sehen.'},
-  {n:'Omega Centauri', d:150*LY, k:'cluster', cat:'Kugelsternhaufen', dot:'#ffe6c0',
+  {n:'Omega Centauri', d:150*LY, k:'cluster', cat:'Kugelsternhaufen', dot:'#ffe6c0', g:{pts:{m:2, n:15000}},
    t:'Der größte Kugelsternhaufen der Milchstraße mit rund zehn Millionen Sternen. Vermutlich ist er der Kern einer verschluckten Zwerggalaxie.'},
-  {n:'Milchstraße', d:100000*LY, k:'galaxy', cat:'Galaxie', dot:'#e9e2ff', g:{mode:0},
+  {n:'Milchstraße', d:100000*LY, k:'galaxy', cat:'Galaxie', dot:'#e9e2ff', g:{mode:0, pts:{m:3, n:36000, q:[4,4.2,1,.45], q2:[0,1,0,0]}},
    marks:[{x:.52*Math.cos(2.5),y:.52*Math.sin(2.5),l:'Sonne'}],
    t:'Unsere Galaxie mit 100 bis 400 Milliarden Sternen. Die Sonne liegt rund 26.000 Lichtjahre vom Zentrum entfernt und braucht für eine Runde etwa 230 Millionen Jahre.'},
-  {n:'Andromeda', d:220000*LY, k:'galaxy', cat:'Galaxie', dot:'#ffe9d0', g:{mode:1},
+  {n:'Andromeda', d:220000*LY, k:'galaxy', cat:'Galaxie', dot:'#ffe9d0', g:{mode:1, pts:{m:3, n:30000, q:[2,7.5,0,.2], q2:[.62,.3,0,0]}},
    t:'Die nächste große Galaxie, 2,5 Millionen Lichtjahre entfernt. In einigen Milliarden Jahren könnte sie mit der Milchstraße verschmelzen.'},
-  {n:'Lokale Gruppe', d:10e6*LY, k:'galaxy', cat:'Galaxiengruppe', dot:'#d8dcff', g:{mode:2},
+  {n:'Lokale Gruppe', d:10e6*LY, k:'galaxy', cat:'Galaxiengruppe', dot:'#d8dcff', g:{mode:2, pts:{m:4, n:260}},
    marks:[{x:-.25,y:.1,l:'Milchstraße'},{x:.25,y:-.05,l:'Andromeda'},{x:.36,y:.1,l:'Dreiecksgalaxie'}],
    t:'Über 80 Galaxien, die von ihrer gegenseitigen Schwerkraft zusammengehalten werden. Die Milchstraße und Andromeda sind die beiden größten.'},
-  {n:'Virgo-Superhaufen', d:110e6*LY, k:'web', cat:'Superhaufen', dot:'#c8cfff', g:{mode:0},
+  {n:'Virgo-Superhaufen', d:110e6*LY, k:'web', cat:'Superhaufen', dot:'#c8cfff', g:{mode:0, pts:{m:5, n:14000, q:[0,3,0,0]}},
    marks:[{x:0,y:0,l:'Virgohaufen'},{x:.82,y:.08,l:'Lokale Gruppe'}],
    t:'Rund hundert Galaxiengruppen und -haufen mit dem Virgohaufen in der Mitte. Unsere Lokale Gruppe liegt am Rand.'},
-  {n:'Laniakea', d:520e6*LY, k:'web', cat:'Superhaufen', dot:'#ffd9b0', g:{mode:1},
+  {n:'Laniakea', d:520e6*LY, k:'web', cat:'Superhaufen', dot:'#ffd9b0', g:{mode:1, pts:{m:6, n:5200}},
    marks:[{x:0,y:0,l:'Großer Attraktor'},{x:.62,y:-.18,l:'Milchstraße'}],
    t:'Der Superhaufen, zu dem wir gehören, 2014 anhand der Bewegung von Galaxien abgegrenzt. Der Name ist Hawaiianisch und bedeutet „unermesslicher Himmel“.'},
-  {n:'Herkules-Corona-Borealis-Mauer', d:10e9*LY, k:'web', cat:'Großstruktur', dot:'#c8cfff', g:{mode:2},
+  {n:'Herkules-Corona-Borealis-Mauer', d:10e9*LY, k:'web', cat:'Großstruktur', dot:'#c8cfff', g:{mode:2, pts:{m:5, n:14000, q:[2,4,0,0]}},
    t:'Eine der größten bekannten Strukturen, entdeckt über die Verteilung von Gammablitzen. Ihre Ausdehnung ist umstritten, Schätzungen reichen bis zehn Milliarden Lichtjahre.'},
-  {n:'Beobachtbares Universum', d:93e9*LY, k:'web', cat:'Alles', dot:'#ffb36b', g:{mode:3},
+  {n:'Beobachtbares Universum', d:93e9*LY, k:'web', cat:'Alles', dot:'#ffb36b', g:{mode:3, pts:{m:5, n:22000, q:[3,5,0,0]}},
    marks:[{x:0,y:0,l:'Milchstraße'},{x:0,y:-.965,l:'Hintergrundstrahlung'}],
    t:'Alles, dessen Licht uns seit dem Urknall vor 13,8 Milliarden Jahren erreichen konnte. Weil sich der Raum ausdehnt, liegt sein Rand heute rund 46 Milliarden Lichtjahre entfernt.'}
 ];
@@ -1158,7 +1158,9 @@ OBJ.forEach((o, j) => {
   if (o.orbits) { const m = o.orbits[o.orbits.length-1].au; o.orbits.forEach(q => q.r = q.au/m); }
   /* 1 = Scheibe, 2 = Kugel */
   o.flat = ['orbits','helio','proxima','nebula','galaxy'].includes(o.k) ? 1 : ['oort','cluster'].includes(o.k) ? 2 : o.k === 'web' ? (o.g.mode === 3 ? 2 : 1) : 0;
-  o.pk = o.k + ':' + (o.g.mode || 0) + ':' + o.flat;
+  o.pk = o.fx || o.k + ':' + (o.g.mode || 0) + ':' + o.flat;
+  /* Partikel zum Objekt (g.pts = {m: Art, n: Anzahl, q/q2: Parameter, b: Helligkeit}) */
+  if (o.g.pts) o.ptk = 'pts:' + o.g.pts.m + ':0';
   o.edge = o.k === 'micro' ? (o.g.edge || 0) : (o.solid || o.k === 'hole' ? 0 : o.ext);
 });
 
@@ -1426,7 +1428,8 @@ vec4 shade(vec2 p){
   float sig = 1.0/pow(1.0+r*r/(a*a),2.0);
   vec3 col = vec3(1.0,0.85,0.62)*(sig*0.9 + 0.08*exp(-r*3.0));
   float dd = clamp(sig*2.0+0.05,0.0,1.0)*smoothstep(1.3,0.5,r);
-  col += starLayers(PP,dd,16.0,uSeed,PX)*1.1 + starLayers(PP,dd,23.0,uSeed+7.0,PX)*0.9 + starLayers(PP,dd,33.0,uSeed+13.0,PX)*0.7;
+  /* die hellen Einzelsterne zeichnet das Partikelsystem; hier bleibt der feine, unaufgelöste Sternenstaub */
+  col += starLayers(PP,dd,33.0,uSeed+13.0,PX)*0.45;
   return emit(col);
 }`;
 SRC.craft = `
@@ -1697,14 +1700,18 @@ vec4 galaxy(vec2 q, float arms, float pk, float bar, float barA, float warm, flo
 }
 vec4 shade(vec2 p){
   vec3 col = vec3(0.0);
+  /* Das Armmuster dreht sich langsam und starr (im Uhrzeigersinn, die Arme ziehen nach); die Sterne dazu sind Partikel */
+  const float OP = 0.02;
   if(uMode==0){
-    vec4 g = galaxy(p,4.0,4.2,1.0,0.45,0.0,uSeed);
-    col = g.rgb + starLayers(p,g.a,18.0,uSeed,PX);
+    vec2 pr = rot2(uT*OP)*p;
+    vec4 g = galaxy(pr,4.0,4.2,1.0,0.45,0.0,uSeed);
+    col = g.rgb*0.9 + starLayers(pr,g.a,18.0,uSeed,PX)*0.5;
     col *= smoothstep(1.15,0.95,length(p));
   } else if(uMode==1){
     vec2 q = rot2(0.62)*p; q.y /= 0.3;
+    q = rot2(uT*OP)*q;
     vec4 g = galaxy(q,2.0,7.5,0.3,0.2,1.0,uSeed);
-    col = g.rgb + starLayers(p,g.a*0.6,18.0,uSeed,PX);
+    col = g.rgb*0.9 + starLayers(p,g.a*0.6,18.0,uSeed,PX)*0.4;
     col += vec3(1.0,0.88,0.7)*exp(-length(p-vec2(0.06,-0.1))/0.012)*0.7;
     vec2 m = rot2(0.9)*(p-vec2(-0.28,0.3)); m.y /= 0.55;
     col += vec3(1.0,0.88,0.7)*exp(-length(m)/0.03)*0.35;
@@ -1723,7 +1730,7 @@ vec4 shade(vec2 p){
       col += vec3(0.85,0.88,1.0)*exp(-length(p-c2)/0.006)*0.6; }
     float dd = (0.5*(exp(-dot(p-c0,p-c0)/0.006)+exp(-dot(p-c1,p-c1)/0.01)) + 0.03)*smoothstep(1.05,0.75,length(p));
     col += starLayers(p,dd*0.6,7.0,uSeed+3.0,PX)*vec3(0.85,0.85,1.0)*0.9;
-    for(int k=ZERO;k<70;k++){ vec3 h = hash33(vec3(float(k),uSeed,3.7)); vec2 cc = (k<50) ? ((k<25?c0:c1) + (h.xy-0.5)*0.28) : (h.xy-0.5)*1.5; float sz = 0.002+0.006*h.z*h.z; col += vec3(0.85,0.87,1.0)*exp(-length(p-cc)/sz)*0.35*(0.4+h.z); }
+    /* die Zwerggalaxien umkreisen die beiden großen als Partikel (pts, Art 4) */
   }
   return emit(col*1.1);
 }`;
@@ -1895,7 +1902,8 @@ float mapM(vec3 q){
     float xk = (floor(q.x/0.34) + 0.5)*0.34, tk = TAU*xk/3.4;
     vec3 a = vec3(xk, cos(tk)*0.8, sin(tk)*0.8), b = vec3(xk, cos(tk + 2.3)*0.8, sin(tk + 2.3)*0.8);
     d = min(d, sdCap(q, a, b, 0.1));
-    return max(d, abs(q.x) - 3.3);
+    /* der Strang läuft weiter und blendet erst an den Enden aus (siehe shadeMarch) */
+    return max(d, abs(q.x) - 5.6);
   }
   if(uMode==11){
     /* Bakteriophage T4: gestreckter Ikosaeder-Kopf, Kragen, Schwanzrohr mit Scheide, Grundplatte, sechs geknickte Fasern */
@@ -1926,14 +1934,14 @@ vec3 microN(vec3 q, float e){
 vec4 shadeMarch(vec2 p){
   mat3 Rv = microRot(), Ri = transpose(Rv);
   /* Tiefe nach der Ausdehnung: die 6,6 Einheiten lange DNA kann zur Kamera zeigen */
-  float zr = uMode==4 ? 3.6 : uMode==11 ? 1.6 : 1.2;
+  float zr = uMode==4 ? 6.0 : uMode==11 ? 1.6 : 1.2;
   vec3 ro = Ri*vec3(p, zr), rd = Ri*vec3(0.0, 0.0, -1.0);
   float t = 0.0, dm = 1e9; bool hit = false;
   float stepK = uMode==4 ? 0.5 : 0.75;
   /* nur innerhalb der Hüllkugel abtasten */
-  float bR = uMode==4 ? 3.5 : uMode==11 ? 1.5 : 1.2, bb = dot(ro, rd), bc = dot(ro, ro) - bR*bR, bd = bb*bb - bc;
+  float bR = uMode==4 ? 5.8 : uMode==11 ? 1.5 : 1.2, bb = dot(ro, rd), bc = dot(ro, ro) - bR*bR, bd = bb*bb - bc;
   if(bd > 0.0){ t = max(0.0, -bb - sqrt(bd)); float t1 = -bb + sqrt(bd);
-    for(int i=ZERO;i<160;i++){ float d = mapM(ro + rd*t); dm = min(dm, d); if(d < 0.0015){ hit = true; break; } t += max(d*stepK, 0.002); if(t > t1) break; } }
+    for(int i=ZERO;i<200;i++){ float d = mapM(ro + rd*t); dm = min(dm, d); if(d < 0.0015){ hit = true; break; } t += max(d*stepK, 0.002); if(t > t1) break; } }
   vec3 col = vec3(0.0); float a = 0.0;
   /* Elektronendichte des Wassers als feiner Schleier um die Atome */
   if(uMode==5){
@@ -1960,7 +1968,8 @@ vec4 shadeMarch(vec2 p){
     vec3 alb = mix(base, vec3(0.78,0.82,0.9), bb);
     vec3 hv = normalize(LD + vec3(0.0,0.0,1.0));
     col = alb*(0.12 + 0.95*max(dif,0.0)) + vec3(1.0)*pow(max(dot(nw,hv),0.0), 40.0)*0.35 + alb*fres*0.25;
-    return vec4(col, 1.0);
+    float fd = smoothstep(5.4, 3.0, abs(q.x));
+    return vec4(col*fd*fd, fd);
   }
   /* Ribosom und Wasser: weich, plakativ, mit dunkler Kontur (nach David Goodsell) */
   vec3 alb;
@@ -1988,6 +1997,9 @@ float faceH(vec2 q){
   h += 0.5*exp(-pow((q.x - 0.2)/2.1, 2.0) - pow((q.y + 2.4)/1.1, 2.0));
   h += 0.13*exp(-pow((q.y - 0.62)/0.32, 2.0) - q.x*q.x/2.4) + 0.06*exp(-pow((q.y + 0.5)/0.24, 2.0) - q.x*q.x/2.0);
   h -= 0.5*smoothstep(-2.4, -4.8, q.x);
+  /* Die Lider wölben sich über den Augapfel; darunter die Tränenrinne */
+  h += 0.17*exp(-(q.x*q.x/1.5 + (q.y - 0.04)*(q.y - 0.04)/0.5));
+  h -= 0.07*exp(-pow((q.y + 0.95 - 0.12*q.x)/0.2, 2.0) - pow((q.x - 0.5)/1.3, 2.0));
   return h;
 }
 /* Deckung eines Haares: dünner als ein Pixel wird es blasser statt zu verschwinden */
@@ -1995,7 +2007,7 @@ float strandCov(float d, float w){ float ww = max(w, PX); return (w/ww)*clamp((0
 vec4 eye(vec2 q){
   const vec3 LF = vec3(-0.55, 0.55, 0.63);
   float hw = 1.32, xx = clamp(q.x/hw, -1.0, 1.0), e = 1.0 - xx*xx;
-  float up = 0.5*pow(max(e,0.0), 0.75) + 0.05 + 0.03*q.x;
+  float up = 0.42*pow(max(e,0.0), 0.7) + 0.045 + 0.03*q.x;
   float lo = -0.38*pow(max(e,0.0), 0.9) + 0.03 + 0.02*q.x;
   float open = smoothstep(0.0, 1.5*PX, up - q.y)*smoothstep(0.0, 1.5*PX, q.y - lo)*step(abs(q.x), hw);
   /* Licht durchs Visier: weicher, unregelmäßiger Lichtfleck statt Kreisrand */
@@ -2004,16 +2016,21 @@ vec4 eye(vec2 q){
   float hc = faceH(q), ee = 0.03;
   vec3 n = normalize(vec3(-(faceH(q + vec2(ee,0.0)) - faceH(q - vec2(ee,0.0)))/(2.0*ee), -(faceH(q + vec2(0.0,ee)) - faceH(q - vec2(0.0,ee)))/(2.0*ee), 1.0));
   float pore = fbm(vec3(q, uSeed), 26.0, 5), fine = fbm(vec3(q, uSeed + 2.0), 7.0, 5);
-  n = bumpN(n, vec3(q, 0.0), 0.0015*pore + 0.005*fine, 1.0);
+  n = bumpN(n, vec3(q, 0.0), 0.0018*pore + 0.005*fine, 1.0);
   vec3 alb = vec3(0.74,0.53,0.44)*(0.9 + 0.12*fine);
+  /* Hautton: um die Lider rötlicher und dünner, unter dem Auge etwas dunkler, feine Fältchen am Unterlid */
+  float nearEye = exp(-(q.x*q.x/2.6 + q.y*q.y/1.0));
+  alb = mix(alb, vec3(0.72,0.44,0.4), 0.3*nearEye);
+  alb *= 1.0 - 0.14*exp(-pow((q.y + 0.8 - 0.1*q.x)/0.28, 2.0) - pow((q.x - 0.3)/1.5, 2.0));
+  alb *= 1.0 - 0.07*smoothstep(0.3, 0.5, abs(fract((q.y + 0.06*q.x*q.x)*9.0 + 0.25*snoise(vec3(q*2.0, 3.0))) - 0.5))*smoothstep(-1.2, -0.5, q.y)*smoothstep(-0.25, -0.45, q.y)*smoothstep(1.4, 0.6, abs(q.x))*lodw(9.0);
   alb = mix(alb, vec3(0.78,0.46,0.42), 0.35*exp(-dot(q - vec2(1.6,-0.1), q - vec2(1.6,-0.1))/0.6));
   /* Lachfältchen am äußeren Lidwinkel */
   vec2 cf = q - vec2(-1.45, 0.05); float rc = length(cf), ac = atan(cf.y, cf.x);
   float crow = smoothstep(0.35, 0.6, rc)*smoothstep(1.7, 1.0, rc)*step(q.x, -1.3);
   alb *= 1.0 - 0.18*crow*smoothstep(0.42, 0.5, abs(fract(ac*11.0/TAU + 0.12*snoise(vec3(cf*3.0, 1.0))) - 0.5) + 0.0)*lodw(11.0);
   /* Lidfalte */
-  float crease = exp(-pow((q.y - up - 0.3 - 0.1*e)/0.045, 2.0))*step(0.0, q.y - up)*smoothstep(1.5, 0.6, abs(q.x));
-  alb *= 1.0 - 0.3*crease;
+  float crease = exp(-pow((q.y - up - 0.3 - 0.1*e)/0.035, 2.0))*step(0.0, q.y - up)*smoothstep(1.5, 0.6, abs(q.x));
+  alb *= 1.0 - 0.5*crease;
   /* Augenbraue: Haare rund 0,1 mm stark (0,008 Augenradien) und 5–10 mm lang; innen aufrecht, außen flach nach außen.
      Ist ein Haar kleiner als ein Pixel, zählt seine mittlere Deckung. */
   float yb = 1.72 + 0.28*exp(-pow((q.x + 0.25)/1.5, 2.0)) - 0.04*q.x, db = q.y - yb;
@@ -2036,6 +2053,14 @@ vec4 eye(vec2 q){
   }
   float ndl = dot(n, normalize(LF)), wrap = (ndl + 0.35)/1.35;
   vec3 col = alb*(max(ndl, 0.0)*1.25*spot + 0.012) + alb*vec3(0.55,0.14,0.08)*max(wrap, 0.0)*spot*0.22;
+  /* leichter Glanz der Haut auf Brauenbogen, Lid und Wange */
+  { vec3 hs = normalize(normalize(LF) + vec3(0.0, 0.0, 1.0)); col += vec3(1.0,0.9,0.82)*pow(max(dot(n, hs), 0.0), 26.0)*0.11*spot*(0.6 + 0.4*pore); }
+  /* Schatten in der Lidfalte und unter dem Brauenbogen */
+  col *= 1.0 - 0.2*exp(-pow((q.y - up - 0.34 - 0.1*e)/0.1, 2.0))*step(0.0, q.y - up)*smoothstep(1.7, 0.7, abs(q.x));
+  /* Unterlidrand (Wasserlinie): schmaler, feuchter Hautstreifen zwischen Auge und Wimpern */
+  { float wl = smoothstep(0.0, 0.012, lo - q.y)*smoothstep(0.075, 0.045, lo - q.y)*smoothstep(1.28, 1.05, abs(q.x));
+    col = mix(col, vec3(0.8,0.5,0.46)*(0.35 + 0.75*spot), wl*0.85);
+    col += vec3(1.0,0.95,0.9)*0.22*spot*exp(-pow((lo - q.y - 0.03)/0.008, 2.0))*wl; }
   /* schwacher goldener Widerschein des Visiers von unten rechts */
   col += alb*vec3(0.32,0.22,0.08)*0.12*max(dot(n, normalize(vec3(0.5,-0.6,0.6))), 0.0)*exp(-dot(q,q)/30.0);
   /* Lidränder fangen Licht */
@@ -2044,27 +2069,32 @@ vec4 eye(vec2 q){
     vec2 c = vec2(0.02, 0.07);
     vec2 s2 = q*vec2(0.78, 0.9); float zz = sqrt(max(1.0 - dot(s2,s2), 0.0));
     vec3 nb = normalize(vec3(s2, zz));
-    float dif = 0.35 + 0.65*max(dot(nb, normalize(LF)), 0.0);
+    float dif = 0.3 + 0.7*max(dot(nb, normalize(LF)), 0.0);
+    /* der Augapfel liegt in der Höhle: zu den Lidern und Winkeln hin dunkler */
+    dif *= (0.45 + 0.55*smoothstep(0.0, 0.2, up - q.y))*(0.7 + 0.3*smoothstep(0.0, 0.12, q.y - lo))*(1.0 - 0.5*pow(abs(xx), 3.0));
     float ir = length(q - c)/0.5, ang = atan(q.y - c.y, q.x - c.x);
     float veins = pow(1.0 - abs(snoise(vec3(q*5.0, uSeed + 3.0))), 14.0)*(0.25 + 0.8*abs(xx)) + pow(1.0 - abs(snoise(vec3(q*11.0, uSeed))), 22.0)*0.5*abs(xx);
-    vec3 sclera = mix(vec3(0.92,0.89,0.86), vec3(0.84,0.86,0.9), smoothstep(1.6, 1.05, ir));
+    vec3 sclera = mix(vec3(0.86,0.8,0.77), vec3(0.82,0.84,0.88), smoothstep(1.6, 1.05, ir));
+    sclera = mix(sclera, vec3(0.8,0.6,0.56), 0.3*pow(abs(xx), 2.5));
     vec3 eyeC = mix(sclera, vec3(0.8,0.32,0.28), clamp(veins*lodw(5.0)*0.3, 0.0, 0.4));
     /* Tränenkarunkel im inneren Lidwinkel */
-    float car = exp(-dot(q - vec2(1.22, 0.04), q - vec2(1.22, 0.04))/0.012);
-    eyeC = mix(eyeC, vec3(0.86,0.5,0.5), clamp(car*1.4, 0.0, 1.0));
+    float car = exp(-dot(q - vec2(1.2, 0.05), q - vec2(1.2, 0.05))/0.02);
+    eyeC = mix(eyeC, vec3(0.84,0.44,0.44), clamp(car*1.5, 0.0, 1.0));
     if(ir < 1.0){
       float pup = 0.36 + 0.02*sin(uT*0.7);
       vec3 fq = vec3(cos(ang), sin(ang), 0.0);
       float fib = 0.5 + 0.5*fbm(vec3(fq.xy*7.0, ir*1.8) + uSeed, 1.0, 6);
       float fib2 = 0.5 + 0.5*fbm(vec3(fq.xy*22.0, ir*3.5) + uSeed + 5.0, 1.0, 5);
       float crypt = smoothstep(0.62, 0.8, fbm(vec3(fq.xy*5.0, ir*5.0) + uSeed + 9.0, 1.0, 4))*smoothstep(0.45, 0.6, ir)*smoothstep(0.92, 0.75, ir);
-      vec3 outer = vec3(0.3,0.42,0.54)*(0.55 + 0.75*fib)*(0.75 + 0.45*fib2);
+      vec3 outer = vec3(0.3,0.43,0.56)*(0.34 + 1.15*fib)*(0.58 + 0.75*fib2);
       vec3 coll = mix(vec3(0.52,0.42,0.28), vec3(0.3,0.42,0.54), 0.25)*(0.7 + 0.6*fib);
       float cr = 0.55 + 0.035*sin(ang*13.0 + uSeed*3.0) + 0.02*sin(ang*29.0);
       vec3 irC = mix(coll, outer, smoothstep(cr - 0.07, cr + 0.07, ir + 0.06*fib));
       irC *= 1.0 - 0.55*crypt;
       irC += vec3(0.85,0.7,0.45)*0.12*exp(-pow((ir - cr)/0.02, 2.0));
-      irC *= 1.0 - 0.8*smoothstep(0.84, 1.0, ir);
+      /* Licht fällt schräg durch die Hornhaut: gegenüber der Lichtquelle hellt sich die Iris auf */
+      irC *= 0.8 + 0.75*smoothstep(-0.2, 0.9, dot(normalize(q - c + 1e-4), vec2(0.62, -0.62)))*smoothstep(0.42, 0.85, ir);
+      irC *= 1.0 - 0.85*smoothstep(0.8, 1.0, ir);
       irC = mix(irC, vec3(0.16,0.09,0.05), smoothstep(pup + 0.05, pup + 0.015, ir));
       irC = mix(irC, vec3(0.008), smoothstep(pup + 0.012, pup - 0.008, ir));
       eyeC = mix(irC, eyeC, smoothstep(0.98, 1.0, ir));
@@ -2076,8 +2106,15 @@ vec4 eye(vec2 q){
     ec *= mix(0.3, 1.0, ls)*(1.0 - 0.12*(1.0 - ls)*(0.5 + 0.5*snoise(vec3(q*12.0, 2.0))));
     /* Hornhaut: Fensterreflex, kleines Glanzlicht und die goldene Spiegelung des Visiers */
     vec2 w = q - c - vec2(-0.17, 0.17);
-    float win = smoothstep(0.045, 0.012, length(max(abs(w) - vec2(0.045, 0.03), 0.0)))*(0.75 + 0.25*smoothstep(0.004, 0.012, abs(w.x)));
-    ec += vec3(1.0,0.97,0.92)*(win*0.55 + exp(-dot(q - c - vec2(0.12,-0.15), q - c - vec2(0.12,-0.15))/0.0004)*0.5);
+    /* Spiegelungen in der Hornhaut: die Sonne als weiches Glanzlicht, darunter die Erde als blauer Bogen mit Wolken */
+    float gl1 = exp(-dot(w, w)/0.0028) + 0.35*exp(-dot(w, w)/0.012);
+    ec += vec3(1.0,0.98,0.94)*gl1*0.85;
+    ec += vec3(1.0,0.97,0.92)*exp(-dot(q - c - vec2(0.12,-0.15), q - c - vec2(0.12,-0.15))/0.0004)*0.4;
+    { vec2 ev = q - c - vec2(0.05, -0.62); float er = length(ev);
+      float earth = smoothstep(0.52, 0.47, er)*smoothstep(0.5, 0.3, length(q - c));
+      float cl = smoothstep(-0.1, 0.5, snoise(vec3(ev*9.0, 4.0)) + 0.5*snoise(vec3(ev*21.0, 7.0)));
+      ec += mix(vec3(0.12,0.3,0.75), vec3(0.75,0.82,0.95), cl*0.7)*earth*0.3;
+      ec += vec3(0.45,0.7,1.0)*exp(-pow((er - 0.5)/0.02, 2.0))*smoothstep(0.52, 0.3, length(q - c))*0.3; }
     float arc = exp(-pow((length(q - c - vec2(0.0, -1.1)) - 1.42)/0.025, 2.0))*smoothstep(0.75, 0.2, abs(q.x - c.x));
     ec += vec3(0.85,0.62,0.25)*arc*0.22*step(length(q - c), 0.55);
     /* Tränenfilm am Unterlid */
@@ -2127,10 +2164,7 @@ vec4 hatom(vec2 p){
   for(int i=ZERO;i<12;i++){ float z = (float(i) + 0.5)*0.5; dens += exp(-2.0*sqrt(rho*rho + z*z))*0.5; }
   dens *= 2.0;
   vec3 col = vec3(0.42,0.58,1.0)*dens*0.5;
-  float cs = 3.0*PX*uDpr; vec2 cell = floor(p/cs);
-  float fr = floor(uT*9.0);
-  float h = hash12(cell + fr*vec2(17.3, 5.1));
-  if(h < dens*0.18){ vec2 cc = (cell + 0.5)*cs; float d = length(p - cc)/(PX*uDpr); col += vec3(0.85,0.92,1.0)*exp(-d*d*0.9)*0.9; }
+  /* die einzelnen Messpunkte zeichnet das Partikelsystem (pts, Art 0) */
   float ring = smoothstep(1.4*PX, 0.0, abs(rho - 1.0))*step(0.5, fract(atan(p.y,p.x)*30.0/TAU))*0.35;
   col += vec3(0.7,0.8,1.0)*ring;
   float dn = rho/(PX*uDpr); col += vec3(1.0,0.82,0.6)*exp(-dn*dn*0.6)*1.6;
@@ -2207,7 +2241,34 @@ vec4 foam(vec2 p){
   GLW += max(col - 0.8, 0.0); col = aces(col);
   return vec4(col, clamp(max(col.r, max(col.g, col.b))*1.2, 0.0, 1.0));
 }
+/* Elektromagnetische Welle als laufende Wellenpakete: Die Wellenlänge ist genau der Durchmesser der Wegmarke.
+   Hell das elektrische Feld, blasser und gestaucht das magnetische Feld senkrecht dazu. uQ.x: 0 Gammastrahlung, 1 sichtbares Licht. */
+vec4 wave(vec2 p){
+  float k = PI, sp = uQ.x < 0.5 ? 2.4 : 1.5, A = 0.5;
+  vec3 cE = uQ.x < 0.5 ? vec3(0.78,0.62,1.0) : vec3(0.6,1.0,0.45), cB = uQ.x < 0.5 ? vec3(0.45,0.75,1.0) : vec3(1.0,0.85,0.4);
+  vec3 col = vec3(0.0);
+  for(int n=ZERO;n<2;n++){
+    float x0 = mod(uT*sp + float(n)*4.2, 8.4) - 4.2;
+    float env = exp(-pow((p.x - x0)/1.35, 2.0)), ph = k*(p.x - uT*sp*1.6);
+    float e = A*env*sin(ph), de = A*env*k*cos(ph);
+    float w = max(0.035, 1.6*PX);
+    float dE = abs(p.y - e)/sqrt(1.0 + de*de), dB = abs(p.y - e*0.32)/sqrt(1.0 + de*de*0.1);
+    col += cE*(smoothstep(w, 0.0, dE)*1.5 + exp(-dE*dE/0.02)*0.35)*env;
+    col += cB*smoothstep(w*0.8, 0.0, dB)*0.55*env;
+    /* Feldlinien vom Strahl zur Welle */
+    float gx = abs(fract(p.x/0.25 + 0.5) - 0.5)*0.25;
+    float inside = step(0.0, p.y*e)*step(abs(p.y), abs(e));
+    col += cE*smoothstep(max(0.012, PX), 0.0, gx)*inside*0.3*env;
+    /* das Paket selbst leuchtet, bei Gammastrahlung kräftiger */
+    col += mix(cE, vec3(1.0), 0.5)*exp(-(pow((p.x - x0)/0.9, 2.0) + p.y*p.y/0.05))*(uQ.x < 0.5 ? 0.5 : 0.22);
+  }
+  /* Strahlachse */
+  col += cE*smoothstep(max(0.01, PX), 0.0, abs(p.y))*0.12;
+  GLW += max(col - 0.5, 0.0)*0.8; col = aces(col);
+  return vec4(col, clamp(max(col.r, max(col.g, col.b)), 0.0, 1.0));
+}
 vec4 shade(vec2 p){
+  if(uMode==12) return wave(p);
   if(uMode==0) return eye(p);
   if((uMode>=1 && uMode<=5) || uMode==11) return shadeMarch(p);
   if(uMode==6) return hatom(p);
@@ -2243,7 +2304,6 @@ vec4 shade(vec2 p){
   float r = length(p);
   float sig = (r<1.0 ? sqrt(1.0-r*r) : 0.0)*0.6 + exp(-r*5.0)*0.5;
   vec3 col = vec3(0.4,0.55,1.0)*sig*0.06*(0.7+0.6*fbm(vec3(PP*3.0,uSeed),1.0,8));
-  col += starLayers(PP,sig*0.5,20.0,uSeed,PX)*vec3(0.75,0.85,1.0);
   float ds = r/PX/uDpr; col += vec3(1.0,0.85,0.6)*(exp(-ds*ds/6.0)*2.0+exp(-ds/10.0)*0.3);
   return emit(col);
 }`;
@@ -2892,6 +2952,8 @@ vec4 shade(vec2 p){
   return e;
 }`;
 SRC.web = `
+/* Verdrehung der Strömungslinien von Laniakea; dieselbe Formel steht im Partikel-Shader */
+float lanT(vec2 p){ return 0.45*sin(p.x*3.1 + 1.3)*cos(p.y*2.7 - 0.4) + 0.3*sin(p.y*5.3 + p.x*2.1 + 2.0); }
 vec2 webField(vec2 q, float f0, float seed){
   vec2 w = vec2(fbm(vec3(q*1.3,seed),1.0,5), fbm(vec3(q*1.3,seed+3.3),1.0,5))*0.3;
   float d = 0.0, nd = 0.0, amp = 1.0, f = f0;
@@ -2915,16 +2977,16 @@ vec4 shade(vec2 p){
   vec2 wf = webField(PP,f0,uSeed);
   float dens = wf.x*mask, nd = wf.y*mask;
   vec3 col = vec3(0.3,0.36,0.95)*dens*0.16 + vec3(1.0,0.72,0.42)*pow(nd,1.6)*0.6;
-  col += starLayers(PP,clamp(dens*0.1+nd*0.6,0.0,1.0),22.0,uSeed,PX)*vec3(0.9,0.92,1.0)*0.8;
+  col += starLayers(PP,clamp(dens*0.1+nd*0.6,0.0,1.0),22.0,uSeed,PX)*vec3(0.9,0.92,1.0)*0.45;
   if(uMode==0) col += vec3(1.0,0.82,0.6)*(exp(-r/0.05)*1.2 + exp(-r/0.15)*0.25);
   if(uMode==1){
     float th = atan(p.y,p.x);
-    float tw = th + 0.55*sin(r*5.0+1.0) + 0.8*fbm(vec3(p*1.6,uSeed+4.0),1.0,4);
+    float tw = th + 0.55*sin(r*5.0+1.0) + lanT(p);
     float K = 46.0;
     float sp = TAU*r/K/PX/uDpr;
     float fl = abs(fract(tw*K/TAU)-0.5)*sp;
     float line = smoothstep(1.3,0.0,fl)*smoothstep(3.0,8.0,sp)*smoothstep(0.02,0.25,r)*smoothstep(1.0,0.7,r);
-    col += vec3(1.0,0.93,0.85)*line*0.5 + vec3(1.0,0.8,0.55)*exp(-r/0.06)*0.8;
+    col += vec3(1.0,0.93,0.85)*line*0.22 + vec3(1.0,0.8,0.55)*exp(-r/0.06)*0.8;
   }
   if(uMode==3){
     float cm = fbm(vec3(p*9.0,uSeed+11.0),1.0,12);
@@ -3051,6 +3113,253 @@ void main(){
 const GLSL_post_vert = `#version 300 es
 in vec2 aP; out vec2 vUv;
 void main(){ vUv = aP*0.5 + 0.5; gl_Position = vec4(aP, 0.0, 1.0); }
+`;
+const GLSL_pts_frag = `#version 300 es
+precision highp float;
+/* Partikel als weiche runde Lichtpunkte, die sich aufaddieren */
+//@DEFS
+in vec3 vCol; in float vGlow;
+layout(location=0) out vec4 fragColor;
+#ifdef MRT
+layout(location=1) out vec4 fragGlow;
+#else
+uniform float uPass;
+#endif
+void main(){
+  vec2 d = gl_PointCoord*2.0 - 1.0; float r2 = dot(d, d);
+  vec3 c = vCol*(exp(-r2*3.2)*smoothstep(1.0, 0.55, r2));
+#ifdef MRT
+  fragColor = vec4(c, 0.0); fragGlow = vec4(c*vGlow, 0.0);
+#else
+  fragColor = vec4(uPass > 0.5 ? c*vGlow : c, 0.0);
+#endif
+}
+`;
+const GLSL_pts_vert = `#version 300 es
+precision highp float; precision highp int;
+/* Partikel: Jeder Punkt berechnet Ort, Größe und Farbe allein aus seiner Nummer und der Zeit, ohne Daten vom Programm.
+   So lassen sich Zehntausende Sterne, Galaxien oder Messpunkte räumlich bewegen, was im Flächen-Shader nicht ginge.
+   uMode: 0 Wasserstoffatom, 1 Oortsche Wolke, 2 Kugelsternhaufen, 3 Spiralgalaxie, 4 Lokale Gruppe,
+          5 kosmisches Netz, 6 Laniakea (Strömung zum Großen Attraktor), 7 Gasnebel */
+//@DEFS
+uniform vec2 uRes, uCenter, uRot;
+uniform float uR, uT, uSeed, uAlpha, uDpr, uCount, uGain, uSz;
+uniform vec4 uQ, uQ2;
+out vec3 vCol; out float vGlow;
+const float PI = 3.14159265, TAU = 6.28318531;
+uint SD = 0u;
+uint pcg(uint v){ uint s = v*747796405u + 2891336453u; uint w = ((s >> ((s >> 28u) + 4u)) ^ s)*277803737u; return (w >> 22u) ^ w; }
+/* Zufallszahl 0..1 für Punkt i, Kanal k */
+float rn(int i, int k){ return float(pcg(pcg(uint(i) + SD) + uint(k)*2654435769u) >> 8)/16777216.0; }
+vec3 rdir(float u, float v){ float z = 2.0*u - 1.0, a = TAU*v, s = sqrt(max(1.0 - z*z, 0.0)); return vec3(s*cos(a), s*sin(a), z); }
+float gauss(float u, float v){ return sqrt(-2.0*log(max(u, 1e-6)))*cos(TAU*v); }
+mat3 rotX(float a){float c=cos(a),s=sin(a);return mat3(1.0,0.0,0.0, 0.0,c,s, 0.0,-s,c);}
+mat3 rotY(float a){float c=cos(a),s=sin(a);return mat3(c,0.0,-s, 0.0,1.0,0.0, s,0.0,c);}
+mat2 rot2(float a){float c=cos(a),s=sin(a);return mat2(c,s,-s,c);}
+vec3 rotAx(vec3 p, vec3 ax, float a){ float c = cos(a), s = sin(a); return p*c + cross(ax, p)*s + ax*dot(ax, p)*(1.0 - c); }
+vec3 hash33(vec3 p3){ p3=fract(p3*vec3(0.1031,0.1030,0.0973)); p3+=dot(p3,p3.yxz+33.33); return fract((p3.xxy+p3.yxx)*p3.zyx); }
+/* Ort im Maß des Objekts (Radius 1) auf den Bildschirm bringen; Punkte unter 1,5 Bildpunkten werden blasser statt kleiner */
+void put(vec3 P, float size, vec3 col, float glow){
+  vec3 q = rotX(uRot.y)*rotY(uRot.x)*P;
+  vec2 px = uCenter + vec2(q.x, -q.y)*uR;
+  gl_Position = vec4(px.x/uRes.x*2.0 - 1.0, 1.0 - px.y/uRes.y*2.0, 0.0, 1.0);
+  float s = size*uSz*uDpr*(1.0 + 0.18*clamp(q.z, -1.5, 1.5));
+  float k = s < 1.5 ? s*s/2.25 : 1.0;
+  gl_PointSize = clamp(s, 1.5, 48.0);
+  float fadeN = clamp((uCount - float(gl_VertexID))/(0.12*uCount), 0.0, 1.0);
+  vCol = col*(k*uAlpha*uGain*fadeN*(1.0 + 0.25*clamp(q.z, -1.0, 1.0)));
+  vGlow = glow;
+}
+#define OFF gl_Position = vec4(2.0, 2.0, 0.0, 1.0); gl_PointSize = 1.0; vCol = vec3(0.0); vGlow = 0.0; return;
+
+/* --- kosmisches Netz: dieselbe Zellstruktur wie im Flächen-Shader (web.glsl) --- */
+vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+float snoise(vec3 v){
+  const vec2 C=vec2(1.0/6.0,1.0/3.0); const vec4 D=vec4(0.0,0.5,1.0,2.0);
+  vec3 i=floor(v+dot(v,C.yyy)); vec3 x0=v-i+dot(i,C.xxx);
+  vec3 g=step(x0.yzx,x0.xyz); vec3 l=1.0-g; vec3 i1=min(g.xyz,l.zxy); vec3 i2=max(g.xyz,l.zxy);
+  vec3 x1=x0-i1+C.xxx; vec3 x2=x0-i2+C.yyy; vec3 x3=x0-D.yyy;
+  i=mod289(i);
+  vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));
+  float n_=0.142857142857; vec3 ns=n_*D.wyz-D.xzx;
+  vec4 j=p-49.0*floor(p*ns.z*ns.z); vec4 x_=floor(j*ns.z); vec4 y_=floor(j-7.0*x_);
+  vec4 x=x_*ns.x+ns.yyyy; vec4 y=y_*ns.x+ns.yyyy; vec4 h=1.0-abs(x)-abs(y);
+  vec4 b0=vec4(x.xy,y.xy); vec4 b1=vec4(x.zw,y.zw);
+  vec4 s0=floor(b0)*2.0+1.0; vec4 s1=floor(b1)*2.0+1.0; vec4 sh=-step(h,vec4(0.0));
+  vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy; vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+  vec3 p0=vec3(a0.xy,h.x); vec3 p1=vec3(a0.zw,h.y); vec3 p2=vec3(a1.xy,h.z); vec3 p3=vec3(a1.zw,h.w);
+  vec4 norm=1.79284291400159-0.85373472095314*vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3));
+  p0*=norm.x; p1*=norm.y; p2*=norm.z; p3*=norm.w;
+  vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0); m=m*m;
+  return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+}
+float fbm5(vec3 p){ float s=0.0, a=0.5, f=1.0; for(int i=0;i<5;i++){ s+=a*snoise(p*f); f*=2.03; a*=0.5; p+=vec3(1.7,-3.1,2.3); } return s/(1.0-pow(0.5,5.0)); }
+/* Verdrehung der Strömungslinien von Laniakea; dieselbe Formel steht in web.glsl */
+float lanT(vec2 p){ return 0.45*sin(p.x*3.1 + 1.3)*cos(p.y*2.7 - 0.4) + 0.3*sin(p.y*5.3 + p.x*2.1 + 2.0); }
+
+void main(){
+  int i = gl_VertexID;
+  SD = uint(uSeed*977.0 + 13.0);
+  if(float(i) >= uCount){ OFF }
+  if(uMode==0){
+    /* Wasserstoff, Grundzustand: Jeder Punkt ist eine Messung des Elektrons. Der Abstand folgt r²·e^(−2r/a₀),
+       die Richtung ist beliebig. Der Punkt blitzt auf, verblasst und erscheint an einem neuen Ort. */
+    float T = 1.3 + 2.4*rn(i,0), ph = uT/T + rn(i,1)*9.0, f = fract(ph);
+    int j = i*37 + int(mod(floor(ph), 4096.0))*8191 + 5;
+    float r = -0.5*(log(max(rn(j,2),1e-5)) + log(max(rn(j,3),1e-5)) + log(max(rn(j,4),1e-5)));
+    vec3 P = rdir(rn(j,5), rn(j,6))*r;
+    float env = smoothstep(0.0, 0.05, f)*pow(1.0 - f, 2.4);
+    vec3 col = mix(vec3(0.45,0.62,1.0), vec3(0.92,0.96,1.0), env)*env*1.25;
+    put(P, 1.5 + 2.8*env, col, 0.55);
+  } else if(uMode==1){
+    /* Oortsche Wolke: innen eine flachere Scheibe (Hills-Wolke), außen eine Kugelschale mit Bahnen in alle Richtungen.
+       Die ersten Punkte sind Kometen auf langgestreckten Bahnen mit Schweif von der Sonne weg. */
+    mat3 tilt = rotX(1.05)*rotY(0.3);
+    if(i < 132){
+      int c = i/11, kk = i - c*11;
+      float e = 0.93 + 0.05*rn(c,1), a = 0.2 + 0.3*rn(c,2), M = uT*(0.05 + 0.05*rn(c,3)) + TAU*rn(c,4);
+      float E = M; for(int n=0;n<4;n++) E = M + e*sin(E);
+      vec3 ax = rdir(rn(c,5), rn(c,6)), bx = normalize(cross(ax, vec3(0.3,0.5,0.8))), cx = cross(ax, bx);
+      vec2 o2 = vec2(a*(cos(E) - e), a*sqrt(1.0 - e*e)*sin(E));
+      vec3 P = bx*o2.x + cx*o2.y; float r = length(P);
+      float tail = smoothstep(0.22, 0.03, r);
+      P += normalize(P)*float(kk)*0.012*tail;
+      float fk = 1.0 - float(kk)/11.0;
+      vec3 col = mix(vec3(0.6,0.8,1.0), vec3(1.0), fk)*(kk == 0 ? 1.1 : 0.5*fk*tail);
+      put(P, kk == 0 ? 3.2 : 2.6*fk + 0.8, col, 0.7);
+      return;
+    }
+    vec3 P; vec3 col;
+    if(rn(i,7) < 0.3){
+      float r = mix(0.035, 0.3, pow(rn(i,1), 0.7)), a = TAU*rn(i,2) + uT*0.006/pow(r/0.3, 1.5);
+      P = tilt*vec3(cos(a)*r, sin(a)*r, gauss(rn(i,3), rn(i,4))*r*0.24);
+      col = vec3(0.86,0.9,1.0)*0.5;
+    } else {
+      float r = mix(0.28, 1.0, pow(rn(i,1), 0.72));
+      vec3 d = rdir(rn(i,2), rn(i,3)), ax = normalize(cross(d, rdir(rn(i,4), rn(i,5)) + 1e-3));
+      P = rotAx(d*r, ax, uT*0.01/pow(r, 1.5));
+      col = vec3(0.68,0.8,1.0)*0.5*smoothstep(1.0, 0.92, r);
+    }
+    float tw = 0.65 + 0.35*sin(uT*(0.4 + rn(i,6)) + TAU*rn(i,8)), mag = pow(rn(i,9), 5.0);
+    put(P, 1.2 + 2.0*mag, col*tw*(0.7 + 1.6*mag), 0.2);
+  } else if(uMode==2){
+    /* Kugelsternhaufen: Dichte nach Plummer, jeder Stern auf einer eigenen Kreisbahn um das Zentrum */
+    float u = rn(i,0)*0.985 + 0.005, r = min(0.16/sqrt(pow(u, -0.6667) - 1.0), 1.5);
+    vec3 d = rdir(rn(i,1), rn(i,2)), ax = normalize(cross(d, rdir(rn(i,3), rn(i,4)) + 1e-3));
+    vec3 P = rotAx(d*r, ax, uT*0.012/pow(r + 0.05, 1.5)*(0.6 + 0.8*rn(i,7)));
+    float ty = rn(i,5), mag = pow(rn(i,6), 5.0);
+    vec3 col = ty < 0.09 ? vec3(1.0,0.6,0.36) : ty < 0.15 ? vec3(0.72,0.82,1.0) : vec3(1.0,0.92,0.76);
+    float big = ty < 0.09 ? 1.0 : 0.0;
+    put(P, 1.1 + 3.0*mag + 1.3*big, col*(0.3 + 0.95*mag + 0.3*big)*smoothstep(1.4, 0.9, r), 0.25 + 0.3*mag);
+  } else if(uMode==3){
+    /* Spiralgalaxie: Die Sterne laufen innen schneller um als außen. Das Armmuster dreht sich langsamer und starr;
+       ein Stern leuchtet hell und blau, während er einen Arm durchquert (Dichtewelle). uQ = Arme, Windung, Balken, Balkenwinkel;
+       uQ2 = Drehung und Stauchung in der Scheibenebene (Andromeda schräg gesehen). */
+    const float OP = 0.02;
+    float t = rn(i,0), mag = pow(rn(i,5), 6.0); vec3 P, col; float sz, gl = 0.2;
+    if(t < 0.64){
+      float r = min(-0.36*log(1.0 - rn(i,1)*0.94), 1.05);
+      float th = TAU*rn(i,2) - uT*0.03/(r + 0.08);
+      float phi = th + uT*OP - log(max(r, 0.02))*uQ.y;
+      float armv = pow(0.5 + 0.5*cos(uQ.x*phi), 2.5)*smoothstep(0.06, 0.22, r);
+      P = vec3(cos(th)*r, sin(th)*r, gauss(rn(i,3), rn(i,4))*0.012);
+      col = mix(vec3(1.0,0.86,0.66)*0.3, vec3(0.6,0.73,1.0)*1.2, armv)*(0.45 + 1.6*mag)*smoothstep(1.05, 0.8, r);
+      sz = 1.0 + 2.2*mag + 0.9*armv; gl = 0.15 + 0.35*armv;
+    } else if(t < 0.86){
+      float q = pow(rn(i,1), 0.6), rb = min(0.05*q/(1.02 - q), 0.32);
+      P = rdir(rn(i,2), rn(i,3))*rb*vec3(1.0, 1.0, 0.62);
+      if(uQ.z > 0.5 && rn(i,6) < 0.45){ P = vec3(gauss(rn(i,2), rn(i,3))*0.13, gauss(rn(i,4), rn(i,7))*0.036, gauss(rn(i,8), rn(i,9))*0.03); P.xy = transpose(rot2(uQ.w))*P.xy; P.xy = rot2(-uT*OP)*P.xy; }
+      else P.xy = rot2(-uT*0.05)*P.xy;
+      col = vec3(1.0,0.8,0.56)*(0.3 + 1.2*mag); sz = 1.0 + 1.8*mag;
+    } else if(t < 0.885){
+      /* leuchtende Gaswolken, in denen Sterne entstehen: sie sitzen auf den Armen und wandern mit dem Muster */
+      float r = mix(0.14, 0.9, rn(i,1)), k = floor(rn(i,2)*uQ.x);
+      float th = log(r)*uQ.y + TAU*k/uQ.x - uT*OP + gauss(rn(i,3), rn(i,4))*0.1;
+      P = vec3(cos(th)*r, sin(th)*r, 0.0);
+      col = vec3(1.0,0.4,0.56)*(0.34 + 0.16*sin(uT*(0.3 + rn(i,6)) + TAU*rn(i,7)))*smoothstep(1.0, 0.8, r); sz = 1.6 + 1.8*rn(i,8); gl = 0.4;
+    } else {
+      float r = 0.15 + 0.95*pow(rn(i,1), 1.5);
+      vec3 d = rdir(rn(i,2), rn(i,3)), ax = normalize(cross(d, rdir(rn(i,4), rn(i,6)) + 1e-3));
+      P = rotAx(d*r, ax, uT*0.015/(r + 0.2)); col = vec3(1.0,0.9,0.76)*0.3*smoothstep(1.15, 0.9, r); sz = 1.2 + 1.2*mag;
+    }
+    P.xy = transpose(rot2(uQ2.x))*(P.xy*vec2(1.0, uQ2.y)); P.z *= uQ2.y;
+    put(P, sz, col, gl);
+  } else if(uMode==4){
+    /* Lokale Gruppe: Zwerggalaxien umkreisen die Milchstraße und Andromeda, einige treiben frei */
+    float t = rn(i,0); vec3 c; float rr;
+    if(t < 0.42){ c = vec3(-0.25, 0.1, 0.0); rr = 0.17; } else if(t < 0.9){ c = vec3(0.25, -0.05, 0.0); rr = 0.21; } else { c = vec3(0.0); rr = 0.9; }
+    float r = rr*(0.14 + 0.86*pow(rn(i,1), 0.8));
+    vec3 d = rdir(rn(i,2), rn(i,3)), ax = normalize(cross(d, rdir(rn(i,4), rn(i,6)) + 1e-3));
+    vec3 P = c + rotAx(d*r, ax, uT*0.03/(r/rr + 0.15))*vec3(1.0, 1.0, 0.6);
+    float mag = pow(rn(i,5), 3.0);
+    put(P, 1.6 + 4.6*mag, vec3(0.85,0.88,1.0)*(0.3 + 0.85*mag)*smoothstep(1.0, 0.85, length(P)), 0.3);
+  } else if(uMode==5){
+    /* Kosmisches Netz: Galaxien strömen aus den Leerräumen auf die Fäden und an ihnen entlang in die Knoten.
+       Die Fäden sind die Zellgrenzen desselben Zellmusters wie im Flächen-Shader. uQ = Art, Grundfrequenz. */
+    float oc = floor(rn(i,0)*2.6), f = uQ.y*pow(2.4, oc);
+    float hem = uQ.x > 2.5 ? (rn(i,9) < 0.5 ? 1.0 : -1.0) : 0.0;
+    float rr = sqrt(rn(i,1)), aa = TAU*rn(i,2);
+    vec2 q0 = vec2(cos(aa), sin(aa))*rr*(uQ.x > 2.5 ? 0.93 : 1.0);
+    vec2 qp = q0 + (hem < 0.0 ? vec2(17.3, -9.1) : vec2(0.0));
+    vec2 w = vec2(fbm5(vec3(qp*1.3, uSeed)), fbm5(vec3(qp*1.3, uSeed + 3.3)))*0.3;
+    float zs = uSeed*1.37 + oc*7.1;
+    vec3 X = vec3((qp + w)*f, zs), ci = floor(X);
+    vec3 A = vec3(0.0), B = vec3(0.0), C = vec3(0.0); vec3 dd = vec3(1e9);
+    for(int z=-1;z<=1;z++) for(int y=-1;y<=1;y++) for(int x=-1;x<=1;x++){
+      vec3 g = vec3(float(x), float(y), float(z)); vec3 fp = ci + g + hash33(ci + g); vec3 v = fp - X; float e = dot(v, v);
+      if(e < dd.x){ dd.z = dd.y; C = B; dd.y = dd.x; B = A; dd.x = e; A = fp; } else if(e < dd.y){ dd.z = dd.y; C = B; dd.y = e; B = fp; } else if(e < dd.z){ dd.z = e; C = fp; }
+    }
+    /* Fußpunkt auf dem Faden: gleiche Entfernung zu A und B, innerhalb der Schnittebene */
+    vec3 n1 = B - A, n2 = C - A; vec3 M1 = 0.5*(A + B), M2 = 0.5*(A + C);
+    float l1 = max(dot(n1.xy, n1.xy), 1e-4);
+    vec2 F = X.xy - n1.xy*(dot(X - M1, n1)/l1);
+    /* Knoten: gleiche Entfernung zu A, B und C */
+    float b1 = dot(M1, n1) - zs*n1.z, b2 = dot(M2, n2) - zs*n2.z, det = n1.x*n2.y - n1.y*n2.x;
+    vec2 V = abs(det) > 1e-3 ? vec2(b1*n2.y - b2*n1.y, n1.x*b2 - n2.x*b1)/det : F;
+    if(length(V - F) > 1.6) V = F;
+    float T = 26.0 + 22.0*rn(i,3), ph = fract(uT/T + rn(i,4));
+    float s1 = smoothstep(0.0, 0.5, ph), s2 = smoothstep(0.45, 1.0, ph);
+    vec2 jit = vec2(gauss(rn(i,5), rn(i,6)), gauss(rn(i,6), rn(i,7)))*0.035;
+    vec2 Y = mix(mix(X.xy, F, s1), V, s2*0.92) + jit;
+    vec2 q = Y/f - w - (hem < 0.0 ? vec2(17.3, -9.1) : vec2(0.0));
+    float mask, r = length(q);
+    if(uQ.x < 0.5){ vec2 m = rot2(0.3)*q; m.y /= 0.5; mask = smoothstep(1.0, 0.45, length(m)); }
+    else if(uQ.x < 2.5){ vec2 m = rot2(-0.18)*q; m.y /= 0.26; mask = smoothstep(1.0, 0.35, length(m)); }
+    else mask = smoothstep(0.935, 0.9, r);
+    float vis = smoothstep(0.0, 0.3, ph)*smoothstep(1.0, 0.86, ph), mag = pow(rn(i,8), 4.0);
+    vec3 col = mix(vec3(0.55,0.66,1.0), vec3(1.0,0.84,0.62), s2)*(0.35 + 1.1*mag)*vis*mask*(1.0 - 0.3*oc);
+    vec3 P = uQ.x > 2.5 ? vec3(q, hem*sqrt(max(1.0 - r*r, 0.0))) : vec3(q, gauss(rn(i,5), rn(i,7))*0.01);
+    put(P, 1.2 + 2.6*mag - 0.25*oc, col, 0.25 + 0.3*s2);
+  } else if(uMode==6){
+    /* Laniakea: Galaxien folgen den Strömungslinien zum Großen Attraktor, erst langsam, dann schneller */
+    const float K = 46.0;
+    float k = floor(rn(i,0)*K), f = fract(rn(i,1) + uT*(0.012 + 0.012*rn(i,2)));
+    float r = 0.02 + 0.98*pow(1.0 - f, 1.5);
+    float th0 = TAU*(k + 0.5)/K - 0.55*sin(r*5.0 + 1.0) + gauss(rn(i,3), rn(i,4))*0.012, th = th0;
+    for(int n=0;n<3;n++) th = th0 - lanT(r*vec2(cos(th), sin(th)));
+    float mag = pow(rn(i,5), 4.0);
+    vec3 col = mix(vec3(0.75,0.82,1.0), vec3(1.0,0.86,0.66), smoothstep(0.7, 0.1, r))*(0.4 + 1.1*mag)*smoothstep(1.0, 0.82, r)*smoothstep(0.03, 0.16, r);
+    put(vec3(r*cos(th), r*sin(th), gauss(rn(i,6), rn(i,7))*0.008), 1.3 + 2.4*mag, col, 0.35);
+  } else {
+    /* Gasnebel: junge Sterne im Inneren und Staub, der langsam im Gas treibt */
+    float t = rn(i,0);
+    if(t < 0.25){
+      vec3 d = rdir(rn(i,1), rn(i,2)); float r = 0.5*pow(rn(i,3), 1.6);
+      vec3 P = d*r*vec3(1.0, 0.8, 0.6) + vec3(0.05, 0.02, 0.0);
+      float mag = pow(rn(i,5), 5.0), tw = 0.75 + 0.25*sin(uT*(0.8 + 2.0*rn(i,6)) + TAU*rn(i,7));
+      put(P, 1.4 + 4.0*mag, mix(vec3(0.75,0.85,1.0), vec3(1.0,0.9,0.8), rn(i,8))*(0.35 + 1.3*mag)*tw, 0.6);
+    } else {
+      float T = 30.0 + 30.0*rn(i,3), ph = fract(uT/T + rn(i,4));
+      vec3 d = rdir(rn(i,1), rn(i,2)); float r = 0.15 + 0.7*sqrt(rn(i,5));
+      vec3 ax = normalize(cross(d, vec3(0.2, 0.9, 0.4)) + 1e-3);
+      vec3 P = rotAx(d*r*vec3(1.0, 0.75, 0.6), ax, (ph - 0.5)*0.5) + d*0.12*ph;
+      float vis = smoothstep(0.0, 0.2, ph)*smoothstep(1.0, 0.8, ph);
+      put(P, 1.2 + 1.6*rn(i,6), mix(vec3(1.0,0.45,0.55), vec3(0.6,0.75,1.0), rn(i,7))*0.28*vis, 0.3);
+    }
+  }
+}
 `;
 /* ======================================================================
    WebGL
@@ -3187,11 +3496,14 @@ function makeProg(name){
   const fs = gl.createShader(gl.FRAGMENT_SHADER);
   const [k, m = '0', f = '0'] = name.split(':');
   const defs = 'const int uMode = ' + m + ';\n#define FLAT ' + f + '\n' + (k === 'craft' && m === '0' ? '#define ASTRO\n' : '') + (MOBILE ? '#define LOWQ\n' : '') + (k === 'planet' ? '#define CRG\n' : '') + (MRT ? '#define MRT\n' : '');
-  const src = (k === 'bg' ? BG : PRE + SRC[k] + MAIN).replace('//@DEFS', defs);
-  gl.shaderSource(fs, src); gl.compileShader(fs);
-  const p = gl.createProgram(); gl.attachShader(p, vsh); gl.attachShader(p, fs);
+  /* pts: Partikel mit eigenem Vertex-Shader, der Ort und Farbe jedes Punktes berechnet */
+  let vs = vsh;
+  if (k === 'pts') { vs = gl.createShader(gl.VERTEX_SHADER); gl.shaderSource(vs, GLSL_pts_vert.replace('//@DEFS', defs)); gl.compileShader(vs); gl.shaderSource(fs, GLSL_pts_frag.replace('//@DEFS', defs)); }
+  else gl.shaderSource(fs, (k === 'bg' ? BG : PRE + SRC[k] + MAIN).replace('//@DEFS', defs));
+  gl.compileShader(fs);
+  const p = gl.createProgram(); gl.attachShader(p, vs); gl.attachShader(p, fs);
   gl.bindAttribLocation(p, 0, 'aP'); gl.linkProgram(p);
-  return PROGS[name] = {p, fs, u:{}, ok:false, bad:false};
+  return PROGS[name] = {p, fs, vs, u:{}, ok:false, bad:false};
 }
 function prog(name){
   if (!gl) return null;
@@ -3201,7 +3513,7 @@ function prog(name){
   if (e.bad || e.wait) return null;
   if (!e.ok) {
     if (PEXT && !gl.getProgramParameter(e.p, PEXT.COMPLETION_STATUS_KHR)) return null;
-    if (!gl.getProgramParameter(e.p, gl.LINK_STATUS)) { console.error(name, gl.getShaderInfoLog(e.fs) || gl.getProgramInfoLog(e.p)); e.bad = true; return null; }
+    if (!gl.getProgramParameter(e.p, gl.LINK_STATUS)) { console.error(name, gl.getShaderInfoLog(e.fs) || gl.getShaderInfoLog(e.vs) || gl.getProgramInfoLog(e.p)); e.bad = true; return null; }
     e.ok = true;
   }
   return e;
@@ -3214,7 +3526,7 @@ function U(e, n){ if (!(n in e.u)) e.u[n] = gl.getUniformLocation(e.p, n); retur
    Meldet der Browser die Marken nicht, wird wie früher der Reihe nach mit Wartezeit übersetzt (legacy).
    Danach folgen die 3D-Modelle; fehlen sie, kommen ihre Ersatz-Shader dazu. Die Reise beginnt, wenn LOAD.all gilt. */
 const LOAD = {keys: [], i: 0, done: 0, wsum: 0, wdone: 0, all: !gl, fence: false, legacy: false, cur: null, t0: 0, tAll: 0, t3: false};
-const loadW = k => /^planet/.test(k) ? 8 : /^(micro|rock|craft|bg)/.test(k) ? 1 : 3;
+const loadW = k => /^planet/.test(k) ? 8 : /^(micro|rock|craft|bg|pts)/.test(k) ? 1 : 3;
 function loadAdd(k){ if (LOAD.keys.includes(k)) return false; LOAD.keys.push(k); LOAD.wsum += loadW(k); return true; }
 function loadCount(k){
   const e = PROGS[k]; e.cnt = true; LOAD.done++; LOAD.wdone += loadW(k);
@@ -3260,7 +3572,7 @@ function precompile(center){
   if (/[?&]nocompile=1/.test(location.search)) { LOAD.all = true; return; }
   LOAD.t0 = performance.now(); LOAD.fence = !PEXT;
   loadAdd('bg');
-  OBJ.map((o, j) => [Math.abs(j - center), o]).sort((a, b) => a[0] - b[0]).forEach(([, o]) => { if (o.k !== 'void' && o.k !== 'craft') loadAdd(o.pk); });
+  OBJ.map((o, j) => [Math.abs(j - center), o]).sort((a, b) => a[0] - b[0]).forEach(([, o]) => { if ((o.k !== 'void' || o.fx) && o.k !== 'craft') loadAdd(o.pk); if (o.ptk) loadAdd(o.ptk); });
   (function tick(){ loadPoll(); if (!LOAD.all) setTimeout(tick, PEXT ? 30 : 8); })();
 }
 
@@ -3362,6 +3674,27 @@ function drawObj(o, X, Y, R, a, time){
   }
   gl.blendFunc(gl.ONE, o.opq ? gl.ONE_MINUS_SRC_ALPHA : gl.ONE);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  if (o.ptk) drawPts(o, X, Y, R, a, time);
+}
+/* Partikel eines Objekts: je kleiner es im Bild ist, desto weniger Punkte werden gezeichnet (dafür etwas heller) */
+let ptsVAO = null;
+function drawPts(o, X, Y, R, a, time){
+  const rc = R/PK; if (rc < 6) return;
+  const e = prog(o.ptk); if (!e) return;
+  const c = o.g.pts, full = Math.round(c.n*(MOBILE ? .5 : 1)), n = Math.max(48, Math.round(full*clamp(Math.pow(rc/150, 1.5), .05, 1)));
+  if (!ptsVAO) ptsVAO = gl.createVertexArray();
+  gl.bindVertexArray(ptsVAO); gl.useProgram(e.p);
+  if (!MRT) gl.uniform1f(U(e,'uPass'), PASS);
+  gl.uniform2f(U(e,'uRes'), PW, PH); gl.uniform2f(U(e,'uCenter'), X, Y);
+  gl.uniform2f(U(e,'uRot'), o.rot ? o.rot.yaw : 0, o.rot ? o.rot.pitch : 0);
+  gl.uniform1f(U(e,'uR'), R); gl.uniform1f(U(e,'uT'), time); gl.uniform1f(U(e,'uSeed'), o.seed);
+  gl.uniform1f(U(e,'uAlpha'), a*smooth(6, 22, rc)*(c.b || 1)); gl.uniform1f(U(e,'uDpr'), PK);
+  gl.uniform1f(U(e,'uCount'), n); gl.uniform1f(U(e,'uGain'), Math.pow(Math.min(4, full/n), .6));
+  gl.uniform1f(U(e,'uSz'), clamp(Math.pow(rc/260, .35), .75, 2.2));
+  gl.uniform4fv(U(e,'uQ'), c.q || [0,0,0,0]); gl.uniform4fv(U(e,'uQ2'), c.q2 || [0,1,0,0]);
+  gl.blendFunc(gl.ONE, gl.ONE);
+  gl.drawArrays(gl.POINTS, 0, n);
+  gl.bindVertexArray(vao);
 }
 
 const FONT_LAB = '500 13px "Hanken Grotesk", "Segoe UI", system-ui, sans-serif';
@@ -3791,7 +4124,9 @@ function render(time){
     if (j === A0) tcA = a;
     if (a <= 0) continue;
     if (o.orbits) for (const q of o.orbits) q.cur = q.a + T*.12/Math.pow(q.au, 1.5);
-    if (o.k === 'void') { const ra = a*(1 - smooth(.9, 1.6, Math.abs(j - t))); if (ra > .02 && R > 3 && R < MAXD*1.5) rings.push([X, Y, R, ra]); }
+    if (o.k === 'void') { const ra = a*(1 - smooth(.9, 1.6, Math.abs(j - t))); if (ra > .02 && R > 3 && R < MAXD*1.5) { rings.push([X, Y, R, ra]);
+      /* Wegmarken mit eigenem Bild (Wellenpakete): nur in der Nähe ihrer Station */
+      if (gl && o.fx) drawObj(o, X*KG, Y*KG, R*KG, ra, T + j*3.1); } }
     else if (gl && !t3Use(o, X, Y, R, a)) drawObj(o, X*KG, Y*KG, R*KG, a, T + j*3.1);
 
     const dpx = 2*R;
