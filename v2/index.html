@@ -1100,6 +1100,8 @@ OBJ.forEach((o, j) => {
   o.ext = o.ext || (ring ? (ring[3] ? 2.1 : 2.35) : EXT[o.k]);
   if (o.k === 'hole') o.ext = o.g.Q[1]*1.28;
   o.solid = SOLID.has(o.k);
+  /* deckend gezeichnet (verdeckt, was dahinter liegt); alles andere leuchtet additiv */
+  o.opq = o.solid || o.k === 'star' || o.k === 'hole' || o.k === 'pulsar';
   o.seed = ((j - A0)*1.618 % 7) + .37;
   o.dotv = hex(o.dot);
   if (o.k === 'star') o.g.A = blackbody(o.T);
@@ -1263,21 +1265,33 @@ float sdEll(vec3 p, vec3 r){ float k0=length(p/r); float k1=length(p/(r*r)); ret
 float sdSeg(vec2 p, vec2 a, vec2 b){ vec2 pa=p-a, ba=b-a; float h=clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0); return length(pa-ba*h); }
 
 /* Krater-Höhenfeld: mehrere Zellgrößen, Schüssel + Wall, nur so fein wie sichtbar */
+/* Die Neigung des Kraterfelds wird als Formel mitgeführt (HG, im Koordinatensystem von p). Wo CRG gesetzt ist, liefert
+   die Funktion keine Höhe mehr, sondern nur die Neigung: Die Schattierung hängt dann nicht von Differenzen zwischen
+   Bildpunkten ab und bleibt bei jeder Auflösung glatt. Es genügen die 8 nächsten Zellen, weil kein Krater weiter reicht. */
+vec3 HG = vec3(0.0);
 float craters(vec3 p, float f0, float dens, float str){
-  float h=0.0, f=f0;
+  float h=0.0, f=f0; vec3 gr=vec3(0.0);
   for(int k=ZERO;k<7;k++){
     float cw=clamp((0.15-f*PX)/0.07,0.0,1.0); if(cw<=0.0) break;
-    vec3 q=p*f+vec3(float(k)*13.7+uSeed); vec3 i=floor(q), fr=fract(q);
-    for(int z=-1+ZERO;z<=1;z++) for(int y=-1+ZERO;y<=1;y++) for(int x=-1+ZERO;x<=1;x++){
+    vec3 q=p*f+vec3(float(k)*13.7+uSeed); vec3 i=floor(q-0.5), fr=q-i;
+    for(int z=ZERO;z<=1;z++) for(int y=ZERO;y<=1;y++) for(int x=ZERO;x<=1;x++){
       vec3 g=vec3(float(x),float(y),float(z)); vec3 c=hash33(i+g);
       if(c.z>dens) continue;
-      vec3 o=hash33(i+g+41.3)*0.6+0.2; float rad=0.12+0.3*c.x*c.x;
-      float d=length(g+o-fr)/rad;
-      if(d<2.0){ float bowl=d<1.0?(d*d-1.0):0.0; float rim=exp(-(d-1.0)*(d-1.0)*10.0)*0.28; h+=cw*(bowl*0.6+rim)*rad/f*0.5; }
+      vec3 o=hash33(i+g+41.3)*0.6+0.2; float rad=0.12+0.2*c.x*c.x;
+      vec3 v=fr-g-o; float dl=length(v), d=dl/rad;
+      if(d<1.6){
+        float bowl=d<1.0?(d*d-1.0):0.0; float rim=exp(-(d-1.0)*(d-1.0)*10.0)*0.28*smoothstep(1.6,1.3,d);
+        h+=cw*(bowl*0.6+rim)*rad/f*0.5;
+        gr+=cw*0.5*((d<1.0?1.2*d:0.0)-20.0*(d-1.0)*rim)*v/max(dl,1e-4);
+      }
     }
     f*=2.15;
   }
+#ifdef CRG
+  HG += gr*str; return 0.0;
+#else
   return h*str;
+#endif
 }
 /* Einzelsterne: pro Zellebene höchstens ein Stern, Ebenen werden beim Hineinzoomen aufgelöst */
 vec3 starLayers(vec2 q, float dens, float sc, float seed, float px){
@@ -2199,10 +2213,14 @@ float rays(vec3 s, vec3 c, float len, float sd){
   return r*exp(-d/len)*smoothstep(0.0, len*0.06, d);
 }
 /* benannter Krater als Höhe: Schüssel und Wall */
-float crat(vec3 s, vec3 c, float r){
-  float x = adist(s,c)/r; if(x >= 2.0) return 0.0;
-  return ((x<1.0 ? (x*x-1.0)*0.6 : 0.0) + exp(-(x-1.0)*(x-1.0)*10.0)*0.28)*r*0.5;
+/* benannter Krater (Schüssel und Wall), k = Stärke: trägt nur seine Neigung bei, siehe craters() */
+float cratk(vec3 s, vec3 c, float r, float k){
+  vec3 v = s - c; float dl = length(v), x = dl/r; if(x >= 2.0) return 0.0;
+  float rim = exp(-(x-1.0)*(x-1.0)*10.0)*0.28;
+  HG += k*0.5*((x<1.0 ? 1.2*x : 0.0) - 20.0*(x-1.0)*rim)*v/max(dl,1e-4);
+  return 0.0;
 }
+float crat(vec3 s, vec3 c, float r){ return cratk(s,c,r,1.0); }
 /* Abstand zu einem kurzen Bogenstück a–b */
 float arcd(vec3 s, vec3 a, vec3 b){ vec3 pa = s-a, ba = b-a; float h = clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0); return length(pa-ba*h); }
 /* Flächen aus mehreren Flecken: Die Einzelfelder werden addiert und an einer Schwelle geschnitten, die Lage vorher leicht verzerrt */
@@ -2253,7 +2271,7 @@ vec4 shade(vec2 p){
       alb = mix(alb, uC, clamp(ry*0.5,0.0,0.75));
       h = craters(s,5.0,0.55,uQ.x*(1.0-0.6*pl)) + 0.004*fbm(s+3.0,7.0,12)
         + exp(-pow((adist(s,vec3(0.25355,0.5225,-0.81407))-0.32)/0.02,2.0))*0.003
-        + crat(s,vec3(0.74658,0.4633,0.47746),0.06) + crat(s,vec3(0.83906,-0.54317,0.03077),0.147)*0.5 + crat(s,vec3(-0.77592,-0.35511,-0.52139),0.13)*0.5 + crat(s,vec3(-0.25488,-0.28067,-0.92534),0.074);
+        + crat(s,vec3(0.74658,0.4633,0.47746),0.06) + cratk(s,vec3(0.83906,-0.54317,0.03077),0.147,0.5) + cratk(s,vec3(-0.77592,-0.35511,-0.52139),0.13,0.5) + crat(s,vec3(-0.25488,-0.28067,-0.92534),0.074);
     } else if(uMode==7){
       /* Mond: Meere, Becken und Strahlenkrater an ihren wahren Orten. Nullmeridian = Mitte der erdzugewandten Seite. */
       const vec4 MARE[30] = vec4[30](
@@ -2370,7 +2388,7 @@ vec4 shade(vec2 p){
       alb = mix(alb, uC, clamp(fac,0.0,1.0));
       alb = mix(alb, vec3(0.62,0.66,0.72), clamp(ry*0.5,0.0,0.6));
       h = craters(s,4.0,0.6,uQ.x) + 0.004*fbm(s+3.0,7.0,12)
-        + crat(s,vec3(-0.80917,0.33907,-0.47988),0.098) + crat(s,vec3(0.81435,-0.18738,-0.54929),0.3)*0.3 + crat(s,vec3(-0.68007,-0.67688,0.28169),0.277)*0.4 + crat(s,vec3(-0.64852,-0.71934,-0.24894),0.18)*0.5 + crat(s,vec3(0.60748,0.41151,-0.67943),0.134)
+        + crat(s,vec3(-0.80917,0.33907,-0.47988),0.098) + cratk(s,vec3(0.81435,-0.18738,-0.54929),0.3,0.3) + cratk(s,vec3(-0.68007,-0.67688,0.28169),0.277,0.4) + cratk(s,vec3(-0.64852,-0.71934,-0.24894),0.18,0.5) + crat(s,vec3(0.60748,0.41151,-0.67943),0.134)
         + 0.012*exp(-pow(adist(s,vec3(-0.68055,-0.18224,0.70967))/0.02,2.0));
     } else if(uMode==1 && uHasTex>0.5){
       float lon = atan(s.x, s.z), lat = asin(clamp(s.y,-1.0,1.0));
@@ -2533,6 +2551,10 @@ vec4 shade(vec2 p){
       }
     }
     vec3 n = bumpN(nv,nv,h,1.0);
+    /* Kraterneigung zurück in den Bildraum drehen und auf die Fläche projizieren */
+    vec3 gv = M*(rotY(-(uT*uAxis.z - uRot.x))*HG); gv -= nv*dot(gv,nv);
+    float gvl = length(gv); if(gvl > 1.2) gv *= 1.2/gvl;
+    n = normalize(n - gv);
     float ndl0 = dot(nv,L), ndl = dot(n,L);
     float dif = (uMode==0 || uMode>=5) && uHaze<0.5 ? max(ndl,0.0)*smoothstep(-0.02,0.12,ndl0)
                                       : clamp(ndl*0.85+0.15,0.0,1.0)*smoothstep(-0.25,0.25,ndl0);
@@ -2736,7 +2758,9 @@ vec4 shade(vec2 p){
   vec3 cg = max(mix(vec3(dot(c,vec3(0.3,0.5,0.2))), c, 2.0),0.0);
   cg = mix(cg, cg*vec3(1.0, 0.78, 0.42), 0.6*warm);
   col += cg*glow*mix(0.15, 0.8, smoothstep(1.0-2.0*PX, 1.0, r));
-  return emit(col);
+  /* die Scheibe deckt, der Schein außen liegt additiv über dem Hintergrund */
+  vec4 e = emit(col); e.a = smoothstep(1.0, 1.0-1.5*PX, r);
+  return e;
 }`;
 SRC.web = `
 vec2 webField(vec2 q, float f0, float seed){
@@ -3024,7 +3048,7 @@ function setupTextures(){
 function makeProg(name){
   const fs = gl.createShader(gl.FRAGMENT_SHADER);
   const [k, m = '0', f = '0'] = name.split(':');
-  const defs = 'const int uMode = ' + m + ';\n#define FLAT ' + f + '\n' + (k === 'craft' && m === '0' ? '#define ASTRO\n' : '') + (MOBILE ? '#define LOWQ\n' : '');
+  const defs = 'const int uMode = ' + m + ';\n#define FLAT ' + f + '\n' + (k === 'craft' && m === '0' ? '#define ASTRO\n' : '') + (MOBILE ? '#define LOWQ\n' : '') + (k === 'planet' ? '#define CRG\n' : '');
   const src = (k === 'bg' ? BG : PRE + SRC[k] + MAIN).replace('//@DEFS', defs);
   gl.shaderSource(fs, src); gl.compileShader(fs);
   const p = gl.createProgram(); gl.attachShader(p, vsh); gl.attachShader(p, fs);
@@ -3124,7 +3148,7 @@ function drawObj(o, X, Y, R, a, time, extra){
   } else if (o.k === 'proxima') {
     gl.uniform4fv(U(e,'uQ'), [o.marks[1].x, o.marks[1].y, 0, 0]);
   }
-  gl.blendFunc(gl.ONE, o.solid ? gl.ONE_MINUS_SRC_ALPHA : gl.ONE);
+  gl.blendFunc(gl.ONE, o.opq ? gl.ONE_MINUS_SRC_ALPHA : gl.ONE);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
 
@@ -4181,7 +4205,8 @@ function frame(now){
   }
   if (qT > 1.2) { qT = 0;
     qSlow = ema > 21 ? qSlow + 1 : 0; qFast = ema < 17.6 ? qFast + 1 : 0;
-    if (qSlow >= 2 && quality > .55) { qCap = quality; qCapT = now + qWait*1000; qWait = Math.min(240, qWait*2); quality = Math.max(.55, quality*.85); qSlow = 0; sizeGL(); }
+    const qMin = MOBILE ? .75 : .6;
+    if (qSlow >= 2 && quality > qMin) { qCap = quality; qCapT = now + qWait*1000; qWait = Math.min(240, qWait*2); quality = Math.max(qMin, quality*.85); qSlow = 0; sizeGL(); }
     else if (qFast >= 3 && quality < 1) { const q = Math.min(1, quality*1.09); if (q < qCap - .01 || now > qCapT) { quality = q; sizeGL(); } qFast = 0; } }
   if (touring) {
     const fr = targetT - Math.floor(targetT);
