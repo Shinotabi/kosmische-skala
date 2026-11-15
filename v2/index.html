@@ -368,6 +368,18 @@ body.detail-on .det-ctl{opacity:1;transform:translate(-50%,0);pointer-events:aut
 .det-nav button:disabled{opacity:.3;cursor:default;border-color:var(--faint)}
 .det-nav svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 @media (max-width:760px){.det-nav button{width:40px;height:40px;border-radius:20px}}
+
+/* ---------- Anflug mit Ladeanzeige: Das Intro blendet erst aus, wenn alles geladen ist (Klasse gone) ---------- */
+.intro{transition:opacity .9s ease,visibility 0s .9s}
+.intro.out{opacity:1;visibility:visible}
+.intro.out.gone{opacity:0;visibility:hidden}
+.intro-load{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 13vh);width:min(260px,64vw);transform:translateX(-50%);display:grid;grid-template-columns:1fr auto;gap:10px 12px;align-items:baseline;font:500 10px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--dim);opacity:0;transition:opacity .6s ease;pointer-events:none;text-shadow:0 0 12px rgba(4,5,10,.95)}
+.intro-load.on{opacity:1}
+.intro-load::before{content:"";position:absolute;inset:-26px -70px;z-index:-1;background:radial-gradient(closest-side,rgba(4,5,10,.9),rgba(4,5,10,.55) 60%,rgba(4,5,10,0))}
+.intro-load em{font-style:normal;color:var(--sun);letter-spacing:.08em}
+.intro-load i{grid-column:1/-1;height:2px;border-radius:1px;background:rgba(160,178,230,.18);overflow:hidden}
+.intro-load b{display:block;height:100%;background:var(--sun);transform-origin:0 50%;transform:scaleX(0);transition:transform .45s ease}
+@media (prefers-reduced-motion:reduce){.intro-load b{transition:none}}
 </style>
 </head>
 <body>
@@ -1209,9 +1221,15 @@ precision highp float; precision highp int;
    Ein Programm mit allen Zweigen brauchte unter Windows Minuten statt Sekundenbruchteile. */
 //@DEFS
 in vec2 vP;
-/* Ausgabe 0: das Bild. Ausgabe 1: der Leuchtanteil, aus dem die Nachbearbeitung das Überstrahlen berechnet. */
+/* Das Bild und sein Leuchtanteil, aus dem die Nachbearbeitung das Überstrahlen berechnet.
+   MRT: beide in einem Durchgang über zwei Bildziele. Sonst (Windows/Direct3D) zwei Durchgänge mit demselben Programm,
+   uPass 0 = Bild, 1 = Leuchtanteil. Dort würde ein zweites Bildziel jeden Shader beim ersten Zeichnen erneut übersetzen. */
 layout(location=0) out vec4 fragColor;
+#ifdef MRT
 layout(location=1) out vec4 fragGlow;
+#else
+uniform float uPass;
+#endif
 vec3 GLW = vec3(0.0);
 uniform float uT, uR, uSeed, uAlpha, uDpr, uEdge;
 /* Schleifen beginnen bei ZERO statt 0: Der Wert ist immer 0, aber für den Compiler nicht vorhersehbar. So rollt der
@@ -1310,7 +1328,8 @@ vec3 HG = vec3(0.0);
 float craters(vec3 p, float f0, float dens, float str){
   float h=0.0, f=f0; vec3 gr=vec3(0.0);
   for(int k=ZERO;k<7;k++){
-    float cw=clamp((0.15-f*PX)/0.07,0.0,1.0); if(cw<=0.0) break;
+    /* Krater erscheinen erst, wenn ihre Zelle rund 9 Bildpunkte misst: kleinere würden beim Drehen flimmern */
+    float cw=clamp((0.11-f*PX)/0.06,0.0,1.0); if(cw<=0.0) break;
     vec3 q=p*f+vec3(float(k)*13.7+uSeed); vec3 i=floor(q-0.5), fr=q-i;
     for(int z=ZERO;z<=1;z++) for(int y=ZERO;y<=1;y++) for(int x=ZERO;x<=1;x++){
       vec3 g=vec3(float(x),float(y),float(z)); vec3 c=hash33(i+g);
@@ -1318,9 +1337,11 @@ float craters(vec3 p, float f0, float dens, float str){
       vec3 o=hash33(i+g+41.3)*0.6+0.2; float rad=0.12+0.2*c.x*c.x;
       vec3 v=fr-g-o; float dl=length(v), d=dl/rad;
       if(d<1.6){
-        float bowl=d<1.0?(d*d-1.0):0.0; float rim=exp(-(d-1.0)*(d-1.0)*10.0)*0.28*smoothstep(1.6,1.3,d);
+        float wd=clamp(1.5*f*PX/rad,0.04,0.6);
+        float bowl=(d*d-1.0)*(1.0-smoothstep(1.0-wd,1.0+wd,d)); float rim=exp(-(d-1.0)*(d-1.0)*10.0)*0.28*smoothstep(1.6,1.3,d);
         h+=cw*(bowl*0.6+rim)*rad/f*0.5;
-        gr+=cw*0.5*((d<1.0?1.2*d:0.0)-20.0*(d-1.0)*rim)*v/max(dl,1e-4);
+        /* Der Knick am Kraterrand wird so breit wie ein Bildpunkt geglättet, sonst springt dort die Helligkeit */
+        gr+=cw*0.5*(1.2*d*(1.0-smoothstep(1.0-wd,1.0+wd,d))-20.0*(d-1.0)*rim)*v/max(dl,1e-4);
       }
     }
     f*=2.15;
@@ -1355,7 +1376,13 @@ vec3 starLayers(vec2 q, float dens, float sc, float seed, float px){
 const MAIN = `
 void main(){
   PX = 1.0/uR;
-  if(uR < 1.5){ float d=length(vP)*uR; float rr=max(0.85,uR); float b=exp(-d*d/(rr*rr))*min(1.0,0.35+uR*1.2); fragColor=vec4(uDot*b,b)*uAlpha; fragGlow=vec4(0.0,0.0,0.0,b*uAlpha); return; }
+  if(uR < 1.5){ float d=length(vP)*uR; float rr=max(0.85,uR); float b=exp(-d*d/(rr*rr))*min(1.0,0.35+uR*1.2);
+#ifdef MRT
+    fragColor = vec4(uDot*b,b)*uAlpha; fragGlow = vec4(0.0,0.0,0.0,b*uAlpha);
+#else
+    fragColor = uPass > 0.5 ? vec4(0.0,0.0,0.0,b*uAlpha) : vec4(uDot*b,b)*uAlpha;
+#endif
+    return; }
   vec2 p = vP; vec4 c;
 #if FLAT == 1
   /* Scheibe: Sehstrahl mit der gedrehten Ebene schneiden; nie ganz auf die Kante, damit sie sichtbar bleibt */
@@ -1383,8 +1410,12 @@ void main(){
 #endif
   float em = 1.0;
   if(uEdge>0.0){ float rr = length(p); em = smoothstep(uEdge, 1.0+0.3*(uEdge-1.0), rr); }
+#ifdef MRT
   fragColor = c*(em*uAlpha);
   fragGlow = vec4(GLW*em, c.a)*uAlpha;
+#else
+  fragColor = uPass > 0.5 ? vec4(GLW*em, c.a)*uAlpha : c*(em*uAlpha);
+#endif
 }
 `;
 
@@ -2255,16 +2286,58 @@ float rays(vec3 s, vec3 c, float len, float sd){
 float cratk(vec3 s, vec3 c, float r, float k){
   vec3 v = s - c; float dl = length(v), x = dl/r; if(x >= 2.0) return 0.0;
   float rim = exp(-(x-1.0)*(x-1.0)*10.0)*0.28;
-  HG += k*0.5*((x<1.0 ? 1.2*x : 0.0) - 20.0*(x-1.0)*rim)*v/max(dl,1e-4);
+  float wd = clamp(1.5*PX/r, 0.04, 0.6);
+  HG += k*0.5*(1.2*x*(1.0-smoothstep(1.0-wd,1.0+wd,x)) - 20.0*(x-1.0)*rim)*v/max(dl,1e-4);
   return 0.0;
 }
 float crat(vec3 s, vec3 c, float r){ return cratk(s,c,r,1.0); }
 /* Abstand zu einem kurzen Bogenstück a–b */
 float arcd(vec3 s, vec3 a, vec3 b){ vec3 pa = s-a, ba = b-a; float h = clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0); return length(pa-ba*h); }
 /* Flächen aus mehreren Flecken: Die Einzelfelder werden addiert und an einer Schwelle geschnitten, die Lage vorher leicht verzerrt */
-vec3 warp(vec3 s, float k){ return normalize(s + k*vec3(fbm(s+uSeed,2.2,5), fbm(s+uSeed+5.2,2.2,5), fbm(s+uSeed+9.1,2.2,5))); }
-/* m = (Ort, 0,916/r²): am Rand des Flecks (Abstand r) ist das Feld 0,4 */
+/* Schleifen statt mehrfach ausgeschriebener Aufrufe: Jeder Aufruf erzeugt beim Übersetzen eine eigene Kopie der Funktion */
 float blob(vec3 s, vec4 m){ return exp(-m.w*(2.0 - 2.0*dot(s,m.xyz))); }
+/* Nachtlichter der Erde: Ballungsräume an ihren wirklichen Orten (Breite, Länge Ost, Ausdehnung) mit Gewicht.
+   Grobe Näherung nach den Nachtaufnahmen „Black Marble“ der NASA; dazwischen bleibt das Land dunkel. */
+float nightPop(vec3 s){
+  const vec4 CITY[72] = vec4[72](
+    vec4(-0.73275,0.64945,0.20321,186.93878), vec4(-0.74032,0.66913,0.06477,113.08642), vec4(-0.87609,0.46175,0.13876,366.4), vec4(-0.85078,0.51504,-0.10446,186.93878), vec4(-0.8245,0.55919,0.08666,186.93878), vec4(-0.732,0.55919,-0.38921,572.5),
+    vec4(-0.671,0.61153,-0.41928,1017.77778), vec4(-0.57519,0.73135,-0.36644,1017.77778), vec4(-0.69497,0.70091,0.16045,366.4), vec4(-0.93052,0.33381,-0.15071,366.4), vec4(-0.79815,0.60182,0.02787,22.9), vec4(-0.6509,-0.39073,0.6509,254.44444),
+    vec4(-0.70184,-0.56784,0.43009,572.5), vec4(-0.95308,-0.20791,0.22004,1465.6), vec4(-0.95803,0.08194,0.27471,1017.77778), vec4(-0.90509,0.18224,0.38419,572.5), vec4(-0.78702,-0.55194,0.27561,1465.6), vec4(-0.57505,-0.13917,0.80619,366.4),
+    vec4(0.03258,0.78261,0.62166,113.08642), vec4(0.02638,0.75356,0.65685,1017.77778), vec4(0.12214,0.7108,0.69271,366.4), vec4(-0.04914,0.64812,0.75995,1465.6), vec4(-0.12174,0.62796,0.76866,1017.77778), vec4(0.0288,0.66131,0.74956,2290.0),
+    vec4(0.1364,0.75471,0.64172,35.78125), vec4(0.34383,0.8261,0.44648,572.5), vec4(0.25226,0.86603,0.4317,2290.0), vec4(0.36589,0.65606,0.66008,1017.77778), vec4(0.26596,0.77715,0.57036,63.61111), vec4(0.1282,0.84805,0.51418,186.93878),
+    vec4(0.17484,0.66262,0.72826,1017.77778), vec4(0.44726,0.50453,0.73852,747.7551), vec4(0.47895,0.43837,0.76055,366.4), vec4(0.06066,0.1132,0.99172,254.44444), vec4(0.42124,-0.44151,0.79223,572.5), vec4(0.05643,0.58779,0.80705,113.08642),
+    vec4(0.69849,0.43837,0.56563,254.44444), vec4(0.48976,0.5373,0.68662,747.7551), vec4(0.63466,0.58354,0.50664,1017.77778), vec4(0.59887,-0.02269,0.80053,2290.0), vec4(0.66119,0.41787,0.62307,2290.0), vec4(0.88392,0.4462,0.14,54.20118),
+    vec4(0.85616,0.47869,0.19452,572.5), vec4(0.90318,0.32722,0.27785,1017.77778), vec4(0.95496,0.20791,0.21171,143.125), vec4(0.82187,0.51504,0.24345,254.44444), vec4(0.91564,0.40195,-0.00639,572.5), vec4(0.74513,0.55919,-0.36343,54.20118),
+    vec4(0.73319,0.51803,-0.44055,366.4), vec4(0.84416,0.39073,-0.36705,572.5), vec4(0.83418,0.50754,-0.21573,572.5), vec4(0.68874,0.63608,-0.34791,572.5), vec4(0.63774,0.59482,-0.48936,747.7551), vec4(0.52525,0.58354,-0.61935,747.7551),
+    vec4(0.57042,0.57071,-0.59069,1017.77778), vec4(0.78306,0.40674,-0.47051,2290.0), vec4(0.93269,-0.12187,-0.33947,254.44444), vec4(0.95487,0.23853,-0.17698,1017.77778), vec4(0.94086,0.18738,-0.28227,1465.6), vec4(0.89831,0.35837,-0.2542,1465.6),
+    vec4(0.82949,0.25207,-0.49841,1465.6), vec4(0.97537,0.04362,-0.21623,747.7551), vec4(0.70692,0.65606,0.2643,1017.77778), vec4(0.39986,-0.55775,-0.72735,2290.0), vec4(0.45321,-0.61291,-0.64726,2290.0), vec4(0.40269,-0.46175,-0.79033,4071.11111),
+    vec4(0.76287,-0.52992,-0.37043,6361.11111), vec4(-0.11016,0.55339,0.8256,1017.77778), vec4(-0.28925,0.25376,0.92301,4071.11111), vec4(0.61754,0.15643,0.77082,2290.0), vec4(0.71,0.68455,0.16522,2290.0), vec4(0.50166,0.81915,0.27808,143.125));
+  const float CITW[72] = float[72](
+    1.0, 0.8, 0.7, 0.7, 0.6, 0.9, 0.7, 0.5, 0.6, 0.9, 0.35, 0.9,
+    0.8, 0.5, 0.5, 0.5, 0.6, 0.5, 1.0, 0.8, 0.9, 0.6, 0.5, 0.6,
+    0.5, 0.9, 0.6, 0.8, 0.35, 0.35, 0.6, 1.0, 0.6, 0.7, 0.8, 0.45,
+    0.8, 0.8, 0.7, 0.35, 0.6, 0.9, 1.0, 0.9, 0.7, 0.8, 0.8, 0.9,
+    1.0, 1.0, 0.7, 0.9, 1.0, 1.0, 0.9, 0.8, 0.8, 0.8, 0.6, 0.6,
+    0.7, 0.7, 0.4, 0.7, 0.6, 0.5, 0.4, 0.5, 0.35, 0.35, 0.4, 0.3);
+  float pop = 0.0;
+  for(int k=ZERO;k<72;k++) pop += blob(s,CITY[k])*CITW[k];
+  return pop;
+}
+/* Lichter: in dichten Räumen viele Punkte und ein schwacher Schein, sonst fast nichts */
+float nightLights(vec3 s){
+  float pop = clamp(nightPop(s), 0.0, 1.0);
+  float n = 0.5+0.5*fbm(s+40.0,60.0,5);
+  return smoothstep(0.3,0.9,pop)*0.22 + smoothstep(mix(0.82,0.4,pop), mix(1.0,0.66,pop), n)*min(1.0, pop*1.8+0.02);
+}
+float ccer(vec3 s){
+  const vec4 CRT[5] = vec4[5](vec4(vec3(-0.80917,0.33907,-0.47988),0.098), vec4(vec3(0.81435,-0.18738,-0.54929),0.3), vec4(vec3(-0.68007,-0.67688,0.28169),0.277), vec4(vec3(-0.64852,-0.71934,-0.24894),0.18), vec4(vec3(0.60748,0.41151,-0.67943),0.134));
+  const float CRK[5] = float[5](1.0, 0.3, 0.4, 0.5, 1.0);
+  for(int k=ZERO;k<5;k++) cratk(s,CRT[k].xyz,CRT[k].w,CRK[k]);
+  return 0.0;
+}
+vec3 fbm3(vec3 p, vec3 o, float f, int oct){ vec3 w = vec3(0.0); for(int i=ZERO;i<3;i++) w[i] = fbm(p+o[i],f,oct); return w; }
+vec3 warp(vec3 s, float k){ return normalize(s + k*fbm3(s+uSeed, vec3(0.0,5.2,9.1), 2.2, 5)); }
+/* m = (Ort, 0,916/r²): am Rand des Flecks (Abstand r) ist das Feld 0,4 */
 float jb(float x, float a, float b, float w){ return smoothstep(a-w,a+w,x)*(1.0-smoothstep(b-w,b+w,x)); }
 float ringDens(float rr){
   if(uRing.z<=0.0||rr<uRing.x||rr>uRing.y) return 0.0;
@@ -2304,12 +2377,16 @@ vec4 shade(vec2 p){
       alb = mix(uA, uB, smoothstep(0.1,0.5,fbm(s+11.0,1.6,6))*0.8);
       alb = mix(alb, uA*vec3(1.1,1.02,0.9), pl*0.3);
       alb *= 0.82+0.36*(0.5+0.5*fbm(s+7.0,5.0,12));
-      float ry = rays(s,vec3(0.15491,0.84619,0.50986),0.32,1.0) + rays(s,vec3(-0.50945,-0.19595,0.83789),0.12,2.0) + rays(s,vec3(0.17965,-0.55775,0.81034),0.2,3.0)
-               + rays(s,vec3(-0.63446,0.60321,-0.48333),0.1,4.0) + rays(s,vec3(0.8168,0.18395,-0.5468),0.12,5.0) + rays(s,vec3(-0.15097,-0.53583,-0.83072),0.1,6.0) + rays(s,vec3(-0.82511,-0.00349,-0.56496),0.1,7.0);
+      const vec4 RAY[7] = vec4[7](vec4(vec3(0.15491,0.84619,0.50986),0.32), vec4(vec3(-0.50945,-0.19595,0.83789),0.12), vec4(vec3(0.17965,-0.55775,0.81034),0.2),
+        vec4(vec3(-0.63446,0.60321,-0.48333),0.1), vec4(vec3(0.8168,0.18395,-0.5468),0.12), vec4(vec3(-0.15097,-0.53583,-0.83072),0.1), vec4(vec3(-0.82511,-0.00349,-0.56496),0.1));
+      const vec4 CRT[4] = vec4[4](vec4(vec3(0.74658,0.4633,0.47746),0.06), vec4(vec3(0.83906,-0.54317,0.03077),0.147), vec4(vec3(-0.77592,-0.35511,-0.52139),0.13), vec4(vec3(-0.25488,-0.28067,-0.92534),0.074));
+      const float CRK[4] = float[4](1.0, 0.5, 0.5, 1.0);
+      float ry = 0.0;
+      for(int k=ZERO;k<7;k++) ry += rays(s,RAY[k].xyz,RAY[k].w,float(k+1));
       alb = mix(alb, uC, clamp(ry*0.5,0.0,0.75));
       h = craters(s,5.0,0.55,uQ.x*(1.0-0.6*pl)) + 0.004*fbm(s+3.0,7.0,12)
-        + exp(-pow((adist(s,vec3(0.25355,0.5225,-0.81407))-0.32)/0.02,2.0))*0.003
-        + crat(s,vec3(0.74658,0.4633,0.47746),0.06) + cratk(s,vec3(0.83906,-0.54317,0.03077),0.147,0.5) + cratk(s,vec3(-0.77592,-0.35511,-0.52139),0.13,0.5) + crat(s,vec3(-0.25488,-0.28067,-0.92534),0.074);
+        + exp(-pow((adist(s,vec3(0.25355,0.5225,-0.81407))-0.32)/0.02,2.0))*0.003;
+      for(int k=ZERO;k<4;k++) cratk(s,CRT[k].xyz,CRT[k].w,CRK[k]);
     } else if(uMode==7){
       /* Mond: Meere, Becken und Strahlenkrater an ihren wahren Orten. Nullmeridian = Mitte der erdzugewandten Seite. */
       const vec4 MARE[30] = vec4[30](
@@ -2329,16 +2406,23 @@ vec4 shade(vec2 p){
       /* Südpol-Aitken-Becken auf der Rückseite: etwas dunkler */
       alb *= 1.0 - 0.13*spot(s,vec3(-0.11483,-0.79864,-0.59076),0.7,n);
       alb *= 0.82+0.36*(0.5+0.5*fbm(s+7.0,5.0,12));
-      float ry = rays(s,vec3(-0.14385,-0.68582,0.71341),0.22,1.0) + rays(s,vec3(-0.33885,0.16677,0.92594),0.09,2.0) + rays(s,vec3(-0.60952,0.1409,0.78015),0.05,3.0) + rays(s,vec3(-0.67402,0.40195,0.61979),0.04,4.0)
-               + rays(s,vec3(0.70038,0.27731,0.6577),0.04,5.0) + rays(s,vec3(0.7886,0.58779,-0.18061),0.08,6.0) + rays(s,vec3(-0.26877,0.38107,-0.88462),0.1,7.0) + rays(s,vec3(-0.87018,0.31565,-0.37836),0.08,8.0)
-               + rays(s,vec3(-0.81577,-0.41469,0.40318),0.06,9.0) + rays(s,vec3(0.66606,-0.52696,0.52791),0.05,10.0) + rays(s,vec3(-0.0501,0.95832,0.28126),0.06,11.0);
+      /* Strahlenkrater (Ort, Reichweite) und benannte Krater (Ort, Radius) als Listen in Schleifen: Jede einzeln
+         ausgeschriebene Funktion würde beim Übersetzen eine eigene Kopie erzeugen und die Übersetzungszeit vervielfachen. */
+      const vec4 RAY[11] = vec4[11](
+        vec4(vec3(-0.14385,-0.68582,0.71341),0.22), vec4(vec3(-0.33885,0.16677,0.92594),0.09), vec4(vec3(-0.60952,0.1409,0.78015),0.05), vec4(vec3(-0.67402,0.40195,0.61979),0.04),
+        vec4(vec3(0.70038,0.27731,0.6577),0.04), vec4(vec3(0.7886,0.58779,-0.18061),0.08), vec4(vec3(-0.26877,0.38107,-0.88462),0.1), vec4(vec3(-0.87018,0.31565,-0.37836),0.08),
+        vec4(vec3(-0.81577,-0.41469,0.40318),0.06), vec4(vec3(0.66606,-0.52696,0.52791),0.05), vec4(vec3(-0.0501,0.95832,0.28126),0.06));
+      const vec4 CRT[12] = vec4[12](
+        vec4(vec3(-0.14385,-0.68582,0.71341),0.0245), vec4(vec3(-0.33885,0.16677,0.92594),0.027), vec4(vec3(-0.10145,0.78369,0.61281),0.029), vec4(vec3(-0.13221,-0.85355,0.50396),0.065), vec4(vec3(-0.60952,0.1409,0.78015),0.009),
+        vec4(vec3(-0.67402,0.40195,0.61979),0.0115), vec4(vec3(0.86492,-0.15471,0.47746),0.038), vec4(vec3(0.43586,-0.19766,0.87804),0.029), vec4(vec3(0.78739,-0.4242,0.4473),0.052), vec4(vec3(-0.03272,-0.1616,0.98631),0.044),
+        vec4(vec3(-0.5884,-0.69842,0.40743),0.06), vec4(vec3(-0.37251,-0.91706,0.14225),0.083));
+      float ry = 0.0;
+      for(int k=ZERO;k<11;k++) ry += rays(s,RAY[k].xyz,RAY[k].w,float(k+1));
       alb = mix(alb, uC, clamp(ry*0.55,0.0,0.8));
       float dor = adist(s,vec3(-0.9421,-0.33216,-0.04608));
       h = craters(s,5.0,0.5,uQ.x*(1.0-0.75*mar)) + 0.004*fbm(s+3.0,7.0,12)*(1.0-0.6*mar)
-        + crat(s,vec3(-0.14385,-0.68582,0.71341),0.0245) + crat(s,vec3(-0.33885,0.16677,0.92594),0.027) + crat(s,vec3(-0.10145,0.78369,0.61281),0.029) + crat(s,vec3(-0.13221,-0.85355,0.50396),0.065) + crat(s,vec3(-0.60952,0.1409,0.78015),0.009)
-        + crat(s,vec3(-0.67402,0.40195,0.61979),0.0115) + crat(s,vec3(0.86492,-0.15471,0.47746),0.038) + crat(s,vec3(0.43586,-0.19766,0.87804),0.029) + crat(s,vec3(0.78739,-0.4242,0.4473),0.052) + crat(s,vec3(-0.03272,-0.1616,0.98631),0.044)
-        + crat(s,vec3(-0.5884,-0.69842,0.40743),0.06) + crat(s,vec3(-0.37251,-0.91706,0.14225),0.083)
         + (exp(-pow((dor-0.268)/0.02,2.0)) + 0.7*exp(-pow((dor-0.18)/0.015,2.0)))*0.008;
+      for(int k=ZERO;k<12;k++) crat(s,CRT[k].xyz,CRT[k].w);
     } else if(uMode==8){
       /* Mars: dunkle Basaltgebiete, helle Staubebenen, Hellas, Tharsis-Vulkane, Valles Marineris und Polkappen an ihren wahren Orten (Länge Ost) */
       const vec4 DARK[30] = vec4[30](
@@ -2374,7 +2458,7 @@ vec4 shade(vec2 p){
       alb = mix(alb, uB*1.15, vol*0.5);
       /* Valles Marineris: 4.000 km lang, bis 200 km breit */
       vec3 v0 = vec3(-0.97086,-0.12187,-0.20636), v1 = vec3(-0.98966,-0.13917,0.03456), v2 = vec3(-0.93661,-0.17365,0.30432), v3 = vec3(-0.81879,-0.21644,0.53173), v4 = vec3(-0.64925,-0.24192,0.72107);
-      vec3 sc = normalize(s + 0.012*vec3(fbm(s,14.0,4), fbm(s+4.0,14.0,4), fbm(s+8.0,14.0,4)));
+      vec3 sc = normalize(s + 0.012*fbm3(s, vec3(0.0,4.0,8.0), 14.0, 4));
       float vd = min(min(arcd(sc,v0,v1), arcd(sc,v1,v2)), min(arcd(sc,v2,v3), arcd(sc,v3,v4)));
       float vw = 0.026*(0.35+1.1*(0.5+0.5*fbm(s+5.0,7.0,4)))*smoothstep(-1.85,-1.65,atan(s.x,s.z))*smoothstep(-0.7,-0.85,atan(s.x,s.z));
       float can = 1.0 - smoothstep(vw*0.3, vw*1.1 + PX, vd);
@@ -2426,7 +2510,7 @@ vec4 shade(vec2 p){
       alb = mix(alb, uC, clamp(fac,0.0,1.0));
       alb = mix(alb, vec3(0.62,0.66,0.72), clamp(ry*0.5,0.0,0.6));
       h = craters(s,4.0,0.6,uQ.x) + 0.004*fbm(s+3.0,7.0,12)
-        + crat(s,vec3(-0.80917,0.33907,-0.47988),0.098) + cratk(s,vec3(0.81435,-0.18738,-0.54929),0.3,0.3) + cratk(s,vec3(-0.68007,-0.67688,0.28169),0.277,0.4) + cratk(s,vec3(-0.64852,-0.71934,-0.24894),0.18,0.5) + crat(s,vec3(0.60748,0.41151,-0.67943),0.134)
+        + ccer(s)
         + 0.012*exp(-pow(adist(s,vec3(-0.68055,-0.18224,0.70967))/0.02,2.0));
     } else if(uMode==1 && uHasTex>0.5){
       float lon = atan(s.x, s.z), lat = asin(clamp(s.y,-1.0,1.0));
@@ -2439,12 +2523,12 @@ vec4 shade(vec2 p){
       h = (1.0-ocean)*0.003*fbm(s+1.0,40.0,8);
       float lat0 = abs(s.y);
       vec3 cs = rotY(-uT*0.004)*s;
-      vec3 cw = cs + 0.25*vec3(fbm(cs,1.5,5), fbm(cs+3.0,1.5,5), fbm(cs+6.0,1.5,5));
+      vec3 cw = cs + 0.25*fbm3(cs, vec3(0.0,3.0,6.0), 1.5, 5);
       cloud = smoothstep(0.18,0.62, fbm(cw+uSeed+20.0,2.0,12) + 0.1*(smoothstep(0.1,0.3,lat0)-0.4))*0.75;
       float land = (1.0-ocean)*step(dot(tx,vec3(0.33)),0.62);
-      emis = vec3(1.0,0.72,0.4)*0.35*land*smoothstep(0.5,0.8,0.5+0.5*fbm(s+40.0,22.0,6))*(1.0-cloud);
+      emis = vec3(1.0,0.72,0.4)*0.42*land*nightLights(s)*(1.0-cloud);
     } else if(uMode==1){
-      vec3 q = s + 0.18*vec3(fbm(s,1.4,4), fbm(s+5.2,1.4,4), fbm(s+9.1,1.4,4));
+      vec3 q = s + 0.18*fbm3(s, vec3(0.0,5.2,9.1), 1.4, 4);
       float e = fbm(q+uSeed,1.1,12) + 0.06;
       float lat = abs(s.y);
       if(e>0.0){
@@ -2462,11 +2546,11 @@ vec4 shade(vec2 p){
       float ice = smoothstep(0.86,0.9,lat+0.04*fbm(s,5.0,6));
       alb = mix(alb,vec3(0.92,0.94,0.97),ice); wet *= 1.0-ice;
       vec3 cs = rotY(uT*0.005)*s;
-      vec3 cw = cs + 0.25*vec3(fbm(cs,1.5,5), fbm(cs+3.0,1.5,5), fbm(cs+6.0,1.5,5));
+      vec3 cw = cs + 0.25*fbm3(cs, vec3(0.0,3.0,6.0), 1.5, 5);
       cloud = smoothstep(0.02,0.48, fbm(cw+uSeed+20.0,2.0,12) + 0.12*(smoothstep(0.1,0.3,lat)-0.4))*0.92;
-      if(e>0.0 && ice<0.5) emis = vec3(1.0,0.72,0.4)*0.35*smoothstep(0.5,0.8,0.5+0.5*fbm(s+40.0,22.0,6))*(1.0-cloud);
+      if(e>0.0 && ice<0.5) emis = vec3(1.0,0.72,0.4)*0.42*nightLights(s)*(1.0-cloud);
     } else if(uMode==2){
-      vec3 q = s + 0.3*vec3(fbm(s,1.3,5), fbm(s+4.0,1.3,5), fbm(s+8.0,1.3,5));
+      vec3 q = s + 0.3*fbm3(s, vec3(0.0,4.0,8.0), 1.3, 5);
       LK = 6.0; float b = fbm(vec3(q.x*1.3,q.y*6.0,q.z*1.3)+uSeed,1.0,10); LK = 1.0;
       alb = mix(uB,uA,clamp(0.5+0.6*b,0.0,1.0));
       alb = mix(alb,uC,smoothstep(0.1,0.6,fbm(q+2.0,3.0,8))*0.35);
@@ -2517,7 +2601,7 @@ vec4 shade(vec2 p){
       }
     } else if(uMode==5){
       /* Io: Schwefelebenen und Schwefeldioxid-Frost, dunkle Calderen mit roten Auswurfringen, nachts glühende Lava */
-      vec3 q = s + 0.22*vec3(fbm(s,1.5,4), fbm(s+5.2,1.5,4), fbm(s+9.1,1.5,4));
+      vec3 q = s + 0.22*fbm3(s, vec3(0.0,5.2,9.1), 1.5, 4);
       float n1 = fbm(q+uSeed,1.2,10), n2 = fbm(q+13.0,2.6,10);
       alb = mix(uA, uB, smoothstep(0.0,0.5,n1));
       alb = mix(alb, uA*vec3(0.78,0.95,0.55), smoothstep(0.15,0.6,n2)*0.45);
@@ -2527,19 +2611,26 @@ vec4 shade(vec2 p){
       for(int k=ZERO;k<2;k++){
         float f = k==0 ? 3.2 : 7.5;
         vec3 cq = s*f + uSeed + float(k)*9.3, ci = floor(cq), cf = fract(cq);
-        float best = 9.0; vec3 bh = vec3(0.0);
+        /* Jeder Vulkan der Nachbarzellen trägt seinen Ring, Hof und seine Caldera bei. Nähme man nur den nächsten Vulkan,
+           würden die Ringe an der Grenze zum Nachbarn hart abgeschnitten. */
+        float nz = 0.25*fbm(s+3.0,f*3.0,5), lf = 0.5+0.5*fbm(s*f*5.0+uT*0.02,1.0,5);
+        float ring = 0.0, halo = 0.0, cal = 0.0, lv = 0.0;
         for(int z=-1+ZERO;z<=1;z++) for(int y=-1+ZERO;y<=1;y++) for(int x=-1+ZERO;x<=1;x++){
           vec3 g = vec3(float(x),float(y),float(z)); vec3 hh = hash33(ci+g);
           if(hh.z > 0.4) continue;
-          float d = length(g + 0.25 + 0.5*hash33(ci+g+17.0) - cf)/(0.1+0.2*hh.x);
-          if(d < best){ best = d; bh = hh; }
+          float rad = 0.1+0.2*hh.x, dn = length(g + 0.25 + 0.5*hash33(ci+g+17.0) - cf)/rad + nz;
+          if(dn > 3.6) continue;
+          /* Rand der Caldera mindestens einen Bildpunkt breit */
+          float ck = smoothstep(1.0, 1.0-max(0.2, 1.5*f*PX/rad), dn);
+          ring = max(ring, exp(-pow((dn-2.1)/0.5,2.0))*step(hh.y,0.5));
+          halo = max(halo, smoothstep(2.2,1.2,dn)*step(0.5,hh.y));
+          cal = max(cal, ck);
+          lv = max(lv, ck*smoothstep(0.45,0.85, lf + 0.3*(1.0-dn))*step(hh.x,0.6));
         }
-        float dn = best + 0.25*fbm(s+3.0,f*3.0,5);
-        alb = mix(alb, uC, exp(-pow((dn-2.1)/0.5,2.0))*0.75*step(bh.y,0.5));
-        alb = mix(alb, uB*1.02, smoothstep(2.2,1.2,dn)*0.35*step(0.5,bh.y));
-        float cal = smoothstep(1.0,0.8,dn);
+        alb = mix(alb, uC, ring*0.75);
+        alb = mix(alb, uB*1.02, halo*0.35);
         alb = mix(alb, uD, cal);
-        lava += cal*smoothstep(0.45,0.85, 0.5+0.5*fbm(s*f*5.0+uT*0.02,1.0,5) + 0.3*(1.0-dn))*step(bh.x,0.6);
+        lava += lv;
       }
       /* Pele: roter Schwefelring von 1.200 km Durchmesser; Loki Patera: dunkler Lavasee mit heller Insel */
       float dp = adist(s,vec3(0.91621,-0.32061,-0.24036)) + 0.03*fbm(s+3.0,6.0,4);
@@ -2901,8 +2992,12 @@ void main(){
   }
   /* Quantenschaum */
   if(wSch>0.001){ vec3 wv = worley(vec3(u*6.0, uT*0.25)); col += vec3(0.5,0.45,0.9)*smoothstep(0.1,0.0,wv.y-wv.x)*0.07*wSch; }
+#ifdef MRT
   fragColor = vec4(col,1.0);
   fragGlow = vec4(glow,1.0);
+#else
+  fragColor = vec4(uPass > 0.5 ? glow : col, 1.0);
+#endif
 }`;
 
 const GLSL_post_down = `#version 300 es
@@ -3035,7 +3130,12 @@ function histPop(k){ if (!HIST[k]) return; HIST[k] = false; try { history.back()
 const dialogOpen = () => $('imp').open || !!($('atlas') && $('atlas').open);
 const glc = $('gl'), ov = $('ov'), octx = ov.getContext('2d');
 const gl = glc.getContext('webgl2', {alpha:false, antialias:false, premultipliedAlpha:true, powerPreference:'high-performance'});
-const PEXT = gl && gl.getExtension('KHR_parallel_shader_compile');
+const PEXT = gl && !/[?&]nopext=1/.test(location.search) && gl.getExtension('KHR_parallel_shader_compile');
+/* Zwei Bildziele in einem Durchgang (MRT) nur dort, wo das keine zweite Shader-Übersetzung auslöst.
+   Unter Windows (Direct3D) wird der Leuchtanteil in einem eigenen Durchgang gezeichnet. ?mrt=1/0 erzwingt eine Variante. */
+const GLR = gl ? (() => { try { const r = String(gl.getParameter(gl.RENDERER) || ''); if (/ANGLE|Direct3D/i.test(r)) return r;
+  const x = gl.getExtension('WEBGL_debug_renderer_info'); return String((x && gl.getParameter(x.UNMASKED_RENDERER_WEBGL)) || r); } catch (e) { return ''; } })() : '';
+const MRT = /[?&]mrt=1/.test(location.search) || !(/[?&]mrt=0/.test(location.search) || /Direct3D|D3D/i.test(GLR) || /^Win/i.test(navigator.platform || ''));
 let vao = null, vsh = null;
 const PROGS = {};
 let dummyTex = null;
@@ -3086,7 +3186,7 @@ function setupTextures(){
 function makeProg(name){
   const fs = gl.createShader(gl.FRAGMENT_SHADER);
   const [k, m = '0', f = '0'] = name.split(':');
-  const defs = 'const int uMode = ' + m + ';\n#define FLAT ' + f + '\n' + (k === 'craft' && m === '0' ? '#define ASTRO\n' : '') + (MOBILE ? '#define LOWQ\n' : '') + (k === 'planet' ? '#define CRG\n' : '');
+  const defs = 'const int uMode = ' + m + ';\n#define FLAT ' + f + '\n' + (k === 'craft' && m === '0' ? '#define ASTRO\n' : '') + (MOBILE ? '#define LOWQ\n' : '') + (k === 'planet' ? '#define CRG\n' : '') + (MRT ? '#define MRT\n' : '');
   const src = (k === 'bg' ? BG : PRE + SRC[k] + MAIN).replace('//@DEFS', defs);
   gl.shaderSource(fs, src); gl.compileShader(fs);
   const p = gl.createProgram(); gl.attachShader(p, vsh); gl.attachShader(p, fs);
@@ -3095,8 +3195,10 @@ function makeProg(name){
 }
 function prog(name){
   if (!gl) return null;
-  const e = PROGS[name] || makeProg(name);
-  if (e.bad) return null;
+  let e = PROGS[name];
+  /* ohne parallele Übersetzung stößt nur der Lader an, in seiner Reihenfolge; wartende Programme werden nicht abgefragt */
+  if (!e) { if (LOAD.fence && !LOAD.legacy && !LOAD.all && LOAD.keys.includes(name)) return null; e = makeProg(name); }
+  if (e.bad || e.wait) return null;
   if (!e.ok) {
     if (PEXT && !gl.getProgramParameter(e.p, PEXT.COMPLETION_STATUS_KHR)) return null;
     if (!gl.getProgramParameter(e.p, gl.LINK_STATUS)) { console.error(name, gl.getShaderInfoLog(e.fs) || gl.getProgramInfoLog(e.p)); e.bad = true; return null; }
@@ -3105,15 +3207,61 @@ function prog(name){
   return e;
 }
 function U(e, n){ if (!(n in e.u)) e.u[n] = gl.getUniformLocation(e.p, n); return e.u[n]; }
-/* Shader vorab übersetzen: zuerst der Hintergrund und die Objekte nahe am Startpunkt, dann nach außen.
-     Die Ersatz-Shader für Astronaut und ISS entstehen nur bei Bedarf (falls die 3D-Modelle nicht laden). */
+/* Lader: Alle Shader werden vorab übersetzt, zuerst der Hintergrund und die Objekte nahe am Startpunkt, dann nach außen.
+   Mit KHR_parallel_shader_compile (Chrome, Edge) läuft das nebenher. Ohne (Firefox) wird je ein Programm angestoßen und
+   über eine Sync-Marke abgefragt, ob der Grafikprozess damit fertig ist. So wartet keine Statusabfrage auf den Compiler,
+   und die Seite bleibt flüssig, solange währenddessen nicht gezeichnet wird (Intro und Anflug).
+   Meldet der Browser die Marken nicht, wird wie früher der Reihe nach mit Wartezeit übersetzt (legacy).
+   Danach folgen die 3D-Modelle; fehlen sie, kommen ihre Ersatz-Shader dazu. Die Reise beginnt, wenn LOAD.all gilt. */
+const LOAD = {keys: [], i: 0, done: 0, wsum: 0, wdone: 0, all: !gl, fence: false, legacy: false, cur: null, t0: 0, tAll: 0, t3: false};
+const loadW = k => /^planet/.test(k) ? 8 : /^(micro|rock|craft|bg)/.test(k) ? 1 : 3;
+function loadAdd(k){ if (LOAD.keys.includes(k)) return false; LOAD.keys.push(k); LOAD.wsum += loadW(k); return true; }
+function loadCount(k){
+  const e = PROGS[k]; e.cnt = true; LOAD.done++; LOAD.wdone += loadW(k);
+  /* einmal auf einen Bildpunkt zeichnen: Manche Treiber stellen ein Programm erst beim ersten Gebrauch fertig */
+  if (e.ok) { gl.bindFramebuffer(gl.FRAMEBUFFER, POST.on ? POST.fbo : null); gl.viewport(0, 0, 1, 1); gl.useProgram(e.p); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); }
+}
+function loadPoll(){
+  if (LOAD.all) return;
+  const now = performance.now(), K = LOAD.keys;
+  if (PEXT) {
+    for (let n = 0; n < 4 && LOAD.i < K.length; n++, LOAD.i++) PROGS[K[LOAD.i]] || makeProg(K[LOAD.i]);
+    for (const k of K) { const e = PROGS[k]; if (e && !e.cnt && (prog(k) || e.bad)) loadCount(k); }
+  } else if (LOAD.legacy) {
+    const k = K.find(q => !PROGS[q] || !PROGS[q].cnt);
+    if (k) { if (PROGS[k]) PROGS[k].wait = false; prog(k); loadCount(k); }
+  } else {
+    const c = LOAD.cur;
+    if (c) {
+      const sig = gl.getSyncParameter(c.sync, gl.SYNC_STATUS) === gl.SIGNALED;
+      if (!sig && now - c.t < (c.first ? 4000 : 15000)) return;
+      if (!sig && c.first) LOAD.legacy = true;
+      gl.deleteSync(c.sync); LOAD.cur = null;
+      PROGS[c.k].wait = false; prog(c.k); loadCount(c.k);
+    }
+    while (LOAD.i < K.length && PROGS[K[LOAD.i]]) { const k = K[LOAD.i++]; if (!PROGS[k].cnt) { prog(k); loadCount(k); } }
+    if (LOAD.i < K.length && !LOAD.legacy) {
+      const k = K[LOAD.i++]; makeProg(k).wait = true;
+      LOAD.cur = {k, sync: gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0), t: now, first: !LOAD.done}; gl.flush();
+    }
+  }
+  if (LOAD.done < K.length) return;
+  if (!LOAD.tAll) LOAD.tAll = now;
+  if (!LOAD.t3) {
+    const st = t3Settled(now); if (!st) return;
+    LOAD.t3 = true;
+    if (st < 0) { let more = false; OBJ.forEach(o => { if (o.k === 'craft' && !T3.models[o.g.mode || 0] && loadAdd(o.pk)) more = true; }); if (more) return; }
+  }
+  LOAD.all = true;
+}
+function loadFrac(){ return LOAD.all ? 1 : Math.min(.99, (LOAD.wdone + (LOAD.t3 ? 4 : 0))/Math.max(1, LOAD.wsum + 4)); }
 function precompile(center){
-  if (!gl || /[?&]nocompile=1/.test(location.search)) return;
-  const keys = ['bg'];
-  OBJ.map((o, j) => [Math.abs(j - center), o]).sort((a, b) => a[0] - b[0]).forEach(([, o]) => { if (o.k !== 'void' && o.k !== 'craft' && !keys.includes(o.pk)) keys.push(o.pk); });
-  let i = 0;
-  if (PEXT) { const go = () => { for (let n = 0; n < 4 && i < keys.length; n++, i++) PROGS[keys[i]] || makeProg(keys[i]); if (i < keys.length) setTimeout(go, 30); }; go(); }
-  else { prog(keys[i++]); const idle = () => { while (i < keys.length && PROGS[keys[i]]) i++; if (i < keys.length) { prog(keys[i]); if (window.requestIdleCallback) requestIdleCallback(idle, {timeout: 400}); else setTimeout(idle, 60); } }; setTimeout(idle, 200); }
+  if (!gl) return;
+  if (/[?&]nocompile=1/.test(location.search)) { LOAD.all = true; return; }
+  LOAD.t0 = performance.now(); LOAD.fence = !PEXT;
+  loadAdd('bg');
+  OBJ.map((o, j) => [Math.abs(j - center), o]).sort((a, b) => a[0] - b[0]).forEach(([, o]) => { if (o.k !== 'void' && o.k !== 'craft') loadAdd(o.pk); });
+  (function tick(){ loadPoll(); if (!LOAD.all) setTimeout(tick, PEXT ? 30 : 8); })();
 }
 
 /* ======================================================================
@@ -3157,14 +3305,40 @@ if (window.visualViewport) visualViewport.addEventListener('resize', resize);
 function setVec(e, n, v){ if (v) gl.uniform3fv(U(e, n), v); }
 /* Zählt je Bild, wie viele Zeichenaufrufe auf einen noch nicht übersetzten Shader warten */
 let progMiss = 0, progMissLast = 0;
-function drawObj(o, X, Y, R, a, time, extra){
-  const e = prog(o.pk); if (!e) { progMiss++; return; }
+/* Zeichendurchgang: 0 = Bild, 1 = Leuchtanteil in halber Auflösung (nur ohne MRT). PW/PH/PK: Zielgröße und Pixelmaß
+   des Durchgangs. GQ merkt sich die Objekte des Bildes für den zweiten Durchgang. */
+let PASS = 0, PW = 0, PH = 0, PK = 1;
+const GQ = [];
+function drawBg(w, T){
+  const bg = prog('bg'); if (!bg) return false;
+  gl.useProgram(bg.p);
+  gl.uniform2f(U(bg,'uRes'), PW, PH); gl.uniform2f(U(bg,'uCenter'), PW/2, PH/2);
+  gl.uniform1f(U(bg,'uHalf'), Math.max(PW, PH)); gl.uniform1f(U(bg,'uExt'), 1);
+  gl.uniform1f(U(bg,'uZ'), Math.log10(w)); gl.uniform1f(U(bg,'uT'), T); gl.uniform1f(U(bg,'uDpr'), PK);
+  if (!MRT) gl.uniform1f(U(bg,'uPass'), PASS);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  return true;
+}
+function glowPass(w, T){
+  const gs = POST.gw/GW;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, POST.gfbo); gl.viewport(0, 0, POST.gw, POST.gh);
+  PASS = 1; PW = POST.gw; PH = GH*gs; PK = KG*gs;
+  gl.disable(gl.BLEND);
+  if (!drawBg(w, T)) { gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT); }
+  gl.enable(gl.BLEND);
+  for (const q of GQ) drawObj(q[0], q[1]*gs, q[2]*gs, q[3]*gs, q[4], q[5]);
+  PASS = 0; PW = GW; PH = GH; PK = KG;
+}
+function drawObj(o, X, Y, R, a, time){
+  const e = prog(o.pk); if (!e) { if (!PASS) progMiss++; return; }
+  if (!PASS && GQ.on) GQ.push([o, X, Y, R, a, time]);
   gl.useProgram(e.p);
+  if (!MRT) gl.uniform1f(U(e,'uPass'), PASS);
   const half = Math.max(R*o.ext, 3);
-  gl.uniform2f(U(e,'uRes'), GW, GH); gl.uniform2f(U(e,'uCenter'), X, Y);
+  gl.uniform2f(U(e,'uRes'), PW, PH); gl.uniform2f(U(e,'uCenter'), X, Y);
   gl.uniform1f(U(e,'uHalf'), half); gl.uniform1f(U(e,'uExt'), half/R);
   gl.uniform1f(U(e,'uR'), R); gl.uniform1f(U(e,'uT'), time); gl.uniform1f(U(e,'uSeed'), o.seed);
-  gl.uniform1f(U(e,'uAlpha'), a); gl.uniform1f(U(e,'uDpr'), KG); gl.uniform1f(U(e,'uEdge'), o.edge);
+  gl.uniform1f(U(e,'uAlpha'), a); gl.uniform1f(U(e,'uDpr'), PK); gl.uniform1f(U(e,'uEdge'), o.edge);
   gl.uniform3fv(U(e,'uDot'), o.dotv);
   gl.uniform2f(U(e,'uRot'), o.rot ? o.rot.yaw : 0, o.rot ? o.rot.pitch : 0);
   const g = o.g;
@@ -3231,13 +3405,19 @@ function postResize(w, h){
     /* Das Bild selbst liegt schon im darstellbaren Bereich, 8 Bit genügen; nur der Leuchtanteil braucht mehr Umfang */
     const fS = [gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE];
     const fG = fl ? [gl.R11F_G11F_B10F, gl.RGB, gl.HALF_FLOAT] : [gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE];
-    if (POST.fbo) { gl.deleteFramebuffer(POST.fbo); gl.deleteTexture(POST.scene); gl.deleteTexture(POST.glow); POST.mips.forEach(m => { gl.deleteFramebuffer(m.fb); gl.deleteTexture(m.t); }); }
-    POST.scene = postTex(w, h, fS); POST.glow = postTex(w, h, fG);
+    if (POST.fbo) { gl.deleteFramebuffer(POST.fbo); gl.deleteTexture(POST.scene); gl.deleteTexture(POST.glow); POST.mips.forEach(m => { gl.deleteFramebuffer(m.fb); gl.deleteTexture(m.t); }); if (POST.gfbo) { gl.deleteFramebuffer(POST.gfbo); POST.gfbo = null; } }
+    /* ohne MRT: Leuchtanteil in halber Auflösung in einem eigenen Ziel; die Kette danach bleibt gleich */
+    const gw = MRT ? w : Math.max(1, w >> 1), gh = MRT ? h : Math.max(1, h >> 1);
+    POST.scene = postTex(w, h, fS); POST.glow = postTex(gw, gh, fG); POST.gw = gw; POST.gh = gh;
     POST.fbo = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, POST.fbo);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, POST.scene, 0);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, POST.glow, 0);
-    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+    if (MRT) { gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, POST.glow, 0); gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]); }
     let ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+    if (!MRT && ok) {
+      POST.gfbo = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, POST.gfbo);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, POST.glow, 0);
+      ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+    }
     POST.mips = [];
     let mw = w, mh = h;
     for (let i = 0; i < (MOBILE ? 5 : 6) && ok; i++) {
@@ -3298,7 +3478,7 @@ postInit(); postReady = POST.ready; if (postReady) postResize(GW, GH);
    Wird erst nach dem ersten Bild nachgeladen; bis dahin zeichnet der
    Shader die prozeduralen Platzhalter.
    ====================================================================== */
-const T3 = {state:'idle', models:{}, draws:[]};
+const T3 = {state:'idle', models:{}, bad:{}, draws:[]};
 const T3BASE = 'https://cdn.jsdelivr.net/npm/three@0.147.0/';
 function t3Script(src){ return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
 function t3Start(){
@@ -3411,8 +3591,8 @@ ${kind === 'truss' ? `
     /* Erst die .glb, ersatzweise dieselben Daten als Base64-Text (für Umgebungen ohne .glb-Auslieferung) */
     loader.load(url, onModel, undefined, () => {
       fetch(url.replace(/.glb$/, '.b64.txt')).then(r => { if (!r.ok) throw 0; return r.text(); })
-        .then(t => { const bin = atob(t.trim()), buf = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i); loader.parse(buf.buffer, '', onModel, () => {}); })
-        .catch(() => {});
+        .then(t => { const bin = atob(t.trim()), buf = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i); loader.parse(buf.buffer, '', onModel, () => { T3.bad[key] = true; }); })
+        .catch(() => { T3.bad[key] = true; });
     });
   }
   add(0, '../models/emu.glb', meshes => meshes.forEach(m => {
@@ -3493,6 +3673,31 @@ function rcsStep(time, md){
     q.sp.material.opacity = .5*Math.pow(1 - q.life, 2);
   }
 }
+/* Für den Lader: 1 = beide Modelle liegen bereit, -1 = ohne (alle) Modelle weiter, 0 = noch warten */
+function t3Settled(now){
+  if (T3.state === 'failed' || T3.state === 'idle') return -1;
+  const have = [0, 1].filter(k => T3.models[k]).length, bad = [0, 1].filter(k => T3.bad[k]).length;
+  if (T3.state === 'ready' && have + bad === 2) return t3Warm() ? (have === 2 ? 1 : -1) : 0;
+  /* nicht ewig warten: Kommen die Modelle später, lösen sie die Ersatz-Shader ab */
+  if (now - LOAD.t0 > 9000 && now - LOAD.tAll > 2500) return T3.state !== 'ready' || t3Warm() ? -1 : 0;
+  return 0;
+}
+/* Modelle einmal verdeckt (unter dem Intro) zeichnen, damit Geometrie, Texturen und Programme vor der Reise bereitliegen.
+   Je Aufruf ein Modell, damit die Seite dabei nur kurz stockt; liefert true, wenn alle geladenen Modelle durch sind. */
+function t3Warm(){
+  T3.warmed = T3.warmed || {};
+  const k = Object.keys(T3.models).find(q => !T3.warmed[q]);
+  if (k === undefined) return true;
+  T3.warmed[k] = true;
+  try {
+    T3.draws.push({md: T3.models[k], X: W/2, Y: H/2, R: 60, a: 1, mode: +k, rot: null});
+    const nx = RCS.next; RCS.next = 1e12;
+    t3Render(performance.now()/1000);
+    RCS.next = nx; RCS.lt = 0;
+    T3.R3.clear(); T3.drawn = false;
+  } catch (e) {}
+  return false;
+}
 /* Pro Bild: Modell statt Shader verwenden, wenn es geladen ist */
 function t3Use(o, X, Y, R, a){
   if (T3.state !== 'ready' || o.k !== 'craft') return false;
@@ -3564,16 +3769,10 @@ function render(time){
 
   if (gl) {
     postBegin();
+    PASS = 0; PW = GW; PH = GH; PK = KG; GQ.length = 0; GQ.on = POST.on && !MRT;
     gl.viewport(0, 0, GW, GH);
     gl.disable(gl.BLEND);
-    const bg = prog('bg');
-    if (bg) {
-      gl.useProgram(bg.p);
-      gl.uniform2f(U(bg,'uRes'), GW, GH); gl.uniform2f(U(bg,'uCenter'), GW/2, GH/2);
-      gl.uniform1f(U(bg,'uHalf'), Math.max(GW, GH)); gl.uniform1f(U(bg,'uExt'), 1);
-      gl.uniform1f(U(bg,'uZ'), Math.log10(w)); gl.uniform1f(U(bg,'uT'), T); gl.uniform1f(U(bg,'uDpr'), KG);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    } else { gl.clearColor(.01,.012,.022,1); gl.clear(gl.COLOR_BUFFER_BIT); }
+    if (!drawBg(w, T)) { gl.clearColor(.01,.012,.022,1); gl.clear(gl.COLOR_BUFFER_BIT); }
     gl.enable(gl.BLEND);
   }
 
@@ -3618,7 +3817,7 @@ function render(time){
     }
   }
 
-  if (gl) postEnd(T);
+  if (gl) { if (GQ.on) glowPass(w, T); postEnd(T); }
   if (tcA !== render.tcA) { render.tcA = tcA; $('tc').style.opacity = tcA < 1 ? tcA.toFixed(3) : ''; }
   t3Render(T);
   lastDiscs = discs;
@@ -3992,12 +4191,21 @@ function sfxDive(){
   const src = C.createBufferSource(); src.buffer = SND.noise; src.loop = true;
   const bp = C.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = .9;
   bp.frequency.setValueAtTime(2200, t); bp.frequency.exponentialRampToValueAtTime(180, t + d);
-  const g = C.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.07, t + d*.45); g.gain.linearRampToValueAtTime(0, t + d + .6);
-  src.connect(bp); bp.connect(g); g.connect(SND.verb); g.connect(SND.dry); src.start(t); src.stop(t + d + .8);
+  /* schwillt an und hält dann leise an, solange der Anflug dauert */
+  const g = C.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.07, t + d*.45); g.gain.linearRampToValueAtTime(.028, t + d + .6);
+  src.connect(bp); bp.connect(g); g.connect(SND.verb); g.connect(SND.dry); src.start(t);
+  SND.dive = {src, g};
+}
+/* Ankunft: Das Rauschen des Anflugs klingt aus, ein Ton kündigt den Astronauten an */
+function sfxArrive(){
+  if (!SND.C) return;
+  const C = SND.C, t = C.currentTime, dv = SND.dive; SND.dive = null;
+  if (dv) { const v = dv.g.gain.value; dv.g.gain.cancelScheduledValues(t); dv.g.gain.setValueAtTime(v, t); dv.g.gain.linearRampToValueAtTime(0, t + 1.7); dv.src.stop(t + 1.8); }
+  if (!SND.on) return;
   const o = C.createOscillator(); o.type = 'sine';
-  o.frequency.setValueAtTime(392, t + d - .4);
-  const og = C.createGain(); og.gain.setValueAtTime(0, t + d - .4); og.gain.linearRampToValueAtTime(.035, t + d - .3); og.gain.exponentialRampToValueAtTime(.0001, t + d + 3);
-  o.connect(og); og.connect(SND.verb); og.connect(SND.dry); o.start(t + d - .4); o.stop(t + d + 3.1);
+  o.frequency.setValueAtTime(392, t + .7);
+  const og = C.createGain(); og.gain.setValueAtTime(0, t + .7); og.gain.linearRampToValueAtTime(.035, t + .8); og.gain.exponentialRampToValueAtTime(.0001, t + 4.1);
+  o.connect(og); og.connect(SND.verb); og.connect(SND.dry); o.start(t + .7); o.stop(t + 4.2);
 }
 function sfxPuff(){
   if (!SND.on || !SND.C || focus !== A0) return;
@@ -4013,7 +4221,11 @@ $('sndBtn').addEventListener('click', () => { if (!SND.on) trackOnce('ton', 'ton
    Intro
    ====================================================================== */
 let introActive = false, introT0 = 0;
-const ZOOM_MS = 2400, DROP_AT = 2300, DROP_MS = 2600, INTRO_MS = DROP_AT + DROP_MS;
+/* Ablauf nach dem Klick: Hineinzoomen (ZOOM_MS). Frühestens nach EXIT_AT und erst, wenn alles geladen ist, blendet das
+   Intro aus (EXIT_MS); DROP_LEAD später schwebt der Astronaut ein (DROP_MS). Dauert das Laden länger, zieht sich der
+   Anflug mit vorbeiziehenden Sternen und Ladebalken hin, höchstens HOLD_MAX. */
+const ZOOM_MS = 2400, DROP_MS = 2600, EXIT_AT = 1700, EXIT_MS = 900, DROP_LEAD = 600, HOLD_MAX = 45000;
+let dropT0 = 0, introCover = false, devHold = 0;
 let astroDrop = 0;
 function introSetup(skip){
   const el = $('intro');
@@ -4026,7 +4238,7 @@ function introSetup(skip){
     [...word].forEach(ch => { const sp = document.createElement('span'); sp.style.setProperty('--i', li++); sp.textContent = ch; w.appendChild(sp); });
     ttl.appendChild(w);
   });
-  introActive = true;
+  introActive = true; introCover = true;
   orreryStart();
   $('introSound').addEventListener('click', () => introGo(true));
   $('introQuiet').addEventListener('click', () => introGo(false));
@@ -4050,15 +4262,42 @@ function orreryStart(){
     g.setTransform(dp, 0, 0, dp, 0, 0);
     g.fillStyle = '#04050a'; g.fillRect(0, 0, Wc, Hc);
     const T = reduce ? 8 : (now - ORR.t0)/1000;
-    for (const [x, y, b, ph] of stars) { g.globalAlpha = (.25 + .6*b)*(reduce ? 1 : .7 + .3*Math.sin(T*(.5 + b) + ph)); g.fillStyle = b > .85 ? '#ffe9c8' : '#dfe6ff'; g.fillRect(x*Wc, y*Hc, b*1.6, b*1.6); }
-    g.globalAlpha = 1;
     const cx = Wc/2, cy = Hc*.7, Rr = (Wc < 760 ? Math.min(Wc*.98, Hc*.95)*.62 : Math.min(Wc*.62, Hc*.95)*.66), tilt = .34 + .04*Math.sin(T*.05), rot = T*.012;
     /* Hineinzoomen: zwischen Erd- und Marsbahn hindurch, bis nur Sterne bleiben */
-    let Z = 1;
-    if (ORR.z0) { const k = Math.min(1, (now - ORR.z0)/ZOOM_MS); Z = Math.exp(Math.pow(k, 2.1)*Math.log(110)); }
+    let Z = 1, zk = 0;
+    if (ORR.z0) { zk = Math.min(1, (now - ORR.z0)/ZOOM_MS); Z = Math.exp(Math.pow(zk, 2.1)*Math.log(110)); }
     const fx = cx + Rr*.4, fy = cy + Rr*tilt*.12;
+    /* Anflug: Die Sterne ziehen vom Fluchtpunkt aus vorbei, solange geladen wird; beim Ausblenden kommen sie zur Ruhe */
+    const dtw = Math.min(.05, (now - (ORR.last || now))/1000); ORR.last = now;
+    let wv = 0;
+    if (ORR.z0) { wv = smooth(.3, 1, zk); if (ORR.x0) wv *= 1 - smooth(0, EXIT_MS, now - ORR.x0); }
+    ORR.S = (ORR.S || 0) + wv*dtw*.5;
+    /* Der Fluchtpunkt wandert im Anflug zur Bildmitte */
+    const wm = smooth(.5, 1, zk), wx = fx + (Wc/2 - fx)*wm, wy = fy + (Hc*.46 - fy)*wm;
+    const drawStars = () => {
+      g.setTransform(dp, 0, 0, dp, 0, 0);
+      const Rm = Math.hypot(Math.max(wx, Wc - wx), Math.max(wy, Hc - wy));
+      g.lineCap = 'round';
+      const WM = 2.3, wf = smooth(0, .12, ORR.S);
+      for (const [x, y, b, ph] of stars) {
+        const tw = (.25 + .6*b)*(reduce ? 1 : .7 + .3*Math.sin(T*(.5 + b) + ph));
+        const col = b > .85 ? '#ffe9c8' : '#dfe6ff';
+        if (!ORR.S) { g.globalAlpha = tw; g.fillStyle = col; g.fillRect(x*Wc, y*Hc, b*1.6, b*1.6); continue; }
+        /* Jeder Stern entfernt sich vom Fluchtpunkt um einen wachsenden Faktor und beginnt dann weiter innen neu. Der Faktor
+           wächst exponentiell: So bleiben die Sterne gleichmäßig über das Bild verteilt, und außen werden die Spuren länger.
+           Hellere Sterne sind näher und ziehen schneller. */
+        const dx = x*Wc - wx, dy = y*Hc - wy, r0 = Math.hypot(dx, dy) || 1, sp = .6 + .8*b, p0 = ph/TAU*WM;
+        const m = (p0 + ORR.S*sp*3.2) % WM, r1 = r0*Math.exp(m - p0), r2 = r1*Math.exp(-wv*.22*sp);
+        if (r2 > Rm) continue;
+        const fade = smooth(0, .7, m)*(1 - smooth(WM - .35, WM, m)), ax = dx/r0, ay = dy/r0, sz = b*1.6*(.8 + .9*Math.min(1, r1/Rm));
+        g.globalAlpha = Math.min(1, tw*(1 + wv*.7))*(1 - wf*(1 - fade));
+        if (r1 - r2 < 1.5) { g.fillStyle = col; g.fillRect(wx + ax*r1, wy + ay*r1, sz, sz); }
+        else { g.strokeStyle = col; g.lineWidth = sz; g.beginPath(); g.moveTo(wx + ax*r2, wy + ay*r2); g.lineTo(wx + ax*r1, wy + ay*r1); g.stroke(); }
+      }
+      g.globalAlpha = 1;
+    };
+    const drawOrr = () => {
     g.setTransform(dp*Z, 0, 0, dp*Z, dp*fx*(1 - Z), dp*fy*(1 - Z));
-    cv.style.opacity = Math.max(0, 1 - (Z - 1)/70);
     const P = (r, a) => { const x = Math.cos(a + rot)*r, z = Math.sin(a + rot)*r; return [cx + x*Rr, cy + z*Rr*tilt, z]; };
     /* Bahnen */
     g.lineWidth = 1;
@@ -4088,6 +4327,14 @@ function orreryStart(){
       if (q.ring) { g.beginPath(); g.ellipse(x, y, sz*2.3, sz*2.3*tilt*.9, -.2, 0, TAU); g.strokeStyle = 'rgba(230,207,157,.55)'; g.lineWidth = sz*.35; g.stroke(); g.lineWidth = 1; }
       g.beginPath(); g.arc(x, y, sz, 0, TAU); g.fillStyle = sh; g.fill();
     }
+    };
+    if (!ORR.z0) { drawStars(); drawOrr(); }
+    else {
+      /* Im Zoom verblasst das Planetarium, die Sterne bleiben */
+      const oa = Math.max(0, 1 - (Z - 1)/70);
+      if (oa > 0) { drawOrr(); g.setTransform(dp, 0, 0, dp, 0, 0); g.globalAlpha = 1 - oa; g.fillStyle = '#04050a'; g.fillRect(0, 0, Wc, Hc); g.globalAlpha = 1; }
+      drawStars();
+    }
     if (!reduce) ORR.raf = requestAnimationFrame(draw);
   }
   ORR.raf = requestAnimationFrame(draw);
@@ -4099,11 +4346,47 @@ function introGo(sound){
   track('start', {ton: sound ? 'mit' : 'ohne'});
   if (sound) audioOn(true);
   $('intro').classList.add('out');
-  if (reduce) { document.documentElement.classList.add('ui'); orreryStop(); }
-  else { introT0 = performance.now(); ORR.z0 = introT0; sfxDive(); setTimeout(() => document.documentElement.classList.add('ui'), DROP_AT + 1700); setTimeout(orreryStop, DROP_AT + 300); }
-  setTimeout(() => { const el = $('intro'); if (el) el.remove(); }, INTRO_MS + 300);
+  ORR.go = introT0 = performance.now();
+  if (!reduce) { ORR.z0 = ORR.go; sfxDive(); }
 }
-
+/* Ladeanzeige im Anflug: erscheint nur, wenn das Laden länger dauert als das Hineinzoomen */
+function loadUI(f){
+  if (!$('introLoad')) {
+    const host = $('intro'); if (!host) return;
+    const el = document.createElement('div'); el.id = 'introLoad'; el.className = 'intro-load'; el.setAttribute('role', 'status');
+    const s = document.createElement('span'); s.textContent = LT('Reise wird vorbereitet', 'Preparing the journey');
+    const p = document.createElement('em'); p.id = 'introLoadPct'; p.setAttribute('aria-hidden', 'true');
+    const tr = document.createElement('i'), b = document.createElement('b'); b.id = 'introLoadBar'; tr.appendChild(b);
+    el.append(s, p, tr); host.appendChild(el);
+    void el.offsetWidth; el.classList.add('on');
+  }
+  ORR.f = Math.max(ORR.f || 0, f);
+  $('introLoadBar').style.transform = 'scaleX(' + ORR.f.toFixed(3) + ')';
+  $('introLoadPct').textContent = Math.round(ORR.f*100) + ' %';
+}
+/* Je Bild: prüft nach dem Klick, ob alles geladen ist, und beendet dann den Anflug */
+function introStep(now){
+  if (!ORR.go || ORR.x0) return;
+  const e = now - ORR.go, rdy = LOAD.all && e >= devHold;
+  if (!rdy && e > 1300) loadUI(devHold ? Math.min(loadFrac(), e/devHold) : loadFrac());
+  else if (rdy && $('introLoad')) loadUI(1);
+  if ((rdy && (reduce || e >= EXIT_AT)) || e > HOLD_MAX) introExit(now);
+}
+function introExit(now){
+  ORR.x0 = now; introCover = false;
+  const el = $('intro'); if (el) el.classList.add('gone');
+  track('geladen', {sekunden: Math.round((now - ORR.go)/1000)});
+  if (reduce) {
+    introT0 = 0; astroDrop = 0;
+    document.documentElement.classList.add('ui'); orreryStop();
+    setTimeout(() => { const el = $('intro'); if (el) el.remove(); }, 1000);
+    return;
+  }
+  dropT0 = now + DROP_LEAD; sfxArrive();
+  setTimeout(() => document.documentElement.classList.add('ui'), DROP_LEAD + 1700);
+  setTimeout(orreryStop, EXIT_MS + 50);
+  setTimeout(() => { const el = $('intro'); if (el) el.remove(); }, DROP_LEAD + DROP_MS + 300);
+}
 /* ======================================================================
    Detailansicht
    ====================================================================== */
@@ -4268,11 +4551,14 @@ function frame(now){
   spinStep(dt);
   if (introActive) astroDrop = H*1.4;
   else if (introT0) {
-    const e = now - introT0;
-    if (e < DROP_AT) astroDrop = H*1.4;
-    else { const k = Math.min(1, (e - DROP_AT)/DROP_MS); astroDrop = H*1.4*Math.pow(1 - k, 3); if (k > .72 && !RCS.braked) { RCS.braked = true; RCS.kick = [0, 1]; } }
-    if (e > INTRO_MS) { introT0 = 0; astroDrop = 0; }
+    if (!dropT0 || now < dropT0) astroDrop = H*1.4;
+    else {
+      const k = Math.min(1, (now - dropT0)/DROP_MS); astroDrop = H*1.4*Math.pow(1 - k, 3);
+      if (k > .72 && !RCS.braked) { RCS.braked = true; RCS.kick = [0, 1]; }
+      if (k >= 1) { introT0 = 0; astroDrop = 0; }
+    }
   }
+  introStep(now);
   if (qT > 1.2) { qT = 0;
     qSlow = ema > 21 ? qSlow + 1 : 0; qFast = ema < 17.6 ? qFast + 1 : 0;
     const qMin = MOBILE ? .75 : .6;
@@ -4287,7 +4573,10 @@ function frame(now){
   if (Math.abs(vel) > .002) { targetT = clamp(targetT + vel*dt, 0, N-1); vel *= Math.exp(-dt*3.5); } else vel = 0;
   t += (targetT - t) * (reduce ? 1 : 1 - Math.exp(-dt*6.5));
   if (Math.abs(targetT - t) < 1e-5) t = targetT;
-  if (!introActive || now - introR > 400) { introR = now; render(now/1000); }
+  /* Ohne parallele Shader-Übersetzung (Firefox) wird unter dem Intro nicht gezeichnet, bis alles geladen ist:
+     Jeder Zeichenaufruf müsste sonst auf den Compiler warten, und die Seite würde hängen. */
+  const hold = introCover && LOAD.fence && !LOAD.legacy && !LOAD.all;
+  if (!hold && (!introActive || now - introR > 400)) { introR = now; render(window.__ksTime || now/1000); }
   requestAnimationFrame(frame);
 }
 
@@ -4353,7 +4642,8 @@ const start = data => {
     window.__ks = {OBJ, go: j => { t = targetT = j; }, state: () => ({t, targetT, focus, quality, GW, GH}), openDetail, closeDetail,
       progs: () => Object.fromEntries(Object.entries(PROGS).map(([k, e]) => [k, e.ok ? 1 : e.bad ? -1 : (PEXT && gl.getProgramParameter(e.p, PEXT.COMPLETION_STATUS_KHR) ? (prog(k) ? 1 : -1) : 0)])),
       pending: () => progMissLast + (prog('bg') ? 0 : 1),
-      glsl: {PRE, MAIN, SRC, BG},
+      glsl: {PRE, MAIN, SRC, BG, VERT}, PROGS, prog, makeProg, gl, POST, LOAD, T3,
+      load: () => ({all: LOAD.all, done: LOAD.done, n: LOAD.keys.length, fence: LOAD.fence, legacy: LOAD.legacy, frac: +loadFrac().toFixed(3), t3: LOAD.t3, t3state: T3.state, mrt: MRT, ms: Math.round(performance.now() - LOAD.t0)}),
       compileTime: src => new Promise(res => { const t0 = performance.now(), fs = gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(fs, src); gl.compileShader(fs);
         const p = gl.createProgram(); gl.attachShader(p, vsh); gl.attachShader(p, fs); gl.bindAttribLocation(p, 0, 'aP'); gl.linkProgram(p);
         const chk = () => { if (!PEXT || gl.getProgramParameter(p, PEXT.COMPLETION_STATUS_KHR)) res({ms: Math.round(performance.now() - t0), ok: gl.getProgramParameter(p, gl.LINK_STATUS), log: (gl.getShaderInfoLog(fs) || gl.getProgramInfoLog(p) || '').slice(0, 400)}); else setTimeout(chk, 40); }; chk(); })};
@@ -4362,6 +4652,8 @@ const start = data => {
     if (qs.get('q')) { quality = +qs.get('q'); sizeGL(); qT = -1e9; }
     if (qs.get('detail')) setTimeout(openDetail, 200);
     if (qs.get('time')) window.__ksTime = +qs.get('time');
+    /* hold=ms hält den Anflug für Bildtests mindestens so lange */
+    if (qs.get('hold')) devHold = +qs.get('hold');
     /* sweep=1 fährt alle Stationen ab und schreibt gesammelte Fehler in den Seitentitel */
     if (qs.get('sweep')) {
       const errs = []; addEventListener('error', e => errs.push((e.message || '') + ' @' + e.lineno));
