@@ -404,7 +404,7 @@ body.detail-on .det-ctl{opacity:1;transform:translate(-50%,0);pointer-events:aut
     <h3>Inhalte und Links</h3>
     <p>Die Texte, Größenangaben und Zusammensetzungen sind sorgfältig zusammengestellt, aber ohne Gewähr. Die Zusammensetzungen stammen unter anderem aus den Planetary Fact Sheets der NASA und den Ergebnissen der Planck-Mission. Bei vielen Objekten sind die Werte Schätzungen der Forschung. Für die Inhalte verlinkter Seiten wie Wikipedia oder NASA sind deren Betreiber verantwortlich.</p>
     <h3>Darstellungen</h3>
-    <p>Alle Himmelskörper werden live im Browser berechnet. Sie sind maßstabsgetreu in der Größe, Oberflächen und Farben sind aber künstlerische Annäherungen und keine Fotos. Die Erdoberfläche ist das Bild „Blue Marble“ der NASA (Visible Earth). Die 3D-Modelle des Raumanzugs (EMU) und der ISS stammen aus den <a href="https://science.nasa.gov/3d-resources/" target="_blank" rel="noopener">NASA 3D Resources</a>; Materialien und Texturen der ISS wurden ergänzt.</p>
+    <p>Alle Himmelskörper werden live im Browser berechnet. Sie sind maßstabsgetreu in der Größe. Große Strukturen wie die Mondmeere, die Vulkane des Mars, Plutos Herz oder Jupiters Wolkenbänder liegen an ihren tatsächlichen Orten; feinere Details und Farben sind berechnete Annäherungen und keine Fotos. Die Erdoberfläche ist das Bild „Blue Marble“ der NASA (Visible Earth). Die 3D-Modelle des Raumanzugs (EMU) und der ISS stammen aus den <a href="https://science.nasa.gov/3d-resources/" target="_blank" rel="noopener">NASA 3D Resources</a>; Materialien und Texturen der ISS wurden ergänzt.</p>
     <h3>Datenschutz</h3>
     <p>Diese Seite setzt keine Cookies. Beim Aufruf verarbeitet der Webhoster technisch notwendige Daten wie IP-Adresse, Zeitpunkt und Browserkennung in Server-Logfiles, um die Seite auszuliefern und abzusichern (Art. 6 Abs. 1 lit. f DSGVO). Klänge werden live im Browser erzeugt, es werden keine Audiodateien geladen. Die Schriften werden über <span id="fontHost">Bunny Fonts (BunnyWay d.o.o., Slowenien)</span> geladen, die 3D-Bibliothek three.js über das Content-Delivery-Netzwerk jsDelivr; dabei wird deine IP-Adresse an diese Dienste übermittelt. Links zu Wikipedia, NASA und PayPal führen zu externen Anbietern, deren Datenschutzbestimmungen ab dem Aufruf gelten.</p>
     <p id="statsNote" hidden>Für eine anonyme Reichweitenmessung nutzt diese Seite Umami Cloud (Umami Software, Inc.). Erfasst werden ohne Cookies und ohne Profilbildung: aufgerufene Seite, Herkunftsseite, Browser, Betriebssystem, Gerätetyp, Bildschirmgröße, Land sowie Ereignisse wie gestartete Reise, erreichte Objekte, geöffnete Detailansichten und angeklickte externe Links. Die IP-Adresse wird nicht gespeichert; Besuche werden nur über einen täglich wechselnden, nicht rückrechenbaren Hashwert zusammengefasst. Ist in deinem Browser „Do Not Track“ aktiviert, findet keine Messung statt. Rechtsgrundlage ist unser berechtigtes Interesse, das Angebot zu verbessern (Art. 6 Abs. 1 lit. f DSGVO).</p>
@@ -517,16 +517,16 @@ const OBJ = [
   {n:'Vesta', d:525e3, k:'rock', cat:'Asteroid', dot:'#a9a39c', g:{mode:3, A:[.55,.52,.49], Q:[1,0,.03,0]},
    t:'Der hellste Asteroid am Himmel. Ein Einschlagbecken an seinem Südpol ist mit rund 500 km fast so breit wie Vesta selbst.'},
   {n:'Ceres', d:939e3, k:'planet', cat:'Zwergplanet', dot:'#8d8984',
-   g:{mode:0, A:[.42,.4,.38], B:[.3,.29,.28], C:[.95,.95,.95], Q:[1,.4,3,0], axis:[0.05,0.1,-0.12]},
+   g:{mode:10, A:[.42,.4,.38], B:[.3,.29,.28], C:[.95,.95,.95], Q:[1,0,0,0], axis:[0.05,0.1,-0.12]},
    t:'Der größte Körper im Asteroidengürtel und ein Zwergplanet. Die hellen Flecken im Krater Occator sind Ablagerungen aus Salz.'},
   {n:'Pluto', d:2377e3, k:'planet', cat:'Zwergplanet', dot:'#d8b892',
-   g:{mode:0, A:[.76,.6,.46], B:[.33,.18,.11], C:[.95,.91,.85], Q:[.5,.8,2,0], axis:[0.2,-0.25,0.0078]},
+   g:{mode:9, A:[.76,.6,.46], B:[.3,.16,.1], C:[.95,.91,.85], Q:[.5,0,0,0], axis:[0.2,-0.25,0.0078]},
    t:'Seit 2006 zählt Pluto als Zwergplanet. Sein helles „Herz“ ist eine weite Ebene aus gefrorenem Stickstoff.'},
   {n:'Europa', d:3122e3, k:'planet', cat:'Mond', dot:'#d9d2c4',
    g:{mode:6, A:[.86,.84,.8], B:[.66,.52,.42], C:[.5,.27,.18], Q:[.1,0,0,0], axis:[0.1,0.08,-0.012]},
    t:'Ein Jupitermond mit einer Kruste aus Eis. Darunter liegt ein Ozean mit mehr Wasser als alle Meere der Erde zusammen – einer der spannendsten Orte für die Suche nach Leben.'},
   {n:'Mond', d:3474e3, k:'planet', cat:'Mond', dot:'#c9c7c2',
-   g:{mode:0, A:[.62,.61,.59], B:[.27,.27,.28], C:[.8,.8,.78], Q:[1.1,1,0,0], axis:[0.03,0.05,-0.0018]},
+   g:{mode:7, A:[.62,.61,.59], B:[.26,.26,.275], C:[.86,.86,.84], Q:[1.1,0,0,0], axis:[0.03,0.05,-0.0018]},
    t:'Der Mond ist etwas mehr als ein Viertel so breit wie die Erde. Sein Licht braucht gut eine Sekunde bis zu uns.'},
   {n:'Io', d:3643e3, k:'planet', cat:'Mond', dot:'#e6c75a',
    g:{mode:5, A:[.86,.74,.34], B:[.93,.9,.78], C:[.8,.36,.14], D:[.13,.1,.08], Q:[.1,0,0,0], axis:[0.05,0.03,-0.02]},
@@ -538,7 +538,7 @@ const OBJ = [
    g:{mode:2, A:[.86,.6,.26], B:[.7,.44,.16], C:[.94,.74,.4], Q:[1,0,0,0], axis:[0.3,0.1,0.004], haze:.95, atmo:[.95,.66,.3]},
    t:'Saturns größter Mond und der einzige Mond mit dichter Atmosphäre. Unter dem orangen Dunst regnet es Methan in Flüsse und Seen.'},
   {n:'Mars', d:6779e3, k:'planet', cat:'Planet', dot:'#d27a4f',
-   g:{mode:0, A:[.72,.36,.2], B:[.38,.19,.11], C:[.86,.56,.36], Q:[.35,.9,1,0], axis:[0.44,0.2,-0.049], haze:.25, atmo:[.95,.62,.45]},
+   g:{mode:8, A:[.76,.43,.25], B:[.36,.2,.13], C:[.87,.58,.38], Q:[.5,0,0,0], axis:[0.44,0.2,-0.049], haze:.25, atmo:[.95,.62,.45]},
    t:'Auf dem Mars steht Olympus Mons, der höchste Vulkan im Sonnensystem. Er ragt rund 22 km über seine Umgebung.'},
   {n:'Sirius B', d:11690e3, k:'star', T:25200, cat:'Weißer Zwerg', dot:'#cfe0ff', g:{Q:[2,1.7,0,0]},
    t:'Ein ausgebrannter Stern, so groß wie die Erde und so schwer wie die Sonne. Ein Würfelzucker seiner Materie wöge mehr als zwei Tonnen.'},
@@ -552,7 +552,7 @@ const OBJ = [
    g:{mode:4, A:[.42,.66,.88], B:[.33,.56,.82], C:[.9,.95,1], D:[.2,.36,.6], Q:[14,.3,0,.5], axis:[0.3,0.15,-0.075], haze:.75, atmo:[.6,.8,1]},
    t:'Der äußerste Planet. Hier wehen die schnellsten Winde des Sonnensystems mit über 2.000 km/h.'},
   {n:'Uranus', d:50724e3, k:'planet', cat:'Planet', dot:'#a9e0e3',
-   g:{mode:4, A:[.62,.85,.88], B:[.54,.78,.82], C:[.82,.96,.96], D:[0,0,0], Q:[10,.15,0,.06], axis:[1.35,0.3,0.07], haze:.8, atmo:[.75,.95,.95], ring:[1.6,2.02,.8,1]},
+   g:{mode:4, A:[.62,.85,.88], B:[.54,.78,.82], C:[.82,.96,.96], D:[0,0,0], Q:[10,.15,2,.06], axis:[1.35,0.3,0.07], haze:.8, atmo:[.75,.95,.95], ring:[1.6,2.02,.8,1]},
    t:'Seine Rotationsachse ist um 98 Grad gekippt. Deshalb rollt Uranus fast liegend um die Sonne.'},
   {n:'Saturn', d:116460e3, k:'planet', lx:2.3, cat:'Planet', dot:'#e6cf9d',
    g:{mode:3, A:[.9,.8,.6], B:[.74,.6,.4], C:[.96,.91,.77], D:[0,0,0], Q:[34,.45,0,.6], axis:[-0.38,0.42,-0.11], haze:.3, atmo:[.95,.86,.66], ring:[1.24,2.27,1,0]},
@@ -2173,8 +2173,31 @@ vec4 shade(vec2 p){
 }`;
 SRC.planet = `
 uniform vec4 uRing; uniform vec3 uAtmo, uAxis; uniform float uHaze, uHasTex; uniform sampler2D uTex;
-/* Karte: x = Längenversatz (0…1), y = Breite in Bildpunkten, z = Reliefstärke (0 = glatt, z. B. Gasplaneten), w = Helligkeit */
-uniform vec4 uTexP;
+/* ---- Geografie: Orte als (Breite, Länge Ost) in Grad; Radien als Winkel im Bogenmaß (Kilometer / Körperradius) ---- */
+vec3 LL(float lat, float lon){ lat = radians(lat); lon = radians(lon); float c = cos(lat); return vec3(c*sin(lon), sin(lat), c*cos(lon)); }
+float adist(vec3 s, vec3 c){ return acos(clamp(dot(s,c),-1.0,1.0)); }
+/* Fleck mit Winkelradius r; n franst den Rand aus */
+float spot(vec3 s, float lat, float lon, float r, float n){ return 1.0 - smoothstep(0.72, 1.0, adist(s, LL(lat,lon))/r + n); }
+/* Strahlensystem eines jungen Kraters */
+float rays(vec3 s, vec3 c, float len, float sd){
+  float d = adist(s,c); if(d > len*4.0) return 0.0;
+  vec3 e1 = normalize(cross(c, vec3(0.0,1.0,0.0))), e2 = cross(c,e1), t = s - c*dot(s,c);
+  float az = atan(dot(t,e2), dot(t,e1));
+  vec3 q = vec3(cos(az), sin(az), sd);
+  float r = pow(0.5+0.5*snoise(q*vec3(3.0,3.0,1.0)), 3.0) + 0.6*pow(0.5+0.5*snoise(q*vec3(11.0,11.0,1.0)+5.0), 5.0);
+  return r*exp(-d/len)*smoothstep(0.0, len*0.06, d);
+}
+/* benannter Krater als Höhe: Schüssel und Wall */
+float crat(vec3 s, float lat, float lon, float r){
+  float x = adist(s, LL(lat,lon))/r; if(x >= 2.0) return 0.0;
+  return ((x<1.0 ? (x*x-1.0)*0.6 : 0.0) + exp(-(x-1.0)*(x-1.0)*10.0)*0.28)*r*0.5;
+}
+/* Abstand zu einem kurzen Bogenstück a–b */
+float arcd(vec3 s, vec3 a, vec3 b){ vec3 pa = s-a, ba = b-a; float h = clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0); return length(pa-ba*h); }
+/* Flächen aus mehreren Flecken: Die Einzelfelder werden addiert und an einer Schwelle geschnitten, die Lage vorher leicht verzerrt */
+vec3 warp(vec3 s, float k){ return normalize(s + k*vec3(fbm(s+uSeed,2.2,5), fbm(s+uSeed+5.2,2.2,5), fbm(s+uSeed+9.1,2.2,5))); }
+float blob(vec3 s, vec4 m){ float x = adist(s, LL(m.x,m.y))/m.z; return exp(-0.916*x*x); }
+float jb(float x, float a, float b, float w){ return smoothstep(a-w,a+w,x)*(1.0-smoothstep(b-w,b+w,x)); }
 float ringDens(float rr){
   if(uRing.z<=0.0||rr<uRing.x||rr>uRing.y) return 0.0;
   float d;
@@ -2204,44 +2227,136 @@ vec4 shade(vec2 p){
     /* Abtastung: Bildpunkt → Oberfläche braucht die umgekehrte Drehung, damit Ziehen nach rechts die Vorderseite nach rechts bewegt */
     vec3 s = rotY(uT*uAxis.z - uRot.x)*(transpose(M)*nv);
     vec3 alb = uA; float h = 0.0, wet = 0.0, cloud = 0.0; vec3 emis = vec3(0.0);
-    if(uMode!=1 && uHasTex>0.5){
-      /* Karte aus Sondendaten. Was feiner ist als die Karte, wird beim Hineinzoomen berechnet: Körnung und kleinste Krater. */
-      float lon = atan(s.x, s.z), lat = asin(clamp(s.y,-1.0,1.0));
-      vec2 uv = vec2(lon/TAU + 0.5 + uTexP.x, 0.5 - lat/PI);
-      vec3 tx = textureLod(uTex, uv, max(log2(PX*uTexP.y/TAU/sqrt(max(sqrt(1.0-s.y*s.y),0.05))), 0.0)).rgb;
-      alb = tx*uTexP.w;
-      if(uTexP.z>0.0){
-        float fine = fbm(s+uSeed,90.0,5);
-        alb *= 1.0+0.1*fine;
-        h = dot(tx,vec3(0.333))*uTexP.z + craters(s,70.0,0.45,uTexP.z*18.0) + 0.0015*fine;
-      }
-    } else if(uMode==0){
-      int sp = int(uQ.z+0.5);
-      float mar = smoothstep(0.0,0.35, fbm(s+uSeed,1.1,6)*uQ.y + 0.1*fbm(s+2.0,4.0,6));
-      alb = mix(uA,uB,mar);
-      alb *= 0.8 + 0.4*(0.5+0.5*fbm(s+7.0,5.0,12));
-      h = craters(s,2.4,0.5,uQ.x*(1.0-0.5*mar)) + 0.004*fbm(s+3.0,7.0,12);
-      if(sp==1){
-        alb = mix(uA,uB,smoothstep(-0.1,0.45,fbm(s+uSeed,1.3,8)));
-        alb = mix(alb,uC,smoothstep(0.2,0.6,fbm(s+11.0,2.5,8))*0.5);
-        alb *= 0.85+0.3*(0.5+0.5*fbm(s+7.0,8.0,12));
-        float cap = smoothstep(0.92,0.945,abs(s.y)+0.04*fbm(s,6.0,6));
-        alb = mix(alb,vec3(0.93,0.92,0.9),cap);
-        h = craters(s,2.4,0.4,uQ.x) + 0.01*fbm(s+3.0,3.0,12);
-      } else if(sp==2){
-        vec3 hd = normalize(vec3(0.1,-0.25,1.0)), hd2 = normalize(vec3(0.38,-0.3,0.9));
-        float n5 = 0.06*fbm(s,5.0,6);
-        float heart = max(smoothstep(0.93,0.95,dot(s,hd)+n5), smoothstep(0.955,0.97,dot(s,hd2)+n5));
-        float belt = smoothstep(0.35,0.05,abs(s.y+0.12+0.08*fbm(s+4.0,2.0,6)));
-        alb = mix(uA,uB,belt*smoothstep(-0.2,0.3,fbm(s+9.0,3.0,6)+0.2));
-        alb *= 0.85+0.3*(0.5+0.5*fbm(s+7.0,6.0,12));
-        alb = mix(alb,uC,heart);
-        h = craters(s,2.4,0.4,uQ.x*(1.0-heart)) + 0.003*fbm(s+3.0,8.0,12)*(1.0-heart);
-      } else if(sp==3){
-        float spot = smoothstep(0.99975,0.9999,dot(s,normalize(vec3(0.25,0.18,0.95)))+0.00008*fbm(s,60.0,6))
-                   + 0.6*smoothstep(0.99985,0.99995,dot(s,normalize(vec3(0.27,0.17,0.947))));
-        alb = mix(alb,uC*1.2,clamp(spot,0.0,1.0));
-      }
+    if(uMode==0){
+      /* Merkur (MESSENGER): Caloris-Becken, glatte Ebenen im Norden, dunkles kohlenstoffreiches Material, junge Strahlenkrater */
+      float n = 0.3*fbm(s+uSeed,3.0,6);
+      vec3 sw = warp(s, 0.06);
+      float cal = smoothstep(0.3,0.5, blob(sw,vec4(31.5,162.7,0.32,1.0)) + n*0.4), npl = smoothstep(0.78,0.9,s.y+0.1*n);
+      float pl = max(cal,npl);
+      alb = mix(uA, uB, smoothstep(0.1,0.5,fbm(s+11.0,1.6,6))*0.8);
+      alb = mix(alb, uA*vec3(1.1,1.02,0.9), pl*0.3);
+      alb *= 0.82+0.36*(0.5+0.5*fbm(s+7.0,5.0,12));
+      float ry = rays(s,LL(57.8,16.9),0.32,1.0) + rays(s,LL(-11.3,-31.3),0.12,2.0) + rays(s,LL(-33.9,12.5),0.2,3.0)
+               + rays(s,LL(37.1,-127.3),0.1,4.0) + rays(s,LL(10.6,123.8),0.12,5.0) + rays(s,LL(-32.4,-169.7),0.1,6.0) + rays(s,LL(-0.2,-124.4),0.1,7.0);
+      alb = mix(alb, uC, clamp(ry*0.5,0.0,0.75));
+      h = craters(s,5.0,0.55,uQ.x*(1.0-0.6*pl)) + 0.004*fbm(s+3.0,7.0,12)
+        + exp(-pow((adist(s,LL(31.5,162.7))-0.32)/0.02,2.0))*0.003
+        + crat(s,27.6,57.4,0.06) + crat(s,-32.9,87.9,0.147)*0.5 + crat(s,-20.8,-123.9,0.13)*0.5 + crat(s,-16.3,-164.6,0.074);
+    } else if(uMode==7){
+      /* Mond: Meere, Becken und Strahlenkrater an ihren wahren Orten. Nullmeridian = Mitte der erdzugewandten Seite. */
+      const vec4 MARE[30] = vec4[30](
+        vec4(32.8,-15.6,0.33,1.0), vec4(28.0,17.5,0.2,1.0), vec4(8.5,31.4,0.25,1.0), vec4(17.0,59.1,0.15,1.0), vec4(-7.8,51.3,0.22,0.9),
+        vec4(-15.2,35.5,0.1,0.9), vec4(-21.3,-16.6,0.2,0.9), vec4(-24.4,-38.6,0.115,1.0), vec4(22.0,-57.0,0.33,0.95), vec4(4.0,-47.0,0.26,0.9),
+        vec4(44.0,-52.0,0.2,0.85), vec4(57.0,-28.0,0.1,0.8), vec4(56.0,-2.0,0.1,0.8), vec4(55.0,24.0,0.1,0.8), vec4(13.3,3.6,0.07,0.85),
+        vec4(7.5,-30.9,0.14,0.8), vec4(-10.0,-23.1,0.1,0.85), vec4(56.8,81.5,0.08,0.8), vec4(1.3,87.5,0.1,0.8), vec4(13.3,86.1,0.1,0.7),
+        vec4(-19.4,-92.8,0.085,0.9), vec4(27.3,147.9,0.08,0.9), vec4(-33.7,163.5,0.08,0.7), vec4(-20.4,129.1,0.05,1.0), vec4(-38.9,93.0,0.15,0.5),
+        vec4(-5.5,-68.3,0.05,1.0), vec4(51.6,-9.4,0.03,1.0), vec4(2.4,1.7,0.06,0.7), vec4(10.9,-8.8,0.07,0.75), vec4(38.0,29.2,0.09,0.6));
+      float n = 0.2*fbm(s+uSeed,3.0,6) + 0.07*fbm(s+3.0,11.0,5);
+      vec3 sw = warp(s, 0.07);
+      float fl = 0.0, fw = 0.0;
+      for(int k=ZERO;k<30;k++){ vec4 m = MARE[k]; float g = blob(sw,m); fl += g; fw += g*m.w; }
+      float mar = smoothstep(0.5,0.62,fl+n)*clamp(fw/max(fl,1e-3),0.0,1.0);
+      alb = mix(uA, uB, mar);
+      /* Südpol-Aitken-Becken auf der Rückseite: etwas dunkler */
+      alb *= 1.0 - 0.13*spot(s,-53.0,-169.0,0.7,n);
+      alb *= 0.82+0.36*(0.5+0.5*fbm(s+7.0,5.0,12));
+      float ry = rays(s,LL(-43.3,-11.4),0.22,1.0) + rays(s,LL(9.6,-20.1),0.09,2.0) + rays(s,LL(8.1,-38.0),0.05,3.0) + rays(s,LL(23.7,-47.4),0.04,4.0)
+               + rays(s,LL(16.1,46.8),0.04,5.0) + rays(s,LL(36.0,102.9),0.08,6.0) + rays(s,LL(22.4,-163.1),0.1,7.0) + rays(s,LL(18.4,-113.5),0.08,8.0)
+               + rays(s,LL(-24.5,-63.7),0.06,9.0) + rays(s,LL(-31.8,51.6),0.05,10.0) + rays(s,LL(73.4,-10.1),0.06,11.0);
+      alb = mix(alb, uC, clamp(ry*0.55,0.0,0.8));
+      float dor = adist(s,LL(-19.4,-92.8));
+      h = craters(s,5.0,0.5,uQ.x*(1.0-0.75*mar)) + 0.004*fbm(s+3.0,7.0,12)*(1.0-0.6*mar)
+        + crat(s,-43.3,-11.4,0.0245) + crat(s,9.6,-20.1,0.027) + crat(s,51.6,-9.4,0.029) + crat(s,-58.6,-14.7,0.065) + crat(s,8.1,-38.0,0.009)
+        + crat(s,23.7,-47.4,0.0115) + crat(s,-8.9,61.1,0.038) + crat(s,-11.4,26.4,0.029) + crat(s,-25.1,60.4,0.052) + crat(s,-9.3,-1.9,0.044)
+        + crat(s,-44.3,-55.3,0.06) + crat(s,-66.5,-69.1,0.083)
+        + (exp(-pow((dor-0.268)/0.02,2.0)) + 0.7*exp(-pow((dor-0.18)/0.015,2.0)))*0.008;
+    } else if(uMode==8){
+      /* Mars: dunkle Basaltgebiete, helle Staubebenen, Hellas, Tharsis-Vulkane, Valles Marineris und Polkappen an ihren wahren Orten (Länge Ost) */
+      const vec4 DARK[30] = vec4[30](
+        vec4(12.0,69.0,0.17,1.0), vec4(3.0,70.5,0.15,1.0), vec4(-5.0,72.0,0.1,0.8), vec4(-15.0,95.0,0.16,0.8), vec4(-22.0,112.0,0.18,0.8),
+        vec4(-27.0,135.0,0.18,0.85), vec4(-33.0,158.0,0.2,0.85), vec4(-42.0,178.0,0.14,0.7), vec4(-36.0,-158.0,0.17,0.8), vec4(-30.0,-140.0,0.13,0.75),
+        vec4(-25.0,-40.0,0.2,0.75), vec4(-35.0,-25.0,0.14,0.6), vec4(-10.0,-22.0,0.13,0.8), vec4(-3.0,-3.0,0.09,0.9), vec4(-8.0,12.0,0.08,0.85),
+        vec4(-9.0,26.0,0.08,0.85), vec4(-10.0,40.0,0.09,0.8), vec4(47.0,-30.0,0.2,0.9), vec4(32.0,-32.0,0.1,0.7), vec4(48.0,112.0,0.24,0.5),
+        vec4(-26.0,-85.0,0.09,0.8), vec4(-14.0,-50.0,0.1,0.7), vec4(-65.0,30.0,0.3,0.4), vec4(38.0,180.0,0.08,0.4), vec4(10.0,155.0,0.1,0.6),
+        vec4(20.0,162.0,0.06,0.5), vec4(30.0,-55.0,0.08,0.5), vec4(-48.0,35.0,0.12,0.6), vec4(-20.0,65.0,0.1,0.5), vec4(-58.0,150.0,0.2,0.4));
+      float n = 0.26*fbm(s+uSeed,2.6,6) + 0.1*fbm(s+3.0,9.0,5);
+      vec3 sw = warp(s, 0.09);
+      float fl = 0.0, fw = 0.0;
+      for(int k=ZERO;k<30;k++){ vec4 m = DARK[k]; float g = blob(sw,m); fl += g; fw += g*m.w; }
+      float dk = smoothstep(0.42,0.7,fl+n)*clamp(fw/max(fl,1e-3),0.0,1.0);
+      /* vom Wind verwehte, fleckige Ränder statt glatter Flächen */
+      dk *= 0.55+0.45*smoothstep(-0.45,0.4,fbm(s+17.0,5.0,9));
+      float lon = atan(s.x,s.z);
+      /* dunkler Dünengürtel um die Nordpolkappe */
+      dk = max(dk, 0.6*jb(s.y,0.93,0.972,0.012));
+      alb = mix(uA, uB, dk);
+      alb = mix(alb, uC, smoothstep(0.2,0.6,fbm(s+11.0,2.5,8))*0.4*(1.0-dk));
+      float hel = spot(s,-42.4,70.5,0.3,n*0.5), arg = spot(s,-49.7,-44.0,0.12,n*0.5);
+      alb = mix(alb, uC*1.04, max(hel,arg)*0.7);
+      alb *= 0.85+0.3*(0.5+0.5*fbm(s+7.0,8.0,12));
+      /* Schildvulkane: flache Kegel mit Gipfelkrater */
+      float vol = 0.0, vh = 0.0, x;
+      x = adist(s,LL(18.65,-133.8))/0.09;  vol = max(vol, exp(-pow((x-0.7)/0.35,2.0))); vh += 0.04*smoothstep(1.0,0.15,x) - 0.012*smoothstep(0.16,0.08,x);
+      x = adist(s,LL(11.9,-104.1))/0.07;   vol = max(vol, exp(-pow((x-0.7)/0.35,2.0))); vh += 0.03*smoothstep(1.0,0.15,x) - 0.01*smoothstep(0.16,0.08,x);
+      x = adist(s,LL(1.5,-113.0))/0.055;   vol = max(vol, exp(-pow((x-0.7)/0.35,2.0))); vh += 0.025*smoothstep(1.0,0.15,x) - 0.01*smoothstep(0.2,0.1,x);
+      x = adist(s,LL(-8.4,-120.1))/0.065;  vol = max(vol, exp(-pow((x-0.7)/0.35,2.0))); vh += 0.03*smoothstep(1.0,0.15,x) - 0.012*smoothstep(0.28,0.16,x);
+      x = adist(s,LL(25.0,147.2))/0.06;    vol = max(vol, exp(-pow((x-0.7)/0.35,2.0))*0.7); vh += 0.022*smoothstep(1.0,0.15,x);
+      alb = mix(alb, uB*1.15, vol*0.5);
+      /* Valles Marineris: 4.000 km lang, bis 200 km breit */
+      vec3 v0 = LL(-7.0,-102.0), v1 = LL(-8.0,-88.0), v2 = LL(-10.0,-72.0), v3 = LL(-12.5,-57.0), v4 = LL(-14.0,-42.0);
+      vec3 sc = normalize(s + 0.012*vec3(fbm(s,14.0,4), fbm(s+4.0,14.0,4), fbm(s+8.0,14.0,4)));
+      float vd = min(min(arcd(sc,v0,v1), arcd(sc,v1,v2)), min(arcd(sc,v2,v3), arcd(sc,v3,v4)));
+      float vw = 0.026*(0.35+1.1*(0.5+0.5*fbm(s+5.0,7.0,4)))*smoothstep(-1.85,-1.65,atan(s.x,s.z))*smoothstep(-0.7,-0.85,atan(s.x,s.z));
+      float can = 1.0 - smoothstep(vw*0.3, vw*1.1 + PX, vd);
+      alb = mix(alb, uB*0.85, can*0.5);
+      /* Polkappen: Norden mit Spiraltälern, Süden klein und gegen den Pol versetzt */
+      float capN = smoothstep(0.972,0.982, s.y + 0.012*fbm(s,7.0,5));
+      float tro = smoothstep(0.7,0.95, sin(lon + acos(clamp(s.y,-1.0,1.0))*46.0));
+      float capS = max(spot(s,-87.0,-45.0,0.07,n*0.6), 0.45*smoothstep(-0.975,-0.985, s.y + 0.01*fbm(s+2.0,9.0,5)));
+      alb = mix(alb, mix(vec3(0.95,0.94,0.92), vec3(0.78,0.66,0.55), tro*0.6), capN);
+      alb = mix(alb, vec3(0.95,0.94,0.93), capS);
+      /* Süden alt und kraterreich, Norden und Tharsis jung und glatt */
+      float old = smoothstep(0.35,-0.15, s.y + 0.22*sin(lon-0.9))*(1.0 - spot(s,0.0,-110.0,0.55,0.0))*(1.0-0.7*hel);
+      h = craters(s,4.0,0.45,uQ.x*mix(0.2,1.0,old)*(1.0-max(capN,capS))) + 0.008*fbm(s+3.0,3.0,12) + vh - can*0.006
+        - 0.012*hel + exp(-pow((adist(s,LL(-42.4,70.5))-0.32)/0.03,2.0))*0.005;
+    } else if(uMode==9){
+      /* Pluto (New Horizons): helles Herz Tombaugh Regio mit der Eisebene Sputnik Planitia, dunkle Maculae am Äquator, gelblicher Norden */
+      const vec4 MAC[12] = vec4[12](
+        vec4(-6.0,40.0,0.2,1.0), vec4(-8.0,70.0,0.24,1.0), vec4(-9.0,100.0,0.25,1.0), vec4(-7.0,128.0,0.22,1.0), vec4(-3.0,152.0,0.14,0.9),
+        vec4(-12.0,213.0,0.1,0.9), vec4(-14.0,233.0,0.09,0.8), vec4(-5.0,262.0,0.11,0.7), vec4(0.0,292.0,0.13,0.85), vec4(2.0,318.0,0.13,0.85),
+        vec4(-2.0,345.0,0.13,0.85), vec4(0.0,10.0,0.1,0.8));
+      float n = 0.3*fbm(s+uSeed,3.0,6), n2 = fbm(s+9.0,2.2,8);
+      alb = mix(uA*vec3(0.8,0.72,0.66), uA, smoothstep(-0.5,0.3,s.y));
+      alb = mix(alb, vec3(0.86,0.76,0.56), smoothstep(0.75,0.92,s.y+0.08*n2));
+      alb *= 0.82+0.36*(0.5+0.5*fbm(s+7.0,6.0,12));
+      float mac = 0.0;
+      vec3 sw = warp(s, 0.09);
+      float fl = 0.0, fw = 0.0;
+      for(int k=ZERO;k<12;k++){ vec4 m = MAC[k]; float g = blob(sw,m); fl += g; fw += g*m.w; }
+      mac = smoothstep(0.45,0.65,fl+n)*clamp(fw/max(fl,1e-3),0.0,1.0);
+      alb = mix(alb, uB, mac*0.92);
+      vec3 sh = warp(s, 0.035);
+      float spk = smoothstep(0.37,0.43, blob(sh,vec4(31.0,176.0,0.25,1.0)) + blob(sh,vec4(11.0,180.0,0.24,1.0)) + blob(sh,vec4(-10.0,187.0,0.15,1.0)) + n*0.25);
+      float east = smoothstep(0.2,0.42, blob(sw,vec4(22.0,203.0,0.24,1.0)) + blob(sw,vec4(4.0,200.0,0.16,1.0)) + n)*(0.5+0.5*smoothstep(-0.3,0.3,n2));
+      alb = mix(alb, uC*vec3(0.97,0.98,1.0), east*0.85*(1.0-spk));
+      /* Sputnik Planitia: Stickstoffeis in langsam umwälzenden Zellen, keine Krater */
+      vec3 w = worley(s*26.0+uSeed);
+      alb = mix(alb, uC*(0.95+0.05*mix(1.0, smoothstep(0.0,0.07,w.y-w.x), lodw(26.0))), spk);
+      h = craters(s,5.0,0.4,uQ.x*(1.0-max(spk,east*0.6))) + 0.003*fbm(s+3.0,8.0,12)*(1.0-spk)
+        + 0.01*rfbm(s*4.0+uSeed,3.0,5)*jb(adist(s,LL(15.0,160.0)),0.0,0.12,0.03);
+    } else if(uMode==10){
+      /* Ceres (Dawn): dunkle, kraterreiche Kruste; Salzflecken im Krater Occator, junger Strahlenkrater Haulani, Berg Ahuna Mons */
+      alb = mix(uA, uB, smoothstep(0.0,0.5,fbm(s+uSeed,1.5,6))*0.6);
+      alb *= 0.8+0.4*(0.5+0.5*fbm(s+7.0,4.0,12));
+      float fw = max(0.012, PX*1.3), fk = min(1.0, 0.03/fw);
+      float fac = exp(-pow(adist(s,LL(19.82,239.33))/fw,2.0))*fk + 0.7*exp(-pow(adist(s,LL(20.2,241.3))/(fw*0.7),2.0))*fk
+                + 0.5*exp(-pow(adist(s,LL(24.3,138.2))/(fw*0.6),2.0))*fk + 0.5*exp(-pow(adist(s,LL(42.2,-0.4))/(fw*0.6),2.0))*fk;
+      float ry = rays(s,LL(5.8,10.77),0.1,1.0) + 0.6*rays(s,LL(-39.4,173.2),0.06,2.0);
+      alb = mix(alb, uC, clamp(fac,0.0,1.0));
+      alb = mix(alb, vec3(0.62,0.66,0.72), clamp(ry*0.5,0.0,0.6));
+      h = craters(s,4.0,0.6,uQ.x) + 0.004*fbm(s+3.0,7.0,12)
+        + crat(s,19.82,239.33,0.098) + crat(s,-10.8,124.0,0.3)*0.3 + crat(s,-42.6,292.5,0.277)*0.4 + crat(s,-46.0,249.0,0.18)*0.5 + crat(s,24.3,138.2,0.134)
+        + 0.012*exp(-pow(adist(s,LL(-10.5,316.2))/0.02,2.0));
     } else if(uMode==1 && uHasTex>0.5){
       float lon = atan(s.x, s.z), lat = asin(clamp(s.y,-1.0,1.0));
       vec2 uv = vec2(lon/TAU + 0.5, 0.5 - lat/PI);
@@ -2292,15 +2407,36 @@ vec4 shade(vec2 p){
       LK = 5.0; vec2 wv = vec2(fbm(q*vec3(1.0,5.0,1.0)+3.1,2.2,7), fbm(q*vec3(1.0,5.0,1.0)+8.7,2.2,7));
       LK = 22.0; float t1 = fbm(vec3(q.x*3.0+wv.x,q.y*22.0,q.z*3.0+wv.y),1.0,12); LK = 1.0;
       float y = lat + uQ.w*(0.028*wv.x + 0.008*t1);
-      float band = sin(y*uQ.x + 1.3*sin(y*uQ.x*0.31+uSeed));
-      float sel = snoise(vec3(y*uQ.x*0.4,uSeed,0.3));
-      alb = mix(uA,uB,clamp(0.5-0.5*band*uQ.y,0.0,1.0));
-      alb = mix(alb,uC,smoothstep(0.0,0.8,sel)*0.55);
+      if(uQ.z>0.5){
+        /* Jupiter: Gürtel und Zonen in ihren wahren Breiten (Grad): Äquatorzone, Nord- und Südäquatorgürtel, gemäßigte Gürtel, graue Polgebiete */
+        float ph = degrees(asin(clamp(y,-1.0,1.0)));
+        alb = mix(uA, vec3(0.93,0.89,0.8), 0.6);
+        alb = mix(alb, uC, jb(ph,-6.0,6.0,2.0)*0.6);
+        alb = mix(alb, vec3(0.62,0.37,0.22), jb(ph,7.0,17.0,1.2)*0.95);
+        alb = mix(alb, vec3(0.6,0.42,0.29), jb(ph,-20.0,-7.0,1.2)*(0.78+0.22*cos((ph+13.5)*0.5)));
+        alb = mix(alb, uB, jb(ph,24.0,29.0,1.2)*0.75);
+        alb = mix(alb, uB*1.05, jb(ph,-33.0,-27.0,1.2)*0.6);
+        alb = mix(alb, uB*1.1, (jb(ph,35.0,40.0,1.5)+jb(ph,-42.0,-37.0,1.5))*0.45);
+        alb = mix(alb, vec3(0.5,0.47,0.45), smoothstep(42.0,60.0,abs(ph))*0.8);
+        /* blaugraue Wolkenlücken (Festoons) am Nordrand der Äquatorzone */
+        float fe = jb(ph,3.0,8.5,1.0)*smoothstep(0.35,0.75, 0.5+0.5*sin(atan(q.x,q.z)*13.0 + ph*0.9 + wv.x*3.0));
+        alb = mix(alb, vec3(0.42,0.48,0.56), fe*0.5);
+      } else {
+        float band = sin(y*uQ.x + 1.3*sin(y*uQ.x*0.31+uSeed));
+        float sel = snoise(vec3(y*uQ.x*0.4,uSeed,0.3));
+        alb = mix(uA,uB,clamp(0.5-0.5*band*uQ.y,0.0,1.0));
+        alb = mix(alb,uC,smoothstep(0.0,0.8,sel)*0.55);
+        /* Saturn: Sechseck-Strömung um den Nordpol bei 78° Breite, im Zentrum der Polwirbel */
+        float edge = 0.9744 + 0.0035*cos(6.0*atan(q.x,q.z));
+        alb = mix(alb, alb*vec3(0.76,0.82,0.88), smoothstep(edge-0.002,edge+0.002,s.y)*0.6);
+        alb = mix(alb, uC, exp(-pow((s.y-edge)/0.0025,2.0))*0.35);
+        alb = mix(alb, uB*0.5, smoothstep(0.9985,0.9997,s.y));
+      }
       alb *= 0.92+0.16*t1;
       if(uQ.z>0.5){
         vec3 gc = normalize(vec3(0.25,-0.36,0.9));
         vec3 dl = q-gc; vec3 ex = normalize(cross(vec3(0.0,1.0,0.0),gc));
-        vec2 lc = vec2(dot(dl,ex)/0.15, dl.y/0.075);
+        vec2 lc = vec2(dot(dl,ex)/0.115, dl.y/0.075);
         float de = length(lc);
         float ang = atan(lc.y,lc.x) + 3.0*exp(-de*1.5) + uT*0.05;
         vec2 sw = vec2(cos(ang),sin(ang))*de;
@@ -2334,12 +2470,20 @@ vec4 shade(vec2 p){
         alb = mix(alb, uD, cal);
         lava += cal*smoothstep(0.45,0.85, 0.5+0.5*fbm(s*f*5.0+uT*0.02,1.0,5) + 0.3*(1.0-dn))*step(bh.x,0.6);
       }
+      /* Pele: roter Schwefelring von 1.200 km Durchmesser; Loki Patera: dunkler Lavasee mit heller Insel */
+      float dp = adist(s,LL(-18.7,104.7)) + 0.03*fbm(s+3.0,6.0,4);
+      alb = mix(alb, vec3(0.78,0.25,0.1), exp(-pow((dp-0.3)/0.07,2.0))*0.85);
+      alb = mix(alb, uD, 1.0-smoothstep(0.02,0.035,dp));
+      float lk = (1.0-smoothstep(0.045,0.055,adist(s,LL(13.0,51.0))))*smoothstep(0.018,0.026,adist(s,LL(12.4,51.6)));
+      alb = mix(alb, uD*0.7, lk);
+      lava += lk*0.5 + (1.0-smoothstep(0.02,0.035,dp))*0.6;
       emis = vec3(1.0,0.42,0.1)*lava*1.6;
       h = 0.004*fbm(s+3.0,6.0,12);
     } else if(uMode==6){
       /* Europa: helles Wassereis, rotbraune Bruchlinien (Lineae) quer über die Kugel, fleckiges Chaos-Terrain, kaum Krater */
       float n1 = fbm(s+uSeed,1.4,8);
-      float chaos = smoothstep(0.05,0.5, fbm(s+21.0,1.1,6) + 0.3*n1);
+      /* die in Bahnrichtung hintere Halbkugel (um 90° Ost) ist dunkler und rötlicher */
+      float chaos = smoothstep(0.05,0.5, fbm(s+21.0,1.1,6) + 0.3*n1 + 0.35*dot(s,LL(0.0,90.0)) - 0.1);
       alb = mix(uA, uB, chaos*0.8);
       alb *= 0.9+0.2*(0.5+0.5*fbm(s+7.0,9.0,12));
       float lin = 0.0;
@@ -2354,6 +2498,8 @@ vec4 shade(vec2 p){
       }
       float fine = pow(rfbm(s*3.0+uSeed,1.0,8),3.0);
       alb = mix(alb, uC, clamp(lin*0.85 + fine*0.3*(0.4+0.6*chaos), 0.0, 1.0));
+      /* junger Krater Pwyll mit hellen Eisstrahlen */
+      alb = mix(alb, vec3(0.96,0.97,0.98), clamp(rays(s,LL(-25.2,88.6),0.18,1.0)*0.5,0.0,0.7));
       h = 0.002*fbm(s+3.0,10.0,12) + craters(s,6.0,0.08,uQ.x);
     } else {
       float lat = s.y;
@@ -2362,7 +2508,9 @@ vec4 shade(vec2 p){
       alb *= 0.94+0.12*b;
       LK = 24.0; float cl = smoothstep(0.45,0.75,fbm(vec3(s.x*3.0,s.y*24.0,s.z*3.0)+5.0,1.0,12)); LK = 1.0;
       alb = mix(alb,uC,cl*uQ.w);
-      if(uQ.z>0.5){
+      /* Uranus: helle Polhaube über dem sonnenzugewandten Nordpol */
+      if(uQ.z>1.5) alb = mix(alb, uC, 0.4*smoothstep(0.55,0.85,s.y));
+      if(uQ.z>0.5 && uQ.z<1.5){
         vec3 gc = normalize(vec3(-0.25,-0.32,0.9)); vec3 dl = s-gc; vec3 ex = normalize(cross(vec3(0.0,1.0,0.0),gc));
         vec2 lc = vec2(dot(dl,ex)/0.13, dl.y/0.06); float de = length(lc);
         alb = mix(alb,uD,smoothstep(1.0,0.6,de));
@@ -2371,7 +2519,7 @@ vec4 shade(vec2 p){
     }
     vec3 n = bumpN(nv,nv,h,1.0);
     float ndl0 = dot(nv,L), ndl = dot(n,L);
-    float dif = uMode==0 && uHaze<0.5 ? max(ndl,0.0)*smoothstep(-0.02,0.12,ndl0)
+    float dif = (uMode==0 || uMode>=5) && uHaze<0.5 ? max(ndl,0.0)*smoothstep(-0.02,0.12,ndl0)
                                       : clamp(ndl*0.85+0.15,0.0,1.0)*smoothstep(-0.25,0.25,ndl0);
     vec3 col = alb*(dif*1.15+0.008);
     if(wet>0.0){ vec3 hv = normalize(L+vec3(0.0,0.0,1.0)); col += vec3(1.0,0.95,0.85)*pow(max(dot(n,hv),0.0),70.0)*0.55*wet*step(0.0,ndl0)*(1.0-cloud); }
@@ -2393,7 +2541,7 @@ vec4 shade(vec2 p){
   }
   if(uMode==5){
     /* Io: Auswurfwolke eines Vulkans am Rand, schirmförmig, rund 300 km hoch */
-    vec3 v0 = M*(rotY(-(uT*uAxis.z - uRot.x))*normalize(vec3(0.55,0.32,0.77)));
+    vec3 v0 = M*(rotY(-(uT*uAxis.z - uRot.x))*LL(-18.7,104.7));
     float l0 = length(v0.xy); vec2 dir = v0.xy/max(l0,1e-3);
     float al = dot(p,dir) - l0, ac = abs(p.x*dir.y - p.y*dir.x);
     float wp = 0.012 + 0.75*max(al,0.0);
@@ -2791,7 +2939,7 @@ function histPop(k){ if (!HIST[k]) return; HIST[k] = false; try { history.back()
     <h3>Content and links</h3>
     <p>The texts, sizes and compositions have been compiled with care but without guarantee. The compositions come, among others, from NASA’s Planetary Fact Sheets and the results of the Planck mission. For many objects the values are scientific estimates. The operators of linked sites such as Wikipedia or NASA are responsible for their content.</p>
     <h3>Visuals</h3>
-    <p>All celestial bodies are rendered live in your browser. Their sizes are true to scale, but surfaces and colours are artistic approximations, not photographs. Earth’s surface is NASA’s “Blue Marble” image (Visible Earth). The 3D models of the spacesuit (EMU) and the ISS come from <a href="https://science.nasa.gov/3d-resources/" target="_blank" rel="noopener">NASA 3D Resources</a>; materials and textures of the ISS were added.</p>
+    <p>All celestial bodies are rendered live in your browser. Their sizes are true to scale. Large features such as the lunar maria, the volcanoes of Mars, Pluto’s heart or Jupiter’s cloud belts sit at their real locations; finer detail and colours are computed approximations, not photographs. Earth’s surface is NASA’s “Blue Marble” image (Visible Earth). The 3D models of the spacesuit (EMU) and the ISS come from <a href="https://science.nasa.gov/3d-resources/" target="_blank" rel="noopener">NASA 3D Resources</a>; materials and textures of the ISS were added.</p>
     <h3>Privacy</h3>
     <p>This site sets no cookies. When you visit, the web host processes technically necessary data such as IP address, time and browser identifier in server log files in order to deliver and secure the site (Art. 6(1)(f) GDPR). Sounds are generated live in the browser; no audio files are loaded. Fonts are loaded via <span id="fontHost">${fh}</span> and the 3D library three.js via the content delivery network jsDelivr; your IP address is transmitted to these services in the process. Links to Wikipedia, NASA and PayPal lead to external providers whose privacy policies apply once you visit them.</p>
     <p id="statsNote" hidden>For anonymous reach measurement, this site uses Umami Cloud (Umami Software, Inc.). Without cookies and without profiling, it records: the page visited, referring page, browser, operating system, device type, screen size, country and events such as starting the journey, objects reached, detail views opened and external links clicked. IP addresses are not stored; visits are only grouped by a daily changing hash that cannot be reversed. If “Do Not Track” is enabled in your browser, nothing is measured. The legal basis is our legitimate interest in improving the site (Art. 6(1)(f) GDPR).</p>
@@ -2945,7 +3093,6 @@ function drawObj(o, X, Y, R, a, time, extra){
     gl.uniform4fv(U(e,'uRing'), g.ring || [0,0,0,0]); gl.uniform3fv(U(e,'uAtmo'), g.atmo || [0,0,0]);
     gl.uniform3fv(U(e,'uAxis'), g.axis || [0,0,.01]); gl.uniform1f(U(e,'uHaze'), g.haze || 0);
     const tx = texFor(o, R), tc = o.g.tex;
-    if (tx) gl.uniform4f(U(e,'uTexP'), tc.off || 0, TEXS.get(tc.f).w, tc.bump || 0, tc.gain || 1);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tx || dummyTex);
     gl.uniform1i(U(e,'uTex'), 0); gl.uniform1f(U(e,'uHasTex'), tx ? 1 : 0);
   } else if (o.k === 'orbits') {
