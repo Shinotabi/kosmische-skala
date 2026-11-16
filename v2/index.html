@@ -391,6 +391,10 @@ body.detail-on .det-ctl{opacity:1;transform:translate(-50%,0);pointer-events:aut
 @keyframes bootBye{to{opacity:0;visibility:hidden}}
 /* bis dahin ruht das Intro */
 .intro.wait *{animation-play-state:paused!important}
+
+/* Intro ohne Ladesequenz (Firefox): Das Planetarium blendet ein, sobald es flüssig laufen kann */
+#introCv{transition:transform 1.8s cubic-bezier(.55,0,.2,1),filter 1.8s ease,opacity 1.6s ease}
+.intro.dim #introCv{opacity:0}
 </style>
 </head>
 <body>
@@ -3616,17 +3620,28 @@ function U(e, n){ if (!(n in e.u)) e.u[n] = gl.getUniformLocation(e.p, n); retur
    und die Seite bleibt flüssig, solange währenddessen nicht gezeichnet wird (Intro und Anflug).
    Meldet der Browser die Marken nicht, wird wie früher der Reihe nach mit Wartezeit übersetzt (legacy).
    Danach folgen die 3D-Modelle; fehlen sie, kommen ihre Ersatz-Shader dazu. Die Reise beginnt, wenn LOAD.all gilt. */
-const LOAD = {keys: [], i: 0, done: 0, wsum: 0, wdone: 0, all: !gl, fence: false, legacy: false, cur: null, t0: 0, tAll: 0, t3: false};
+const LOAD = {slow: [], keys: [], i: 0, done: 0, wsum: 0, wdone: 0, all: !gl, fence: false, legacy: false, cur: null, t0: 0, tAll: 0, t3: false};
 const loadW = k => /^planet/.test(k) ? 8 : /^(micro|rock|craft|bg|pts)/.test(k) ? 1 : 3;
 function loadAdd(k){ if (LOAD.keys.includes(k)) return false; LOAD.keys.push(k); LOAD.wsum += loadW(k); return true; }
 function loadCount(k){
   const e = PROGS[k]; e.cnt = true; LOAD.done++; LOAD.wdone += loadW(k);
   /* einmal auf einen Bildpunkt zeichnen: Manche Treiber stellen ein Programm erst beim ersten Gebrauch fertig */
-  if (e.ok) { gl.bindFramebuffer(gl.FRAMEBUFFER, POST.on ? POST.fbo : null); gl.viewport(0, 0, 1, 1); gl.useProgram(e.p); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); }
+  /* Partikel als Punkte, sonst entstünde ihre Punkt-Variante erst beim ersten echten Zeichnen (gemessen: gut eine halbe Sekunde) */
+  if (e.ok) { gl.bindFramebuffer(gl.FRAMEBUFFER, POST.on ? POST.fbo : null); gl.viewport(0, 0, 1, 1); gl.useProgram(e.p);
+    if (/^pts/.test(k)) { if (!ptsVAO) ptsVAO = gl.createVertexArray(); gl.bindVertexArray(ptsVAO); gl.drawArrays(gl.POINTS, 0, 1); gl.bindVertexArray(vao); }
+    else gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); }
 }
 function loadPoll(){
   if (LOAD.all) return;
   const now = performance.now(), K = LOAD.keys;
+  /* Ohne parallele Übersetzung zuerst die 3D-Modelle laden und vorwärmen: Ihre Aufrufe müssten sonst jeweils auf den
+     gerade laufenden Shader warten, und die Seite würde in den ersten Sekunden stocken. Höchstens 3,5 Sekunden. */
+  if (LOAD.gate) {
+    const st = T3.state;
+    if (st === 'failed' || now - LOAD.t0 > 3500) LOAD.gate = false;
+    else if (st === 'ready' && [0, 1].every(k => T3.models[k] || T3.bad[k]) && t3Warm()) LOAD.gate = false;
+    if (LOAD.gate) return;
+  }
   if (PEXT) {
     for (let n = 0; n < 4 && LOAD.i < K.length; n++, LOAD.i++) PROGS[K[LOAD.i]] || makeProg(K[LOAD.i]);
     for (const k of K) { const e = PROGS[k]; if (e && !e.cnt && (prog(k) || e.bad)) loadCount(k); }
@@ -3661,10 +3676,11 @@ function loadFrac(){ return LOAD.all ? 1 : Math.min(.99, (LOAD.wdone + (LOAD.t3 
 function precompile(center){
   if (!gl) return;
   if (/[?&]nocompile=1/.test(location.search)) { LOAD.all = true; return; }
-  LOAD.t0 = performance.now(); LOAD.fence = !PEXT;
+  LOAD.t0 = performance.now(); LOAD.fence = !PEXT; LOAD.gate = !PEXT;
   loadAdd('bg');
   OBJ.map((o, j) => [Math.abs(j - center), o]).sort((a, b) => a[0] - b[0]).forEach(([, o]) => { if ((o.k !== 'void' || o.fx) && o.k !== 'craft') loadAdd(o.pk); if (o.ptk) loadAdd(o.ptk); });
-  (function tick(){ loadPoll(); if (!LOAD.all) setTimeout(tick, PEXT ? 30 : 8); })();
+  /* Schritte über 50 ms werden für die Fehlersuche vermerkt (LOAD.slow: Dauer, Stand, zuletzt bearbeitetes Programm) */
+  (function tick(){ const a = performance.now(), d0 = LOAD.done; loadPoll(); const d = performance.now() - a; if (d > 50) LOAD.slow.push(Math.round(d) + 'ms@' + d0 + '/' + LOAD.keys.length + (LOAD.cur ? ' ' + LOAD.cur.k : '') + (LOAD.gate ? ' gate' : '')); if (!LOAD.all) setTimeout(tick, PEXT ? 30 : 8); })();
 }
 
 /* ======================================================================
@@ -3729,12 +3745,13 @@ function glowPass(w, T){
   gl.disable(gl.BLEND);
   if (!drawBg(w, T)) { gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT); }
   gl.enable(gl.BLEND);
-  for (const q of GQ) drawObj(q[0], q[1]*gs, q[2]*gs, q[3]*gs, q[4], q[5]);
+  for (const q of GQ) drawObj(q[0], q[1]*gs, q[2]*gs, q[3]*gs, q[4], q[5], q[6]);
   PASS = 0; PW = GW; PH = GH; PK = KG;
 }
-function drawObj(o, X, Y, R, a, time){
-  const e = prog(o.pk); if (!e) { if (!PASS) progMiss++; return; }
-  if (!PASS && GQ.on) GQ.push([o, X, Y, R, a, time]);
+function drawObj(o, X, Y, R, a, time, key){
+  /* key: anderes Programm für die Punkt-Darstellung (jedes Programm zeichnet Objekte unter 1,5 Bildpunkten als Punkt) */
+  const e = prog(key || o.pk); if (!e) { if (!PASS) progMiss++; return; }
+  if (!PASS && GQ.on) GQ.push([o, X, Y, R, a, time, key]);
   gl.useProgram(e.p);
   if (!MRT) gl.uniform1f(U(e,'uPass'), PASS);
   const half = Math.max(R*o.ext, 3);
@@ -4205,7 +4222,8 @@ function render(time){
     const o = OBJ[j], R = o.d/2*s, X = (relX(j, i) - camX)*s + oxx, Y = oyy - (relY(j, i) - camY)*s - (j === A0 ? astroDrop : 0), E = R*o.ext;
     if (j !== A0 && (introActive || introT0)) continue;
     if (dk > .15 && j !== det.j) continue;
-    if (R < .03 || X + E < -40 || X - E > W + 40) continue;
+    /* nur zeichnen, was das Bild berührt (Abstand des Mittelpunkts zum Bildrechteck) */
+    { const ex = X - clamp(X, 0, W), ey = Y - clamp(Y, 0, H); if (R < .03 || ex*ex + ey*ey > (E + 40)*(E + 40)) continue; }
     let a = 1;
     /* Systeme blenden aus, wenn sie viel größer als das Bild sind; im Detailzoom gilt die Zoomstufe nicht */
     const zd = j === det.j ? Math.pow(Math.max(1, det.z), dk) : 1;
@@ -4218,7 +4236,9 @@ function render(time){
     if (o.k === 'void') { const ra = a*(1 - smooth(.9, 1.6, Math.abs(j - t))); if (ra > .02 && R > 3 && R < MAXD*1.5) { rings.push([X, Y, R, ra]);
       /* Wegmarken mit eigenem Bild (Wellenpakete): nur in der Nähe ihrer Station */
       if (gl && o.fx) drawObj(o, X*KG, Y*KG, R*KG, ra, T + j*3.1); } }
-    else if (gl && !t3Use(o, X, Y, R, a)) drawObj(o, X*KG, Y*KG, R*KG, a, T + j*3.1);
+    /* 3D-Modelle unter gut einem Bildpunkt erscheinen als Punkt. Dafür genügt ein ohnehin geladenes Programm; der eigene
+       Ersatz-Shader würde erst jetzt übersetzt und das Bild für über eine Sekunde anhalten. */
+    else if (gl && !t3Use(o, X, Y, R, a)) drawObj(o, X*KG, Y*KG, R*KG, a, T + j*3.1, o.k === 'craft' && R < 1.2 && T3.models[o.g.mode || 0] ? 'rock:0:0' : undefined);
 
     const dpx = 2*R;
     if (R > 4 && o.k !== 'void') discs.push([X, Y, R*(o.k === 'star' ? 1.05 : o.lx ? o.lx*.9 : 1), j]);
@@ -4680,23 +4700,32 @@ function bootReady(now){
   const el = now - bootT0;
   if (!gl || el > 10000) return true;
   if (PEXT) return LOAD.all;
-  return el > 600 && T3.state !== 'loading' && (T3.state !== 'ready' || !!T3.models[0] || !!T3.bad[0]) || el > 7000;
+  return !LOAD.gate || el > 4500;
 }
+let bootIntro = false;
 function bootStep(now){
   if (bootDone) return;
+  /* Ohne parallele Übersetzung (Firefox) gibt es keine Ladesequenz: Titel und Schaltflächen erscheinen sofort,
+     das Planetarium blendet ein, sobald die 3D-Modelle bereitliegen (rund zwei Sekunden). */
+  if (!PEXT && gl && !bootIntro) {
+    bootIntro = true;
+    const b0 = $('boot'); if (b0) b0.remove();
+    const it = $('intro'); if (it && introActive) { it.classList.add('dim'); it.classList.remove('wait'); setTimeout(() => { try { $('introSound').focus({preventScroll: true}); } catch (e) {} }, 2200); }
+  }
   const b = $('bootBar'); if (b) b.style.transform = 'scaleX(' + (PEXT ? loadFrac() : Math.min(.92, (now - bootT0)/3000)).toFixed(3) + ')';
   if (!bootReady(now)) return;
   bootDone = true;
   const el = $('boot'); if (el) { el.classList.add('done'); setTimeout(() => el.remove(), 800); }
   const it = $('intro');
   if (it && introActive) {
-    it.classList.remove('wait'); orreryStart();
-    setTimeout(() => { try { $('introSound').focus({preventScroll: true}); } catch (e) {} }, 2200);
+    orreryStart(); it.classList.remove('dim');
+    if (it.classList.contains('wait')) { it.classList.remove('wait'); setTimeout(() => { try { $('introSound').focus({preventScroll: true}); } catch (e) {} }, 2200); }
   }
 }
 /* Planetarium: eigenständige Intro-Szene mit stilisierten Abständen */
-const ORR = {raf: 0, t0: 0};
+const ORR = {raf: 0, t0: 0, on: false};
 function orreryStart(){
+  if (ORR.on) return; ORR.on = true;
   /* Ohne parallele Shader-Übersetzung (Firefox) läuft eine beschleunigte Zeichenfläche über denselben Grafik-Thread wie
      die Übersetzung und stockt, solange im Hintergrund geladen wird (gemessen: bis über zwei Sekunden am Stück).
      Dort zeichnet das Intro deshalb ohne Beschleunigung, in einfacher Pixeldichte, damit es flüssig bleibt. */
@@ -4726,8 +4755,8 @@ function orreryStart(){
     let wv = 0;
     if (ORR.z0) { wv = smooth(.3, 1, zk); if (ORR.x0) wv *= 1 - smooth(0, EXIT_MS, now - ORR.x0); }
     ORR.S = (ORR.S || 0) + wv*dtw*.5;
-    /* Der Fluchtpunkt wandert im Anflug zur Bildmitte */
-    const wm = smooth(.5, 1, zk), wx = fx + (Wc/2 - fx)*wm, wy = fy + (Hc*.46 - fy)*wm;
+    /* Der Fluchtpunkt bleibt dort, wohin das Planetarium hineinzoomt: Ein Schwenk wirkte wie eine Kurskorrektur */
+    const wx = fx, wy = fy;
     const drawStars = () => {
       g.setTransform(dp, 0, 0, dp, 0, 0);
       const Rm = Math.hypot(Math.max(wx, Wc - wx), Math.max(wy, Hc - wy));
@@ -4799,7 +4828,8 @@ function introGo(sound){
   introActive = false;
   track('start', {ton: sound ? 'mit' : 'ohne'});
   if (sound) audioOn(true);
-  $('intro').classList.add('out');
+  $('intro').classList.add('out'); $('intro').classList.remove('dim');
+  orreryStart();
   ORR.go = introT0 = performance.now();
   if (!reduce) { ORR.z0 = ORR.go; sfxDive(); }
 }
@@ -5098,7 +5128,7 @@ const start = data => {
       progs: () => Object.fromEntries(Object.entries(PROGS).map(([k, e]) => [k, e.ok ? 1 : e.bad ? -1 : (PEXT && gl.getProgramParameter(e.p, PEXT.COMPLETION_STATUS_KHR) ? (prog(k) ? 1 : -1) : 0)])),
       pending: () => progMissLast + (prog('bg') ? 0 : 1),
       glsl: {PRE, MAIN, SRC, BG, VERT}, PROGS, prog, makeProg, gl, POST, LOAD, T3,
-      load: () => ({all: LOAD.all, done: LOAD.done, n: LOAD.keys.length, fence: LOAD.fence, legacy: LOAD.legacy, frac: +loadFrac().toFixed(3), t3: LOAD.t3, t3state: T3.state, mrt: MRT, ms: Math.round(performance.now() - LOAD.t0)}),
+      load: () => ({slow: LOAD.slow, all: LOAD.all, done: LOAD.done, n: LOAD.keys.length, fence: LOAD.fence, legacy: LOAD.legacy, frac: +loadFrac().toFixed(3), t3: LOAD.t3, t3state: T3.state, mrt: MRT, ms: Math.round(performance.now() - LOAD.t0)}),
       compileTime: src => new Promise(res => { const t0 = performance.now(), fs = gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(fs, src); gl.compileShader(fs);
         const p = gl.createProgram(); gl.attachShader(p, vsh); gl.attachShader(p, fs); gl.bindAttribLocation(p, 0, 'aP'); gl.linkProgram(p);
         const chk = () => { if (!PEXT || gl.getProgramParameter(p, PEXT.COMPLETION_STATUS_KHR)) res({ms: Math.round(performance.now() - t0), ok: gl.getProgramParameter(p, gl.LINK_STATUS), log: (gl.getShaderInfoLog(fs) || gl.getProgramInfoLog(p) || '').slice(0, 400)}); else setTimeout(chk, 40); }; chk(); })};
